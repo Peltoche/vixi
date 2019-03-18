@@ -1,0 +1,14 @@
+[package]
+authors = ["Peltoche <dev@halium.fr>"]
+edition = "2018"
+name = "vixi"
+version = "0.1.0"
+
+[dependencies]
+chrono = "0.4.6"
+fern = "0.5.7"
+log = "0.4.6"
+ncurses = "5.99.0"
+serde_json = "^0.9"
+xi-core-lib = "0.2.0"
+xi-rpc = "0.2.0"
