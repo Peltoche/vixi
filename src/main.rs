@@ -7,7 +7,10 @@ extern crate xi_rpc;
 extern crate log;
 extern crate chrono;
 extern crate fern;
+#[macro_use]
+extern crate clap;
 
+mod cli;
 mod event;
 mod logging;
 mod terminal;
@@ -23,6 +26,8 @@ use ncurses::*;
 use xi_rpc::RpcLoop;
 
 fn main() {
+    let matches = cli::build().get_matches();
+
     let logging_path = Path::new("/home/peltoche/.local/share/vixy/vixi.log");
     if let Err(e) = logging::setup(logging_path) {
         eprintln!(
@@ -31,8 +36,8 @@ fn main() {
         );
     }
 
-    // spawn the core process
-    let process = Command::new("xi-core")
+    // spawn the core core_process
+    let core_process = Command::new("xi-core")
         //.arg("test-file")
         .stdout(Stdio::piped())
         .stdin(Stdio::piped())
@@ -43,14 +48,14 @@ fn main() {
 
     // Create the RpcLoop and give him access to the core via the core process
     // stdin.
-    let stdin = process.stdin.unwrap();
+    let stdin = core_process.stdin.unwrap();
     let mut rpc_loop = RpcLoop::new(stdin);
 
     let server = rpc_loop.get_peer();
 
     // Start a thread used to consume the events from the core process.
     let mut server_event_handler = event::server::Handler::new();
-    let stdout = process.stdout.unwrap();
+    let stdout = core_process.stdout.unwrap();
     thread::spawn(move || {
         rpc_loop.mainloop(|| BufReader::new(stdout), &mut server_event_handler);
     });

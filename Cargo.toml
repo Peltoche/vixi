@@ -4,6 +4,17 @@ edition = "2018"
 name = "vixi"
 version = "0.1.0"
 
+build = "build.rs"
+
+
+[[bin]]
+name = "vixi"
+path = "src/main.rs"
+
+[build-dependencies]
+clap = "2.32.0"
+version_check = "0.1.3"
+
 [dependencies]
 chrono = "0.4.6"
 fern = "0.5.7"
@@ -12,3 +23,8 @@ ncurses = "5.99.0"
 serde_json = "^0.9"
 xi-core-lib = "0.2.0"
 xi-rpc = "0.2.0"
+
+
+[dependencies.clap]
+features = ["suggestions", "color", "wrap_help"]
+version = "2.32.0"

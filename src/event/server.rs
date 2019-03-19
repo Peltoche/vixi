@@ -14,8 +14,8 @@ impl Handler {
 impl<W: Write> xi_rpc::Handler<W> for Handler {
     fn handle_notification(&mut self, _ctx: RpcCtx<W>, method: &str, params: &Value) {
         match method {
-            "available_languages" => (),
-            "available_themes" => (),
+            "available_languages" => debug!("{}", method),
+            "available_themes" => debug!("{}", method),
             _ => debug!("unhandled notif {} -> {:#?}", method, params),
         };
     }
