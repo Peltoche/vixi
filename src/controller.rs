@@ -17,6 +17,21 @@ impl Controller {
             .expect("failed to create the new view");
 
         self.view_id = view_id.as_str().unwrap().to_string();
+
+        let mut size_y: i32 = 0;
+        let mut size_x: i32 = 0;
+        getmaxyx(stdscr(), &mut size_y, &mut size_x);
+        core.send_rpc_notification(
+            "edit",
+            &json!({
+                "method": "resize",
+                "view_id": self.view_id,
+                "params": {
+                    "width": size_y,
+                    "height": size_x,
+                }
+            }),
+        );
     }
 
     pub fn start_keyboard_event_loop(&self, core: &RpcPeer<ChildStdin>) {
