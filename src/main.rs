@@ -10,9 +10,13 @@ extern crate fern;
 #[macro_use]
 extern crate clap;
 extern crate dirs;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 
 mod cli;
-mod event;
+mod controller;
+mod event_handler;
 mod logging;
 mod terminal;
 
@@ -20,6 +24,8 @@ use std::io::BufReader;
 use std::process::{Command, Stdio};
 use std::thread;
 
+use controller::Controller;
+use event_handler::EventHandler;
 use terminal::Terminal;
 
 use xi_rpc::RpcLoop;
@@ -35,7 +41,7 @@ fn setup_logger() {
 fn main() {
     let matches = cli::build().get_matches();
 
-    let inputs = matches
+    let file_path = matches
         .value_of("file")
         .expect("failed to retrieve cli value");
 
@@ -46,7 +52,7 @@ fn main() {
         //.arg("test-file")
         .stdout(Stdio::piped())
         .stdin(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stderr(Stdio::null())
         .env("RUST_BACKTRACE", "1")
         .spawn()
         .unwrap_or_else(|e| panic!("failed to execute core: {}", e));
@@ -56,22 +62,19 @@ fn main() {
     let stdin = core_process.stdin.unwrap();
     let mut rpc_loop = RpcLoop::new(stdin);
 
-    let server = rpc_loop.get_peer();
+    let terminal = Terminal::new();
+    let mut controller = Controller::default();
+    let mut event_handler = EventHandler::default();
+    let core_client = rpc_loop.get_peer();
 
     // Start a thread used to consume the events from the core process.
-    let mut server_event_handler = event::server::Handler::new();
     let stdout = core_process.stdout.unwrap();
     thread::spawn(move || {
-        rpc_loop.mainloop(|| BufReader::new(stdout), &mut server_event_handler);
+        rpc_loop.mainloop(|| BufReader::new(stdout), &mut event_handler);
     });
 
-    // Setup the terminal.
-    let terminal = Terminal::new();
-
-    let params = json!({});
-    server.send_rpc_notification("client_started", &params);
-
-    event::start_keyboard_event_loop();
+    controller.open_file(&core_client, file_path);
+    controller.start_keyboard_event_loop(&core_client);
 
     terminal.clean();
 }
