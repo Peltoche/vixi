@@ -16,11 +16,13 @@ impl<W: Write> xi_rpc::Handler<W> for EventHandler {
             "available_themes" => debug!("{}", method),
             "available_plugins" => debug!("{}", method),
             "config_changed" => debug!("{}", method),
-            "scroll_to" => debug!("{}", method),
+            "scroll_to" => self.handle_cursor_move(params),
             "language_changed" => debug!("{}", method),
             "update" => self.handle_update(params),
             _ => debug!("unhandled notif {} -> {:#?}", method, params),
         };
+
+        refresh();
     }
 
     fn handle_request(
@@ -35,7 +37,18 @@ impl<W: Write> xi_rpc::Handler<W> for EventHandler {
 }
 
 impl EventHandler {
-    pub fn handle_update(&mut self, body: &Value) {
+    fn handle_cursor_move(&mut self, body: &Value) {
+        #[derive(Deserialize, Debug)]
+        struct ScrollInfo {
+            col: i32,
+            line: i32,
+        }
+
+        let event: ScrollInfo = serde_json::from_value(body.clone()).unwrap();
+        mv(event.line, event.col);
+    }
+
+    fn handle_update(&mut self, body: &Value) {
         #[derive(Deserialize, Debug)]
         struct Annotation {
             #[serde(rename = "type")]
@@ -90,10 +103,10 @@ impl EventHandler {
                 }
                 "skip" => old_ix += operation.n,
                 "invalidate" => {
-                    for _ in 0..operation.n {
-                        let line = String::from("????INVALID LINE???????").to_owned();
-                        new_buffer.push(line);
-                    }
+                    //for _ in 0..operation.n {
+                    //let line = String::from("????INVALID LINE???????").to_owned();
+                    //new_buffer.push(line);
+                    //}
                 }
                 "ins" => {
                     for line in operation.lines.unwrap() {
@@ -120,7 +133,5 @@ impl EventHandler {
         }
 
         self.buffer = new_buffer;
-
-        refresh();
     }
 }
