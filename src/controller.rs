@@ -6,6 +6,8 @@ use xi_rpc::RpcPeer;
 #[derive(Default)]
 pub struct Controller {
     view_id: String,
+    size_y: i32,
+    size_x: i32,
 }
 
 impl Controller {
@@ -18,18 +20,25 @@ impl Controller {
 
         self.view_id = view_id.as_str().unwrap().to_string();
 
-        let mut size_y: i32 = 0;
-        let mut size_x: i32 = 0;
-        getmaxyx(stdscr(), &mut size_y, &mut size_x);
+        getmaxyx(stdscr(), &mut self.size_y, &mut self.size_x);
         core.send_rpc_notification(
             "edit",
             &json!({
                 "method": "resize",
                 "view_id": self.view_id,
                 "params": {
-                    "width": size_y,
-                    "height": size_x,
+                    "width": self.size_x,
+                    "height": self.size_y,
                 }
+            }),
+        );
+
+        core.send_rpc_notification(
+            "edit",
+            &json!({
+            "method": "scroll",
+            "view_id": self.view_id,
+            "params": [0 , self.size_y]
             }),
         );
     }

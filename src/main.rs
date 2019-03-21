@@ -18,7 +18,6 @@ mod cli;
 mod controller;
 mod event_handler;
 mod logging;
-mod terminal;
 
 use std::io::BufReader;
 use std::process::{Command, Stdio};
@@ -26,8 +25,8 @@ use std::thread;
 
 use controller::Controller;
 use event_handler::EventHandler;
-use terminal::Terminal;
 
+use ncurses::*;
 use xi_rpc::RpcLoop;
 
 fn setup_logger() {
@@ -62,7 +61,6 @@ fn main() {
     let stdin = core_process.stdin.unwrap();
     let mut rpc_loop = RpcLoop::new(stdin);
 
-    let terminal = Terminal::new();
     let mut controller = Controller::default();
     let mut event_handler = EventHandler::default();
     let core_client = rpc_loop.get_peer();
@@ -73,8 +71,15 @@ fn main() {
         rpc_loop.mainloop(|| BufReader::new(stdout), &mut event_handler);
     });
 
+    /* Setup ncurses. */
+    initscr();
+    raw();
+    keypad(stdscr(), true); // Allow for extended keyboard (like F1).
+    noecho();
+
     controller.open_file(&core_client, file_path);
+
     controller.start_keyboard_event_loop(&core_client);
 
-    terminal.clean();
+    endwin();
 }

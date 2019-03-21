@@ -6,17 +6,20 @@ use xi_rpc::RpcCtx;
 
 #[derive(Default)]
 pub struct EventHandler {
+    screen_start: i32,
+    cursor_x: i32,
+    cursor_y: i32,
     buffer: Vec<String>,
 }
 
 impl<W: Write> xi_rpc::Handler<W> for EventHandler {
-    fn handle_notification(&mut self, _ctx: RpcCtx<W>, method: &str, params: &Value) {
+    fn handle_notification(&mut self, ctx: RpcCtx<W>, method: &str, params: &Value) {
         match method {
             "available_languages" => debug!("{}", method),
             "available_themes" => debug!("{}", method),
             "available_plugins" => debug!("{}", method),
             "config_changed" => debug!("{}", method),
-            "scroll_to" => self.handle_cursor_move(params),
+            "scroll_to" => self.handle_cursor_move(ctx, params),
             "language_changed" => debug!("{}", method),
             "update" => self.handle_update(params),
             _ => debug!("unhandled notif {} -> {:#?}", method, params),
@@ -37,15 +40,50 @@ impl<W: Write> xi_rpc::Handler<W> for EventHandler {
 }
 
 impl EventHandler {
-    fn handle_cursor_move(&mut self, body: &Value) {
+    fn handle_cursor_move<W: Write>(&mut self, ctx: RpcCtx<W>, body: &Value) {
         #[derive(Deserialize, Debug)]
         struct ScrollInfo {
+            view_id: String,
             col: i32,
             line: i32,
         }
 
         let event: ScrollInfo = serde_json::from_value(body.clone()).unwrap();
-        mv(event.line, event.col);
+
+        let size_y = getmaxy(stdscr());
+        let mut cursor_y = event.line - self.screen_start;
+
+        let mut scroll: bool = false;
+        if cursor_y == size_y {
+            self.screen_start += 1;
+            scroll = true;
+            cursor_y -= 1
+        } else if cursor_y <= -1 {
+            self.screen_start -= 1;
+            scroll = true;
+            cursor_y += 1
+        }
+
+        self.cursor_x = event.col as i32;
+        self.cursor_y = cursor_y;
+
+        if scroll {
+            // In case of scroll it need to redraw the screen and after it
+            // the cursor is automatically reset at (self.cursor_y/self.cursor_x).
+            ctx.get_peer().send_rpc_notification(
+                "edit",
+                &json!({
+                    "method": "scroll",
+                    "view_id": event.view_id,
+                    "params": [self.screen_start , self.screen_start + size_y]
+                }),
+            );
+
+            self.redraw_view();
+        } else {
+            // No scroll needed so it move the cursor without any redraw.
+            mv(self.cursor_y, self.cursor_x);
+        }
     }
 
     fn handle_update(&mut self, body: &Value) {
@@ -103,19 +141,14 @@ impl EventHandler {
                 }
                 "skip" => old_ix += operation.n,
                 "invalidate" => {
-                    //for _ in 0..operation.n {
-                    //let line = String::from("????INVALID LINE???????").to_owned();
-                    //new_buffer.push(line);
-                    //}
+                    for _ in 0..operation.n {
+                        let line = String::from("????INVALID LINE???????\n").to_owned();
+                        new_buffer.push(line);
+                    }
                 }
                 "ins" => {
                     for line in operation.lines.unwrap() {
-                        //let tmp = line.text.clone::<'a>();
                         let tmp = line.text.to_owned();
-
-                        //let boxed_line: Box<&'a str> = Box::new(tmp);
-                        //let line: &'a &str = &boxed_line;
-                        //new_buffer.push(tmp);
                         new_buffer.push(tmp);
                     }
                 }
@@ -123,15 +156,30 @@ impl EventHandler {
             }
         }
 
-        self.switch_buffers(new_buffer);
+        self.buffer = new_buffer;
+        self.redraw_view();
     }
 
-    fn switch_buffers(&mut self, new_buffer: Vec<String>) {
+    fn redraw_view(&mut self) {
         clear();
-        for line in new_buffer.iter() {
-            addstr(line.as_str());
-        }
 
-        self.buffer = new_buffer;
+        let size_y = getmaxy(stdscr()) - 1;
+        let buffer_size = self.buffer.len() as i32;
+
+        let nb_lines_to_draw = if size_y > buffer_size - self.screen_start {
+            buffer_size - self.screen_start
+        } else {
+            self.screen_start + size_y
+        };
+
+        let mut output = String::new();
+        self.buffer
+            .iter()
+            .skip(self.screen_start as usize)
+            .take(nb_lines_to_draw as usize)
+            .for_each(|x| output.push_str(&x));
+
+        addstr(output.as_str());
+        mv(self.cursor_y, self.cursor_x);
     }
 }
