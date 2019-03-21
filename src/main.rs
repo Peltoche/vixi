@@ -63,12 +63,14 @@ fn main() {
 
     let mut controller = Controller::default();
     let mut event_handler = EventHandler::default();
-    let core_client = rpc_loop.get_peer();
+    let raw_peer = rpc_loop.get_raw_peer();
 
     // Start a thread used to consume the events from the core process.
     let stdout = core_process.stdout.unwrap();
     thread::spawn(move || {
-        rpc_loop.mainloop(|| BufReader::new(stdout), &mut event_handler);
+        rpc_loop
+            .mainloop(|| BufReader::new(stdout), &mut event_handler)
+            .unwrap();
     });
 
     /* Setup ncurses. */
@@ -77,9 +79,8 @@ fn main() {
     keypad(stdscr(), true); // Allow for extended keyboard (like F1).
     noecho();
 
-    controller.open_file(&core_client, file_path);
-
-    controller.start_keyboard_event_loop(&core_client);
+    controller.open_file(Box::new(raw_peer.clone()), file_path);
+    controller.start_keyboard_event_loop(Box::new(raw_peer));
 
     endwin();
 }

@@ -1,8 +1,6 @@
-use std::io::Write;
-
 use ncurses::*;
-use serde_json::value::Value;
-use xi_rpc::RpcCtx;
+use serde_json::Value;
+use xi_rpc::{RemoteError, RpcCall, RpcCtx};
 
 #[derive(Default)]
 pub struct EventHandler {
@@ -12,35 +10,33 @@ pub struct EventHandler {
     buffer: Vec<String>,
 }
 
-impl<W: Write> xi_rpc::Handler<W> for EventHandler {
-    fn handle_notification(&mut self, ctx: RpcCtx<W>, method: &str, params: &Value) {
-        match method {
-            "available_languages" => debug!("{}", method),
-            "available_themes" => debug!("{}", method),
-            "available_plugins" => debug!("{}", method),
-            "config_changed" => debug!("{}", method),
-            "scroll_to" => self.handle_cursor_move(ctx, params),
-            "language_changed" => debug!("{}", method),
-            "update" => self.handle_update(params),
-            _ => debug!("unhandled notif {} -> {:#?}", method, params),
+impl xi_rpc::Handler for EventHandler {
+    type Notification = RpcCall;
+    type Request = RpcCall;
+
+    fn handle_notification(&mut self, ctx: &RpcCtx, rpc: Self::Notification) {
+        match rpc.method.as_str() {
+            "available_languages" => debug!("{}", &rpc.method),
+            "available_themes" => debug!("{}", &rpc.method),
+            "available_plugins" => debug!("{} -> {}", &rpc.method, &rpc.params),
+            "config_changed" => debug!("{}", &rpc.method),
+            "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
+            "language_changed" => debug!("{}", &rpc.method),
+            "update" => self.handle_update(&rpc.params),
+            _ => debug!("unhandled notif {} -> {:#?}", &rpc.method, &rpc.params),
         };
 
         refresh();
     }
 
-    fn handle_request(
-        &mut self,
-        _ctx: RpcCtx<W>,
-        method: &str,
-        params: &Value,
-    ) -> Result<Value, Value> {
-        debug!("[request] {} -> {:#?}", method, params);
+    fn handle_request(&mut self, _ctx: &RpcCtx, rpc: Self::Request) -> Result<Value, RemoteError> {
+        debug!("[request] {} -> {:#?}", rpc.method, rpc.params);
         Ok(json!({}))
     }
 }
 
 impl EventHandler {
-    fn handle_cursor_move<W: Write>(&mut self, ctx: RpcCtx<W>, body: &Value) {
+    fn handle_cursor_move(&mut self, ctx: &RpcCtx, body: &Value) {
         #[derive(Deserialize, Debug)]
         struct ScrollInfo {
             view_id: String,

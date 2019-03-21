@@ -19,12 +19,21 @@ dirs = "1.0.5"
 fern = "0.5.7"
 log = "0.4.6"
 ncurses = "5.99.0"
-serde = "0.9"
-serde_derive = "0.9"
-serde_json = "0.9"
-xi-core-lib = "0.2.0"
-xi-rpc = "0.2.0"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+
+[dependencies.xi-rpc]
+git = "https://github.com/xi-editor/xi-editor"
+branch = "master"
+
+[dependencies.xi-core-lib]
+git = "https://github.com/xi-editor/xi-editor"
+branch = "master"
 
 [dependencies.clap]
 features = ["suggestions", "color", "wrap_help"]
 version = "2.32.0"
+
+[workspace]
+members = ["./plugins/*"]
