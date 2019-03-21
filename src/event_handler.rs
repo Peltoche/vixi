@@ -16,7 +16,7 @@ impl xi_rpc::Handler for EventHandler {
 
     fn handle_notification(&mut self, ctx: &RpcCtx, rpc: Self::Notification) {
         match rpc.method.as_str() {
-            "available_languages" => debug!("{}", &rpc.method),
+            "available_languages" => debug!("{} -> {}", &rpc.method, &rpc.params),
             "available_themes" => debug!("{}", &rpc.method),
             "available_plugins" => debug!("{} -> {}", &rpc.method, &rpc.params),
             "config_changed" => debug!("{}", &rpc.method),

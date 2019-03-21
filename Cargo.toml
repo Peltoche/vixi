@@ -23,17 +23,17 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 
-[dependencies.xi-rpc]
-git = "https://github.com/xi-editor/xi-editor"
-branch = "master"
-
-[dependencies.xi-core-lib]
-git = "https://github.com/xi-editor/xi-editor"
-branch = "master"
-
 [dependencies.clap]
 features = ["suggestions", "color", "wrap_help"]
 version = "2.32.0"
+
+[dependencies.xi-core-lib]
+branch = "master"
+git = "https://github.com/xi-editor/xi-editor"
+
+[dependencies.xi-rpc]
+branch = "master"
+git = "https://github.com/xi-editor/xi-editor"
 
 [workspace]
 members = ["./plugins/*"]

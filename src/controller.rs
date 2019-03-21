@@ -1,4 +1,5 @@
 use ncurses::*;
+use std::char;
 use xi_rpc::Peer;
 
 #[derive(Default)]
@@ -10,7 +11,15 @@ pub struct Controller {
 
 impl Controller {
     pub fn open_file(&mut self, core: Box<dyn Peer>, file_path: &str) {
-        core.send_rpc_notification("client_started", &json!({}));
+        let mut xi_config_dir = dirs::config_dir().expect("failed to retrieve your config dir");
+        xi_config_dir.push("xi");
+
+        core.send_rpc_notification(
+            "client_started",
+            &json!({
+                "config_dir": xi_config_dir.to_str().unwrap(),
+            }),
+        );
 
         let view_id = core
             .send_rpc_request("new_view", &json!({ "file_path": file_path }))
@@ -52,7 +61,8 @@ impl Controller {
 
     pub fn start_keyboard_event_loop(&self, core: Box<dyn Peer>) {
         loop {
-            match getch() {
+            let ch = getch();
+            match ch {
                 KEY_F1 => break,
                 KEY_UP => {
                     core.send_rpc_notification(
@@ -76,6 +86,21 @@ impl Controller {
                     core.send_rpc_notification(
                         "edit",
                         &json!({ "method": "move_right", "view_id": self.view_id}),
+                    );
+                }
+                _ => (),
+            }
+
+            match char::from_u32(ch as u32).expect("Invalid char") {
+                'i' => {
+                    core.send_rpc_notification(
+                        "edit",
+                        &json!({
+                            "method": "insert",
+                            "params": {
+                                "chars": "!",
+                            },
+                            "view_id": self.view_id}),
                     );
                 }
                 _ => (),

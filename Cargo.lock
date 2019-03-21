@@ -1271,8 +1271,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "xi-sample-plugin"
-version = "0.0.0"
+name = "xi-test-plugin"
+version = "0.1.0"
 dependencies = [
  "serde 1.0.89 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.89 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -1,0 +1,22 @@
+[package]
+authors = ["Peltoche <dev@halium.fr>"]
+edition = "2018"
+name = "xi-test-plugin"
+version = "0.1.0"
+workspace = "./../.."
+
+[dependencies]
+serde = "1.0"
+serde_derive = "1.0"
+
+[dependencies.xi-core-lib]
+git = "https://github.com/xi-editor/xi-editor"
+branch = "master"
+
+[dependencies.xi-rope]
+git = "https://github.com/xi-editor/xi-editor"
+branch = "master"
+
+[dependencies.xi-plugin-lib]
+git = "https://github.com/xi-editor/xi-editor"
+branch = "master"
