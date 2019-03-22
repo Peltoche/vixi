@@ -23,7 +23,7 @@ mod event_handler;
 mod logging;
 
 use std::io::{BufRead, BufReader};
-use std::process::{Command, Stdio};
+use std::process::{ChildStderr, Command, Stdio};
 use std::thread;
 
 use controller::config_map::DEFAULT_CONFIG_MAP;
@@ -39,6 +39,23 @@ fn setup_logger() {
         .join(".local/share/vixy/vixi.log");
 
     logging::setup(&logging_path).expect("failed to set the logger")
+}
+
+fn handle_core_stderr(stderr: ChildStderr) {
+    let buf_reader = BufReader::new(stderr);
+    for line in buf_reader.lines() {
+        if let Ok(line) = line {
+            if let Some(idx) = line.find("[INFO] ") {
+                info!("[CORE] {}", line.split_at(idx + 7).1)
+            } else if let Some(idx) = line.find("[WARN] ") {
+                warn!("[CORE] {}", line.split_at(idx + 7).1)
+            } else if let Some(idx) = line.find("[ERROR] ") {
+                error!("[CORE] {}", line.split_at(idx + 8).1)
+            } else {
+                error!("[CORE] {}", line);
+            }
+        }
+    }
 }
 
 fn main() {
@@ -70,14 +87,7 @@ fn main() {
     let raw_peer = rpc_loop.get_raw_peer();
 
     let stderr = core_process.stderr.unwrap();
-    thread::spawn(move || {
-        let buf_reader = BufReader::new(stderr);
-        for line in buf_reader.lines() {
-            if let Ok(line) = line {
-                info!("[core] {}", line);
-            }
-        }
-    });
+    thread::spawn(move || handle_core_stderr(stderr));
 
     // Start a thread used to consume the events from the core process.
     let stdout = core_process.stdout.unwrap();
