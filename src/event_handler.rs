@@ -38,15 +38,16 @@ impl xi_rpc::Handler for EventHandler {
 
 impl EventHandler {
     fn handle_style_change(&mut self, body: &Value) {
+        info!("raw: {}", body);
+
         #[derive(Deserialize, Debug)]
         struct StyleInfo {
-            id: String,
-            fg_color: i32,
+            id: u32,
+            fg_color: u32,
         }
 
         let event: StyleInfo = serde_json::from_value(body.clone()).unwrap();
 
-        info!("foobar");
         info!(
             "color: {:?} - {:?}",
             event.fg_color.to_le_bytes(),

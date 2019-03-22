@@ -23,7 +23,9 @@ mod event_handler;
 mod logging;
 
 use std::io::{BufRead, BufReader};
-use std::process::{ChildStderr, Command, Stdio};
+use std::panic;
+use std::process::{exit, ChildStderr, Command, Stdio};
+use std::sync::{Once, ONCE_INIT};
 use std::thread;
 
 use controller::config_map::DEFAULT_CONFIG_MAP;
@@ -32,6 +34,24 @@ use event_handler::EventHandler;
 
 use ncurses::*;
 use xi_rpc::RpcLoop;
+
+static HANDLER: Once = ONCE_INIT;
+
+fn install_custom_panic_handler() {
+    HANDLER.call_once(|| {
+        let default_handler = panic::take_hook();
+        panic::set_hook(Box::new(move |info| {
+            // Clean the terminal.
+            endwin();
+
+            // Run the default panic handler.
+            default_handler(info);
+
+            // Exit with the status '1'.
+            exit(1);
+        }));
+    })
+}
 
 fn setup_logger() {
     let logging_path = dirs::home_dir()
@@ -102,6 +122,8 @@ fn main() {
     raw();
     keypad(stdscr(), true); // Allow for extended keyboard (like F1).
     noecho();
+
+    install_custom_panic_handler();
 
     controller.open_file(Box::new(raw_peer.clone()), file_path);
     controller.start_keyboard_event_loop(Box::new(raw_peer), &DEFAULT_CONFIG_MAP);
