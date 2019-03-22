@@ -1,25 +1,65 @@
+use std::char;
 use std::collections::HashMap;
 
-#[derive(Deserialize, Debug)]
-pub struct ConfigMap(HashMap<String, String>);
+use crate::controller::config_map::ConfigMap;
 
-lazy_static! {
-    static ref DEFAULT_CONFIG_MAP: HashMap<String, String> = {
-        let mut c = HashMap::new();
-        c.insert(String::from("f1"), String::from("exit"));
+use xi_rpc::Peer;
 
-        // The classic arrow keys
-        c.insert(String::from("key_up"), String::from("move_up"));
-        c.insert(String::from("key_down"), String::from("move_down"));
-        c.insert(String::from("key_left"), String::from("move_left"));
-        c.insert(String::from("key_right"), String::from("move_right"));
+pub type KeyHandler = fn(view_id: &str, &Box<dyn Peer>);
 
-        // The "vim like" keys
-        c.insert(String::from("k"), String::from("move_up"));
-        c.insert(String::from("j"), String::from("move_down"));
-        c.insert(String::from("h"), String::from("move_left"));
-        c.insert(String::from("l"), String::from("move_right"));
+pub struct KeyMap(HashMap<char, KeyHandler>);
 
-        c
-    };
+impl KeyMap {
+    pub fn from_config(config_map: &ConfigMap) -> Result<Self, ()> {
+        let mut key_map = HashMap::with_capacity(config_map.len());
+
+        for (input, method) in config_map {
+            if input.len() == 1 {
+                key_map.insert(
+                    input
+                        .chars()
+                        .nth(0)
+                        .expect("failed to retrieve the first char of an input keymap"),
+                    get_key_handler(&method)
+                        //.ok_or(|| format!("method {} invalid", method))
+                        .expect("failed to retrieve the keymap key handler"),
+                );
+            }
+        }
+
+        Ok(KeyMap(key_map))
+    }
+
+    pub fn get_handler_for_key(&self, key: char) -> Option<&KeyHandler> {
+        self.0.get(&key)
+    }
+}
+
+fn get_key_handler(name: &str) -> Option<KeyHandler> {
+    match name {
+        "move_up" => Some(move_up),
+        "move_down" => Some(move_down),
+        "move_left" => Some(move_left),
+        "move_right" => Some(move_right),
+        _ => None,
+    }
+}
+
+fn move_up(view_id: &str, core: &Box<dyn Peer>) {
+    core.send_rpc_notification("edit", &json!({ "method": "move_up", "view_id": view_id}));
+}
+
+fn move_down(view_id: &str, core: &Box<dyn Peer>) {
+    core.send_rpc_notification("edit", &json!({ "method": "move_down", "view_id": view_id}));
+}
+
+fn move_left(view_id: &str, core: &Box<dyn Peer>) {
+    core.send_rpc_notification("edit", &json!({ "method": "move_left", "view_id": view_id}));
+}
+
+fn move_right(view_id: &str, core: &Box<dyn Peer>) {
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "move_right", "view_id": view_id}),
+    );
 }

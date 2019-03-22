@@ -19,7 +19,7 @@ impl xi_rpc::Handler for EventHandler {
             "available_languages" => debug!("{}", &rpc.method),
             "available_themes" => debug!("{}", &rpc.method),
             "available_plugins" => debug!("{} -> {}", &rpc.method, &rpc.params),
-            "config_changed" => debug!("{} -> {}", &rpc.method, &rpc.params),
+            "config_changed" => debug!("{}", &rpc.method),
             "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
             "language_changed" => debug!("{}: -> {}", &rpc.method, &rpc.params),
             "def_style" => self.handle_style_change(&rpc.params),

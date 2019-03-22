@@ -1,7 +1,10 @@
-mod config_map;
+pub mod config_map;
 mod key_map;
 
 use std::char;
+
+use self::config_map::ConfigMap;
+use self::key_map::KeyMap;
 
 use ncurses::*;
 use xi_rpc::Peer;
@@ -52,39 +55,18 @@ impl Controller {
         );
     }
 
-    pub fn start_keyboard_event_loop(&self, core: Box<dyn Peer>) {
+    pub fn start_keyboard_event_loop(&self, core: Box<dyn Peer>, config_map: &ConfigMap) {
+        let key_map = KeyMap::from_config(config_map).expect("failed to create the key map");
+
         loop {
             let ch = getch();
             match ch {
                 KEY_F1 => break,
-                KEY_UP => {
-                    core.send_rpc_notification(
-                        "edit",
-                        &json!({ "method": "move_up", "view_id": self.view_id}),
-                    );
-                }
-                KEY_DOWN => {
-                    core.send_rpc_notification(
-                        "edit",
-                        &json!({ "method": "move_down", "view_id": self.view_id}),
-                    );
-                }
-                KEY_LEFT => {
-                    core.send_rpc_notification(
-                        "edit",
-                        &json!({ "method": "move_left", "view_id": self.view_id}),
-                    );
-                }
-                KEY_RIGHT => {
-                    core.send_rpc_notification(
-                        "edit",
-                        &json!({ "method": "move_right", "view_id": self.view_id}),
-                    );
-                }
                 _ => (),
             }
 
-            match char::from_u32(ch as u32).expect("Invalid char") {
+            let key = char::from_u32(ch as u32).expect("Invalid char");
+            match key {
                 'i' => {
                     core.send_rpc_notification(
                         "edit",
@@ -96,7 +78,11 @@ impl Controller {
                             "view_id": self.view_id}),
                     );
                 }
-                _ => (),
+                _ => {
+                    if let Some(handler) = key_map.get_handler_for_key(key) {
+                        handler(&self.view_id, &core);
+                    }
+                }
             }
         }
     }

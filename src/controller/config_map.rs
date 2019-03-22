@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
-#[derive(Deserialize, Debug)]
-pub struct ConfigMap(HashMap<String, String>);
+pub type ConfigMap = HashMap<String, String>;
 
 lazy_static! {
-    static ref DEFAULT_CONFIG_MAP: HashMap<String, String> = {
+    pub static ref DEFAULT_CONFIG_MAP: ConfigMap = {
         let mut c = HashMap::new();
         c.insert(String::from("f1"), String::from("exit"));
 

@@ -26,6 +26,7 @@ use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::thread;
 
+use controller::config_map::DEFAULT_CONFIG_MAP;
 use controller::Controller;
 use event_handler::EventHandler;
 
@@ -93,7 +94,7 @@ fn main() {
     noecho();
 
     controller.open_file(Box::new(raw_peer.clone()), file_path);
-    controller.start_keyboard_event_loop(Box::new(raw_peer));
+    controller.start_keyboard_event_loop(Box::new(raw_peer), &DEFAULT_CONFIG_MAP);
 
     endwin();
 }
