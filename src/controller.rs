@@ -51,15 +51,6 @@ impl Controller {
             "params": [0 , self.size_y]
             }),
         );
-
-        //core.send_rpc_notification(
-        //"plugin",
-        //&json!({
-        //"command": "start",
-        //"view_id": self.view_id,
-        //"plugin_name": "syntect",
-        //}),
-        //);
     }
 
     pub fn start_keyboard_event_loop(&self, core: Box<dyn Peer>) {
