@@ -1,8 +1,6 @@
 pub mod config_map;
 mod key_map;
 
-use std::char;
-
 use self::config_map::ConfigMap;
 use self::key_map::KeyMap;
 
@@ -59,29 +57,13 @@ impl Controller {
         let key_map = KeyMap::from_config(config_map).expect("failed to create the key map");
 
         loop {
-            let ch = getch();
-            match ch {
-                KEY_F1 => break,
-                _ => (),
-            }
+            let key = getch();
 
-            let key = char::from_u32(ch as u32).expect("Invalid char");
-            match key {
-                'i' => {
-                    core.send_rpc_notification(
-                        "edit",
-                        &json!({
-                            "method": "insert",
-                            "params": {
-                                "chars": "!",
-                            },
-                            "view_id": self.view_id}),
-                    );
-                }
-                _ => {
-                    if let Some(handler) = key_map.get_handler_for_key(key) {
-                        handler(&self.view_id, &core);
-                    }
+            if let Some(handler) = key_map.get_handler_for_key(key) {
+                let should_continue = handler(&self.view_id, &core);
+
+                if !should_continue {
+                    break;
                 }
             }
         }
