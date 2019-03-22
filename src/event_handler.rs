@@ -16,26 +16,46 @@ impl xi_rpc::Handler for EventHandler {
 
     fn handle_notification(&mut self, ctx: &RpcCtx, rpc: Self::Notification) {
         match rpc.method.as_str() {
-            "available_languages" => debug!("{} -> {}", &rpc.method, &rpc.params),
+            "available_languages" => debug!("{}", &rpc.method),
             "available_themes" => debug!("{}", &rpc.method),
             "available_plugins" => debug!("{} -> {}", &rpc.method, &rpc.params),
-            "config_changed" => debug!("{}", &rpc.method),
+            "config_changed" => debug!("{} -> {}", &rpc.method, &rpc.params),
             "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
-            "language_changed" => debug!("{}", &rpc.method),
+            "language_changed" => debug!("{}: -> {}", &rpc.method, &rpc.params),
+            "def_style" => self.handle_style_change(&rpc.params),
             "update" => self.handle_update(&rpc.params),
-            _ => debug!("unhandled notif {} -> {:#?}", &rpc.method, &rpc.params),
+            _ => debug!("unhandled notif {} -> {}", &rpc.method, &rpc.params),
         };
 
         refresh();
     }
 
     fn handle_request(&mut self, _ctx: &RpcCtx, rpc: Self::Request) -> Result<Value, RemoteError> {
-        debug!("[request] {} -> {:#?}", rpc.method, rpc.params);
+        info!("[request] {} -> {:#?}", rpc.method, rpc.params);
         Ok(json!({}))
     }
 }
 
 impl EventHandler {
+    fn handle_style_change(&mut self, body: &Value) {
+        #[derive(Deserialize, Debug)]
+        struct StyleInfo {
+            id: String,
+            fg_color: i32,
+        }
+
+        let event: StyleInfo = serde_json::from_value(body.clone()).unwrap();
+
+        info!("foobar");
+        info!(
+            "color: {:?} - {:?}",
+            event.fg_color.to_le_bytes(),
+            event.fg_color.to_ne_bytes()
+        );
+
+        //Colour::RGB()
+    }
+
     fn handle_cursor_move(&mut self, ctx: &RpcCtx, body: &Value) {
         #[derive(Deserialize, Debug)]
         struct ScrollInfo {

@@ -13,13 +13,14 @@ extern crate dirs;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate ansi_term;
 
 mod cli;
 mod controller;
 mod event_handler;
 mod logging;
 
-use std::io::BufReader;
+use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::thread;
 
@@ -51,7 +52,7 @@ fn main() {
         //.arg("test-file")
         .stdout(Stdio::piped())
         .stdin(Stdio::piped())
-        .stderr(Stdio::null())
+        .stderr(Stdio::piped())
         .env("RUST_BACKTRACE", "1")
         .spawn()
         .unwrap_or_else(|e| panic!("failed to execute core: {}", e));
@@ -64,6 +65,16 @@ fn main() {
     let mut controller = Controller::default();
     let mut event_handler = EventHandler::default();
     let raw_peer = rpc_loop.get_raw_peer();
+
+    let stderr = core_process.stderr.unwrap();
+    thread::spawn(move || {
+        let buf_reader = BufReader::new(stderr);
+        for line in buf_reader.lines() {
+            if let Ok(line) = line {
+                info!("[core] {}", line);
+            }
+        }
+    });
 
     // Start a thread used to consume the events from the core process.
     let stdout = core_process.stdout.unwrap();

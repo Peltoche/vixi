@@ -1,5 +1,7 @@
-use ncurses::*;
 use std::char;
+use std::collections::HashMap;
+
+use ncurses::*;
 use xi_rpc::Peer;
 
 #[derive(Default)]
@@ -9,6 +11,9 @@ pub struct Controller {
     size_x: i32,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct ConfigMap(HashMap<String, String>);
+
 impl Controller {
     pub fn open_file(&mut self, core: Box<dyn Peer>, file_path: &str) {
         let mut xi_config_dir = dirs::config_dir().expect("failed to retrieve your config dir");
@@ -16,9 +21,7 @@ impl Controller {
 
         core.send_rpc_notification(
             "client_started",
-            &json!({
-                "config_dir": xi_config_dir.to_str().unwrap(),
-            }),
+            &json!({ "config_dir": xi_config_dir.to_str().unwrap(), }),
         );
 
         let view_id = core
