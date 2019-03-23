@@ -124,8 +124,8 @@ fn main() {
     start_color();
 
     install_custom_panic_handler();
-    controller.open_file(Box::new(raw_peer.clone()), file_path);
-    controller.start_keyboard_event_loop(Box::new(raw_peer), &DEFAULT_CONFIG_MAP);
+    controller.open_file(&raw_peer, file_path);
+    controller.start_keyboard_event_loop(&raw_peer, &DEFAULT_CONFIG_MAP);
 
     endwin();
 }

@@ -5,7 +5,7 @@ use crate::controller::config_map::ConfigMap;
 use ncurses::*;
 use xi_rpc::Peer;
 
-pub type KeyHandler = fn(view_id: &str, &Box<dyn Peer>) -> bool;
+pub type KeyHandler = fn(view_id: &str, &dyn Peer) -> bool;
 
 pub struct KeyMap(HashMap<i32, KeyHandler>);
 
@@ -66,26 +66,26 @@ fn get_handler_from_name(name: &str) -> Option<KeyHandler> {
     }
 }
 
-fn exit(_view_id: &str, _core: &Box<dyn Peer>) -> bool {
+fn exit(_view_id: &str, _core: &dyn Peer) -> bool {
     false
 }
 
-fn move_up(view_id: &str, core: &Box<dyn Peer>) -> bool {
+fn move_up(view_id: &str, core: &dyn Peer) -> bool {
     core.send_rpc_notification("edit", &json!({ "method": "move_up", "view_id": view_id}));
     true
 }
 
-fn move_down(view_id: &str, core: &Box<dyn Peer>) -> bool {
+fn move_down(view_id: &str, core: &dyn Peer) -> bool {
     core.send_rpc_notification("edit", &json!({ "method": "move_down", "view_id": view_id}));
     true
 }
 
-fn move_left(view_id: &str, core: &Box<dyn Peer>) -> bool {
+fn move_left(view_id: &str, core: &dyn Peer) -> bool {
     core.send_rpc_notification("edit", &json!({ "method": "move_left", "view_id": view_id}));
     true
 }
 
-fn move_right(view_id: &str, core: &Box<dyn Peer>) -> bool {
+fn move_right(view_id: &str, core: &dyn Peer) -> bool {
     core.send_rpc_notification(
         "edit",
         &json!({ "method": "move_right", "view_id": view_id}),

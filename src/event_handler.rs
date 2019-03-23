@@ -61,18 +61,18 @@ impl EventHandler {
         // fg
         //
         let fg_rgba: [u8; 4] = event.fg_color.to_le_bytes();
-        let fg_r = (fg_rgba[0] as i16) * 4;
-        let fg_g = (fg_rgba[1] as i16) * 4;
-        let fg_b = (fg_rgba[2] as i16) * 4;
+        let fg_r = i16::from(fg_rgba[0]) * 4;
+        let fg_g = i16::from(fg_rgba[1]) * 4;
+        let fg_b = i16::from(fg_rgba[2]) * 4;
         init_color(bg_color_id, fg_r, fg_g, fg_b);
 
         //
         // bg
         //
         let bg_rgba: [u8; 4] = event.bg_color.to_le_bytes();
-        let bg_r = (bg_rgba[0] as i16) * 4;
-        let bg_g = (bg_rgba[1] as i16) * 4;
-        let bg_b = (bg_rgba[2] as i16) * 4;
+        let bg_r = i16::from(bg_rgba[0]) * 4;
+        let bg_g = i16::from(bg_rgba[1]) * 4;
+        let bg_b = i16::from(bg_rgba[2]) * 4;
         init_color(bg_color_id, bg_r, bg_g, bg_b);
 
         //

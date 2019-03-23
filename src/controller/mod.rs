@@ -15,7 +15,7 @@ pub struct Controller {
 }
 
 impl Controller {
-    pub fn open_file(&mut self, core: Box<dyn Peer>, file_path: &str) {
+    pub fn open_file(&mut self, core: &dyn Peer, file_path: &str) {
         let mut xi_config_dir = dirs::config_dir().expect("failed to retrieve your config dir");
         xi_config_dir.push("xi");
 
@@ -61,14 +61,14 @@ impl Controller {
         );
     }
 
-    pub fn start_keyboard_event_loop(&self, core: Box<dyn Peer>, config_map: &ConfigMap) {
+    pub fn start_keyboard_event_loop(&self, core: &dyn Peer, config_map: &ConfigMap) {
         let key_map = KeyMap::from_config(config_map).expect("failed to create the key map");
 
         loop {
             let key = getch();
 
             if let Some(handler) = key_map.get_handler_for_key(key) {
-                let should_continue = handler(&self.view_id, &core);
+                let should_continue = handler(&self.view_id, core.clone());
 
                 if !should_continue {
                     break;
