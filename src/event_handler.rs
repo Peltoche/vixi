@@ -8,10 +8,22 @@ use xi_rpc::{RemoteError, RpcCall, RpcCtx};
 /// Check the `handle_style_change` method documentation for more informations.
 const MAX_STYLE_ID: i16 = 50;
 
+#[derive(Eq, PartialEq, Debug)]
+enum RedrawBehavior {
+    OnlyDirty,
+    Everything,
+}
+
 #[derive(Default, Clone)]
 struct Line {
     raw: String,
     styles: Vec<usize>,
+    /// The "real" line number.
+    ///
+    /// A line wrapped in two lines will keep the same `ln` value.
+    ln: usize,
+    /// Indicate if the line needs to be rendered during the next redraw.
+    is_dirty: bool,
 }
 
 #[derive(Default)]
@@ -19,7 +31,7 @@ pub struct EventHandler {
     /// An index pointing to the Line rendered at the top of the screen.
     ///
     /// Changing its value make the screen scoll up/down.
-    screen_start: i32,
+    screen_start: usize,
     cursor_x: i32,
     cursor_y: i32,
     buffer: Vec<Line>,
@@ -147,11 +159,11 @@ impl EventHandler {
         // TODO: Avoid to check the term size at each event by saving it.
         // This will implicate to have some background process checking the
         // window size changes.
-        let size_y = getmaxy(stdscr());
-        let mut cursor_y = event.line - self.screen_start;
+        let size_y = getmaxy(stdscr()) as usize;
+        let mut cursor_y = event.line - (self.screen_start) as i32;
 
         let mut scroll: bool = false;
-        if cursor_y == size_y {
+        if cursor_y == (size_y as i32) {
             // The cursor is bellow the current screen view. Trigger a scroll.
             self.screen_start += 1;
             scroll = true;
@@ -173,13 +185,13 @@ impl EventHandler {
             ctx.get_peer().send_rpc_notification(
                 "edit",
                 &json!({
-                    "method": "scroll",
-                    "view_id": event.view_id,
-                    "params": [self.screen_start , self.screen_start + size_y]
+                "method": "scroll",
+                "view_id": event.view_id,
+                "params": [self.screen_start , self.screen_start + size_y]
                 }),
             );
 
-            self.redraw_view();
+            self.redraw_view(RedrawBehavior::Everything);
         } else {
             // No scroll needed so it move the cursor without any redraw.
             mv(self.cursor_y, self.cursor_x);
@@ -211,7 +223,7 @@ impl EventHandler {
         #[derive(Deserialize, Debug)]
         struct LineDescription {
             cursor: Option<Vec<i32>>,
-            ln: i32,
+            ln: usize,
             styles: Vec<usize>,
             text: String,
         }
@@ -221,6 +233,7 @@ impl EventHandler {
             #[serde(rename = "op")]
             kind: String,
             n: usize,
+            ln: Option<usize>,
             lines: Option<Vec<LineDescription>>,
         }
 
@@ -239,32 +252,42 @@ impl EventHandler {
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
         let mut new_buffer = Vec::new();
-        let mut old_ix: usize = 0;
+        let mut old_idx: usize = 0;
+        let mut new_idx: usize = 0;
 
         for operation in event.update.operations {
             match operation.kind.as_str() {
                 "copy" => {
-                    for i in 0..operation.n {
-                        new_buffer.push(self.buffer[old_ix + i].clone());
+                    let mut is_dirty = true;
+                    let ln = operation.ln.unwrap();
+                    if old_idx == new_idx {
+                        is_dirty = false;
                     }
 
-                    old_ix += operation.n;
-                }
-                "skip" => old_ix += operation.n,
-                "invalidate" => {
-                    for _ in 0..operation.n {
+                    for i in 0..operation.n {
+                        let old_buffer = &self.buffer[old_idx + i];
                         new_buffer.push(Line {
-                            raw: String::from("????INVALID LINE???????\n").to_owned(),
-                            styles: Vec::new(),
+                            raw: old_buffer.raw.clone(),
+                            styles: old_buffer.styles.clone(),
+                            ln: ln + i,
+                            is_dirty: is_dirty,
                         });
+                        new_idx += 1;
                     }
+
+                    old_idx += operation.n;
                 }
+                "skip" => old_idx += operation.n,
+                "invalidate" => {}
                 "ins" => {
                     for line in operation.lines.unwrap() {
                         new_buffer.push(Line {
                             raw: line.text.to_owned(),
                             styles: line.styles,
+                            ln: line.ln,
+                            is_dirty: true,
                         });
+                        new_idx += 1;
                     }
                 }
                 _ => warn!("unhandled update 2: {:?}", operation),
@@ -272,7 +295,7 @@ impl EventHandler {
         }
 
         self.buffer = new_buffer;
-        self.redraw_view();
+        self.redraw_view(RedrawBehavior::OnlyDirty);
     }
 
     /// Redraw the screen content.
@@ -280,41 +303,41 @@ impl EventHandler {
     /// It take the Line corresponding to `this.buffer[this.screen_start]` and
     /// render it as the top line and fill the screen with all the following
     /// lines.
-    fn redraw_view(&mut self) {
-        clear();
-
-        let size_y = getmaxy(stdscr());
-        let buffer_size = self.buffer.len() as i32;
-
-        let nb_lines_to_draw = if size_y > buffer_size - self.screen_start {
-            buffer_size - self.screen_start
-        } else {
-            size_y
-        };
+    fn redraw_view(&mut self, behavior: RedrawBehavior) {
+        let size_y = getmaxy(stdscr()) as usize;
 
         self.buffer
             .iter()
-            .skip(self.screen_start as usize)
-            .take(nb_lines_to_draw as usize)
-            .for_each(|line| self.print_stylized_line(&line));
+            .skip(self.screen_start)
+            .enumerate()
+            .take_while(|(idx, _)| *idx < size_y)
+            .for_each(|(idx, line)| {
+                if behavior == RedrawBehavior::Everything || line.is_dirty {
+                    self.print_stylized_line(idx, line);
+                }
+            });
 
         mv(self.cursor_y, self.cursor_x);
     }
 
     /// Display the line content with the specified styles.
-    fn print_stylized_line(&self, line: &Line) {
-        let mut idx: usize = 0;
+    fn print_stylized_line(&self, screen_y: usize, line: &Line) {
+        let mut screen_x: usize = 0;
         let mut memory: Option<(usize, usize, usize)> = None;
+
+        // Move the the specified line and clear it.
+        mv(screen_y as i32, 0);
+        clrtoeol();
 
         let line_len = line.raw.len();
         let mut style_iter = line.styles.iter();
         loop {
             let (style_start, style_length, style_id) = if let Some((start, id, length)) = memory {
                 memory = None;
-                (idx + start, id, length)
+                (screen_x + start, id, length)
             } else if let Some(style_start) = style_iter.next() {
                 (
-                    idx + *style_start,
+                    screen_x + *style_start,
                     *style_iter.next().unwrap(),
                     *style_iter.next().unwrap(),
                 )
@@ -326,7 +349,7 @@ impl EventHandler {
                 break;
             }
 
-            if style_start == idx {
+            if style_start == screen_x {
                 let attr = COLOR_PAIR(style_id as i16);
                 attron(attr);
                 addstr(unsafe {
@@ -335,15 +358,15 @@ impl EventHandler {
                 });
                 attroff(attr);
 
-                idx += style_length;
+                screen_x += style_length;
             } else {
-                addstr(unsafe { line.raw.get_unchecked(idx..style_start) });
+                addstr(unsafe { line.raw.get_unchecked(screen_x..style_start) });
 
                 memory = Some((style_start, style_id, style_length));
-                idx = style_start;
+                screen_x = style_start;
             }
         }
 
-        addstr(unsafe { line.raw.get_unchecked(idx..line_len) });
+        addstr(unsafe { line.raw.get_unchecked(screen_x..line_len) });
     }
 }
