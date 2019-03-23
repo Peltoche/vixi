@@ -52,9 +52,9 @@ impl Controller {
         core.send_rpc_notification(
             "edit",
             &json!({
-            "method": "scroll",
-            "view_id": self.view_id,
-            "params": [0 , self.size_y]
+                "method": "scroll",
+                "view_id": self.view_id,
+                "params": [0 , self.size_y + 1] // + 1 bc range not inclusive
             }),
         );
 

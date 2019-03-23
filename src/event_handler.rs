@@ -32,8 +32,8 @@ pub struct EventHandler {
     ///
     /// Changing its value make the screen scoll up/down.
     screen_start: usize,
-    cursor_x: i32,
-    cursor_y: i32,
+    cursor_x: usize,
+    cursor_y: usize,
     buffer: Vec<Line>,
 }
 
@@ -147,11 +147,12 @@ impl EventHandler {
     /// within the screen, it will scroll all the view content by modifying
     /// the `self.screen_start` value.
     fn handle_cursor_move(&mut self, ctx: &RpcCtx, body: &Value) {
+        info!("scroll to -> {}", body);
         #[derive(Deserialize, Debug)]
         struct Event {
             view_id: String,
-            col: i32,
-            line: i32,
+            col: usize,
+            line: usize,
         }
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
@@ -159,25 +160,32 @@ impl EventHandler {
         // TODO: Avoid to check the term size at each event by saving it.
         // This will implicate to have some background process checking the
         // window size changes.
-        let size_y = getmaxy(stdscr()) as usize;
-        let mut cursor_y = event.line - (self.screen_start) as i32;
+        let size_y = getmaxy(stdscr()) as i32;
+        let mut cursor_y = (event.line as i32) - (self.screen_start as i32);
+
+        let old_screen = self.screen_start;
 
         let mut scroll: bool = false;
-        if cursor_y == (size_y as i32) {
+        if cursor_y >= size_y {
             // The cursor is bellow the current screen view. Trigger a scroll.
-            self.screen_start += 1;
+            self.screen_start += (cursor_y - size_y + 1) as usize;
             scroll = true;
-            cursor_y -= 1
+            cursor_y -= cursor_y - size_y + 1
         } else if cursor_y <= -1 {
             // The cursor is abor the current screen view. Trigger a scroll.
-            self.screen_start -= 1;
+            self.screen_start -= (cursor_y).checked_abs().unwrap() as usize;
             scroll = true;
-            cursor_y += 1
+            cursor_y = 0;
         }
 
+        info!(
+            "start: {} - {} -> {} - {}",
+            old_screen, self.cursor_y, self.screen_start, cursor_y,
+        );
+
         // Move the cursor at its new position.
-        self.cursor_x = event.col as i32;
-        self.cursor_y = cursor_y;
+        self.cursor_x = event.col;
+        self.cursor_y = cursor_y as usize;
 
         if scroll {
             // In case of scroll it need to redraw the screen and after it
@@ -187,14 +195,14 @@ impl EventHandler {
                 &json!({
                 "method": "scroll",
                 "view_id": event.view_id,
-                "params": [self.screen_start , self.screen_start + size_y]
+                "params": [self.screen_start , self.screen_start + (size_y as usize) + 1] // + 1 bc range not inclusive
                 }),
             );
 
             self.redraw_view(RedrawBehavior::Everything);
         } else {
             // No scroll needed so it move the cursor without any redraw.
-            mv(self.cursor_y, self.cursor_x);
+            mv(self.cursor_y as i32, self.cursor_x as i32);
         }
     }
 
@@ -317,7 +325,7 @@ impl EventHandler {
                 }
             });
 
-        mv(self.cursor_y, self.cursor_x);
+        mv(self.cursor_y as i32, self.cursor_x as i32);
     }
 
     /// Display the line content with the specified styles.

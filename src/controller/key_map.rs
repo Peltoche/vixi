@@ -46,11 +46,13 @@ impl KeyMap {
 
 fn get_key_from_name(name: &str) -> Option<i32> {
     match name {
+        "f1" => Some(KEY_F1),
         "key_up" => Some(KEY_UP),
         "key_down" => Some(KEY_DOWN),
         "key_left" => Some(KEY_LEFT),
         "key_right" => Some(KEY_RIGHT),
-        "f1" => Some(KEY_F1),
+        "page_up" => Some(KEY_PPAGE),
+        "page_down" => Some(KEY_NPAGE),
         _ => None,
     }
 }
@@ -62,6 +64,8 @@ fn get_handler_from_name(name: &str) -> Option<KeyHandler> {
         "move_left" => Some(move_left),
         "move_right" => Some(move_right),
         "exit" => Some(exit),
+        "page_up" => Some(page_up),
+        "page_down" => Some(page_down),
         _ => None,
     }
 }
@@ -89,6 +93,22 @@ fn move_right(view_id: &str, core: &dyn Peer) -> bool {
     core.send_rpc_notification(
         "edit",
         &json!({ "method": "move_right", "view_id": view_id}),
+    );
+    true
+}
+
+fn page_up(view_id: &str, core: &dyn Peer) -> bool {
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "scroll_page_up", "view_id": view_id}),
+    );
+    true
+}
+
+fn page_down(view_id: &str, core: &dyn Peer) -> bool {
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "scroll_page_down", "view_id": view_id}),
     );
     true
 }

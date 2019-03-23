@@ -12,6 +12,8 @@ lazy_static! {
         c.insert(String::from("key_down"), String::from("move_down"));
         c.insert(String::from("key_left"), String::from("move_left"));
         c.insert(String::from("key_right"), String::from("move_right"));
+        c.insert(String::from("page_up"), String::from("page_up"));
+        c.insert(String::from("page_down"), String::from("page_down"));
 
         // The "vim like" keys
         c.insert(String::from("k"), String::from("move_up"));
