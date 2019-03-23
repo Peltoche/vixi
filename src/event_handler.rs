@@ -138,7 +138,6 @@ impl EventHandler {
             bg_color: u32,
         }
 
-        info!("style change: {}", body);
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
         if event.id > MAX_STYLE_ID {
@@ -324,7 +323,7 @@ impl EventHandler {
                             raw: old_buffer.raw.clone(),
                             styles: old_buffer.styles.clone(),
                             ln: ln + i,
-                            is_dirty: is_dirty,
+                            is_dirty,
                         });
                         new_idx += 1;
                     }
@@ -441,7 +440,7 @@ impl EventHandler {
             }
 
             if style_start == screen_x {
-                let style = self.styles.get(&style_id).unwrap();
+                let style = &self.styles[&style_id];
                 style.set();
                 addstr(unsafe {
                     line.raw

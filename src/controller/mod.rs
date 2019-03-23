@@ -59,7 +59,7 @@ impl Controller {
             let key = getch();
 
             if let Some(handler) = key_map.get_handler_for_key(key) {
-                let should_continue = handler(&self.view_id, core.clone());
+                let should_continue = handler(&self.view_id, core);
 
                 if !should_continue {
                     break;
