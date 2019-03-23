@@ -7,6 +7,7 @@ use xi_rpc::{RemoteError, RpcCall, RpcCtx};
 ///
 /// Check the `handle_style_change` method documentation for more informations.
 const MAX_STYLE_ID: i16 = 50;
+const SPACES_IN_LINE_SECTION: usize = 2;
 
 #[derive(Eq, PartialEq, Debug)]
 enum RedrawBehavior {
@@ -32,9 +33,17 @@ pub struct EventHandler {
     ///
     /// Changing its value make the screen scoll up/down.
     screen_start: usize,
+
+    /// Cursor horizontal positions into the editing screen.
+    ///
+    /// This position take into account the line_section. This means that when
+    /// `cursor_x` is equal to 0, its real position is `len(line_section) + 1`.
     cursor_x: usize,
     cursor_y: usize,
+
     buffer: Vec<Line>,
+    nb_invalid_lines: usize,
+    size_line_section: usize,
 }
 
 impl xi_rpc::Handler for EventHandler {
@@ -50,7 +59,7 @@ impl xi_rpc::Handler for EventHandler {
             "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
             "language_changed" => debug!("{}: -> {}", &rpc.method, &rpc.params),
             "def_style" => self.handle_style_change(&rpc.params),
-            "update" => self.handle_content_update(&rpc.params),
+            "update" => self.handle_content_update(&ctx, &rpc.params),
             _ => debug!("unhandled notif {} -> {}", &rpc.method, &rpc.params),
         };
 
@@ -147,7 +156,6 @@ impl EventHandler {
     /// within the screen, it will scroll all the view content by modifying
     /// the `self.screen_start` value.
     fn handle_cursor_move(&mut self, ctx: &RpcCtx, body: &Value) {
-        info!("scroll to -> {}", body);
         #[derive(Deserialize, Debug)]
         struct Event {
             view_id: String,
@@ -163,8 +171,6 @@ impl EventHandler {
         let size_y = getmaxy(stdscr()) as i32;
         let mut cursor_y = (event.line as i32) - (self.screen_start as i32);
 
-        let old_screen = self.screen_start;
-
         let mut scroll: bool = false;
         if cursor_y >= size_y {
             // The cursor is bellow the current screen view. Trigger a scroll.
@@ -177,11 +183,6 @@ impl EventHandler {
             scroll = true;
             cursor_y = 0;
         }
-
-        info!(
-            "start: {} - {} -> {} - {}",
-            old_screen, self.cursor_y, self.screen_start, cursor_y,
-        );
 
         // Move the cursor at its new position.
         self.cursor_x = event.col;
@@ -202,7 +203,10 @@ impl EventHandler {
             self.redraw_view(RedrawBehavior::Everything);
         } else {
             // No scroll needed so it move the cursor without any redraw.
-            mv(self.cursor_y as i32, self.cursor_x as i32);
+            mv(
+                self.cursor_y as i32,
+                (self.cursor_x + self.size_line_section) as i32,
+            );
         }
     }
 
@@ -218,7 +222,7 @@ impl EventHandler {
     /// - "invalidate" -> Mark some lines as not available because the core
     ///     doesn't have given their content yet.
     /// - "ins" -> Insert some new content.
-    fn handle_content_update(&mut self, body: &Value) {
+    fn handle_content_update(&mut self, ctx: &RpcCtx, body: &Value) {
         #[derive(Deserialize, Debug)]
         struct Annotation {
             #[serde(rename = "type")]
@@ -262,6 +266,7 @@ impl EventHandler {
         let mut new_buffer = Vec::new();
         let mut old_idx: usize = 0;
         let mut new_idx: usize = 0;
+        self.nb_invalid_lines = 0;
 
         for operation in event.update.operations {
             match operation.kind.as_str() {
@@ -286,7 +291,7 @@ impl EventHandler {
                     old_idx += operation.n;
                 }
                 "skip" => old_idx += operation.n,
-                "invalidate" => {}
+                "invalidate" => self.nb_invalid_lines += operation.n,
                 "ins" => {
                     for line in operation.lines.unwrap() {
                         new_buffer.push(Line {
@@ -302,6 +307,30 @@ impl EventHandler {
             }
         }
 
+        // Caculate the size of the line section.
+        //
+        // This size change in function of the number of line du to the size of
+        // the number to render. Count the number of spaces set around the section.
+        let new_size_line_section =
+            (new_buffer.len() + self.nb_invalid_lines).to_string().len() + SPACES_IN_LINE_SECTION;
+        if new_size_line_section != self.size_line_section {
+            let mut size_x = 0;
+            let mut size_y = 0;
+            getmaxyx(stdscr(), &mut size_y, &mut size_x);
+            ctx.get_peer().send_rpc_notification(
+                "edit",
+                &json!({
+                    "method": "resize",
+                    "view_id": event.view_id,
+                    "params": {
+                        "width": size_x - (new_size_line_section as i32),
+                        "height": size_y,
+                    }
+                }),
+            );
+        }
+
+        self.size_line_section = new_size_line_section;
         self.buffer = new_buffer;
         self.redraw_view(RedrawBehavior::OnlyDirty);
     }
@@ -325,7 +354,10 @@ impl EventHandler {
                 }
             });
 
-        mv(self.cursor_y as i32, self.cursor_x as i32);
+        mv(
+            self.cursor_y as i32,
+            (self.cursor_x + self.size_line_section) as i32,
+        );
     }
 
     /// Display the line content with the specified styles.
@@ -336,6 +368,16 @@ impl EventHandler {
         // Move the the specified line and clear it.
         mv(screen_y as i32, 0);
         clrtoeol();
+
+        // Print the line number.
+        addstr(
+            format!(
+                " {:width$} ",
+                line.ln,
+                width = (self.size_line_section - SPACES_IN_LINE_SECTION)
+            )
+            .as_str(),
+        );
 
         let line_len = line.raw.len();
         let mut style_iter = line.styles.iter();
