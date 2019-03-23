@@ -43,6 +43,12 @@ impl Controller {
             }),
         );
 
+        // Paint all the screen with the black color in order to set an uniform
+        // background color.
+        //
+        // TODO: make the background color configurable.
+        bkgd(' ' as chtype | COLOR_PAIR(COLOR_BLACK) as chtype);
+
         core.send_rpc_notification(
             "edit",
             &json!({
