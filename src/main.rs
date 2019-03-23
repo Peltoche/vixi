@@ -13,7 +13,6 @@ extern crate dirs;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate ansi_term;
 #[macro_use]
 extern crate lazy_static;
 
@@ -122,9 +121,9 @@ fn main() {
     raw();
     keypad(stdscr(), true); // Allow for extended keyboard (like F1).
     noecho();
+    start_color();
 
     install_custom_panic_handler();
-
     controller.open_file(Box::new(raw_peer.clone()), file_path);
     controller.start_keyboard_event_loop(Box::new(raw_peer), &DEFAULT_CONFIG_MAP);
 

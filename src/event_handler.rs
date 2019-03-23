@@ -2,12 +2,18 @@ use ncurses::*;
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
 
+#[derive(Default, Clone)]
+struct Line {
+    raw: String,
+    styles: Vec<usize>,
+}
+
 #[derive(Default)]
 pub struct EventHandler {
     screen_start: i32,
     cursor_x: i32,
     cursor_y: i32,
-    buffer: Vec<String>,
+    buffer: Vec<Line>,
 }
 
 impl xi_rpc::Handler for EventHandler {
@@ -38,23 +44,48 @@ impl xi_rpc::Handler for EventHandler {
 
 impl EventHandler {
     fn handle_style_change(&mut self, body: &Value) {
-        info!("raw: {}", body);
-
         #[derive(Deserialize, Debug)]
         struct StyleInfo {
-            id: u32,
+            id: i16,
             fg_color: u32,
+            #[serde(default)]
+            bg_color: u32,
         }
 
         let event: StyleInfo = serde_json::from_value(body.clone()).unwrap();
 
-        info!(
-            "color: {:?} - {:?}",
-            event.fg_color.to_le_bytes(),
-            event.fg_color.to_ne_bytes()
-        );
+        let fg_color_id = 200 + event.id;
+        let bg_color_id = 100 + event.id;
 
-        //Colour::RGB()
+        //
+        // fg
+        //
+        let fg_rgba: [u8; 4] = event.fg_color.to_le_bytes();
+        let fg_r = (fg_rgba[0] as i16) * 4;
+        let fg_g = (fg_rgba[1] as i16) * 4;
+        let fg_b = (fg_rgba[2] as i16) * 4;
+        init_color(bg_color_id, fg_r, fg_g, fg_b);
+
+        //
+        // bg
+        //
+        let bg_rgba: [u8; 4] = event.bg_color.to_le_bytes();
+        let bg_r = (bg_rgba[0] as i16) * 4;
+        let bg_g = (bg_rgba[1] as i16) * 4;
+        let bg_b = (bg_rgba[2] as i16) * 4;
+        init_color(bg_color_id, bg_r, bg_g, bg_b);
+
+        //
+        // pair
+        //
+        let pair_id = event.id;
+
+        init_pair(pair_id, fg_color_id, bg_color_id);
+
+        bkgd(' ' as chtype | COLOR_PAIR(pair_id) as chtype);
+        let mut w: i32 = 0;
+        let mut h: i32 = 0;
+        getmaxyx(stdscr(), &mut h, &mut w);
     }
 
     fn handle_cursor_move(&mut self, ctx: &RpcCtx, body: &Value) {
@@ -104,6 +135,7 @@ impl EventHandler {
     }
 
     fn handle_update(&mut self, body: &Value) {
+        info!("update screen: {}", body);
         #[derive(Deserialize, Debug)]
         struct Annotation {
             #[serde(rename = "type")]
@@ -114,10 +146,10 @@ impl EventHandler {
         }
 
         #[derive(Deserialize, Debug)]
-        struct Line {
+        struct LineDescription {
             cursor: Option<Vec<i32>>,
             ln: i32,
-            styles: Vec<String>,
+            styles: Vec<usize>,
             text: String,
         }
 
@@ -126,7 +158,7 @@ impl EventHandler {
             #[serde(rename = "op")]
             kind: String,
             n: usize,
-            lines: Option<Vec<Line>>,
+            lines: Option<Vec<LineDescription>>,
         }
 
         #[derive(Deserialize, Debug)]
@@ -143,15 +175,14 @@ impl EventHandler {
         }
 
         let event: UpdateEvent = serde_json::from_value(body.clone()).unwrap();
-
-        let mut new_buffer: Vec<String> = Vec::new();
+        let mut new_buffer = Vec::new();
         let mut old_ix: usize = 0;
 
         for operation in event.update.operations {
             match operation.kind.as_str() {
                 "copy" => {
                     for i in 0..operation.n {
-                        new_buffer.push(self.buffer[old_ix + i].to_owned());
+                        new_buffer.push(self.buffer[old_ix + i].clone());
                     }
 
                     old_ix += operation.n;
@@ -159,14 +190,18 @@ impl EventHandler {
                 "skip" => old_ix += operation.n,
                 "invalidate" => {
                     for _ in 0..operation.n {
-                        let line = String::from("????INVALID LINE???????\n").to_owned();
-                        new_buffer.push(line);
+                        new_buffer.push(Line {
+                            raw: String::from("????INVALID LINE???????\n").to_owned(),
+                            styles: Vec::new(),
+                        });
                     }
                 }
                 "ins" => {
                     for line in operation.lines.unwrap() {
-                        let tmp = line.text.to_owned();
-                        new_buffer.push(tmp);
+                        new_buffer.push(Line {
+                            raw: line.text.to_owned(),
+                            styles: line.styles,
+                        });
                     }
                 }
                 _ => warn!("unhandled update 2: {:?}", operation),
@@ -180,23 +215,66 @@ impl EventHandler {
     fn redraw_view(&mut self) {
         clear();
 
-        let size_y = getmaxy(stdscr()) - 1;
+        let size_y = getmaxy(stdscr());
         let buffer_size = self.buffer.len() as i32;
 
         let nb_lines_to_draw = if size_y > buffer_size - self.screen_start {
             buffer_size - self.screen_start
         } else {
-            self.screen_start + size_y
+            size_y
         };
 
-        let mut output = String::new();
         self.buffer
             .iter()
             .skip(self.screen_start as usize)
             .take(nb_lines_to_draw as usize)
-            .for_each(|x| output.push_str(&x));
+            .for_each(|line| self.print_stylized_line(&line));
 
-        addstr(output.as_str());
         mv(self.cursor_y, self.cursor_x);
+    }
+
+    fn print_stylized_line(&self, line: &Line) {
+        let mut idx: usize = 0;
+        let mut memory: Option<(usize, usize, usize)> = None;
+
+        let line_len = line.raw.len();
+        let mut style_iter = line.styles.iter();
+        loop {
+            let (style_start, style_length, style_id) = if let Some((start, id, length)) = memory {
+                memory = None;
+                (idx + start, id, length)
+            } else if let Some(style_start) = style_iter.next() {
+                (
+                    idx + *style_start,
+                    *style_iter.next().unwrap(),
+                    *style_iter.next().unwrap(),
+                )
+            } else {
+                (usize::max_value(), usize::max_value(), usize::max_value())
+            };
+
+            if style_start == usize::max_value() {
+                break;
+            }
+
+            if style_start == idx {
+                let attr = COLOR_PAIR(style_id as i16);
+                attron(attr);
+                addstr(unsafe {
+                    line.raw
+                        .get_unchecked(style_start..(style_start + style_length))
+                });
+                attroff(attr);
+
+                idx += style_length;
+            } else {
+                addstr(unsafe { line.raw.get_unchecked(idx..style_start) });
+
+                memory = Some((style_start, style_id, style_length));
+                idx = style_start;
+            }
+        }
+
+        addstr(unsafe { line.raw.get_unchecked(idx..line_len) });
     }
 }

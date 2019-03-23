@@ -51,6 +51,14 @@ impl Controller {
             "params": [0 , self.size_y]
             }),
         );
+
+        core.send_rpc_notification(
+            "set_language",
+            &json!({
+            "language_id": "Rust",
+            "view_id": self.view_id,
+            }),
+        );
     }
 
     pub fn start_keyboard_event_loop(&self, core: Box<dyn Peer>, config_map: &ConfigMap) {
