@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use ncurses::*;
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
@@ -27,12 +29,40 @@ struct Line {
     is_dirty: bool,
 }
 
+#[derive(Clone)]
+struct Style {
+    id: i16,
+    italic: bool,
+}
+
+impl Style {
+    pub fn set(&self) {
+        let attr = COLOR_PAIR(self.id);
+        attron(attr);
+
+        if self.italic {
+            attron(A_ITALIC());
+        }
+    }
+
+    pub fn unset(&self) {
+        let attr = COLOR_PAIR(self.id);
+        attroff(attr);
+
+        if self.italic {
+            attroff(A_ITALIC());
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct EventHandler {
     /// An index pointing to the Line rendered at the top of the screen.
     ///
     /// Changing its value make the screen scoll up/down.
     screen_start: usize,
+
+    styles: HashMap<usize, Style>,
 
     /// Cursor horizontal positions into the editing screen.
     ///
@@ -101,11 +131,14 @@ impl EventHandler {
         #[derive(Deserialize, Debug)]
         struct Event {
             id: i16,
+            #[serde(default)]
+            italic: bool,
             fg_color: u32,
             #[serde(default)]
             bg_color: u32,
         }
 
+        info!("style change: {}", body);
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
         if event.id > MAX_STYLE_ID {
@@ -148,6 +181,14 @@ impl EventHandler {
 
         // pair
         init_pair(event.id, fg_color_id, bg_color_id);
+
+        self.styles.insert(
+            event.id as usize,
+            Style {
+                id: event.id,
+                italic: event.italic,
+            },
+        );
     }
 
     /// Handle the "scroll_to" event.
@@ -400,13 +441,13 @@ impl EventHandler {
             }
 
             if style_start == screen_x {
-                let attr = COLOR_PAIR(style_id as i16);
-                attron(attr);
+                let style = self.styles.get(&style_id).unwrap();
+                style.set();
                 addstr(unsafe {
                     line.raw
                         .get_unchecked(style_start..(style_start + style_length))
                 });
-                attroff(attr);
+                style.unset();
 
                 screen_x += style_length;
             } else {
