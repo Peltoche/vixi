@@ -135,7 +135,6 @@ impl EventHandler {
     }
 
     fn handle_update(&mut self, body: &Value) {
-        info!("update screen: {}", body);
         #[derive(Deserialize, Debug)]
         struct Annotation {
             #[serde(rename = "type")]
