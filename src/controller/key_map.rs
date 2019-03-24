@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use crate::controller::config_map::ConfigMap;
-use crate::controller::keyboard::*;
+use crate::devices::keyboard::keys::*;
+use crate::devices::keyboard::KeyStroke;
 
 use xi_rpc::Peer;
 

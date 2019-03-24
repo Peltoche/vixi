@@ -18,6 +18,7 @@ extern crate lazy_static;
 
 mod cli;
 mod controller;
+mod devices;
 mod event_handler;
 mod logging;
 

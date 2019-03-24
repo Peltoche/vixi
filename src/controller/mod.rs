@@ -1,10 +1,9 @@
 pub mod config_map;
 mod key_map;
-mod keyboard;
 
 use self::config_map::ConfigMap;
 use self::key_map::{KeyMap, KeyResponse};
-use self::keyboard::Keyboard;
+use crate::devices::keyboard::Keyboard;
 
 use ncurses::*;
 use xi_rpc::Peer;
