@@ -258,10 +258,8 @@ impl EventHandler {
             self.redraw_view(RedrawBehavior::Everything);
         } else {
             // No scroll needed so it move the cursor without any redraw.
-            mv(
-                self.cursor_y as i32,
-                (self.cursor_x + self.size_line_section) as i32,
-            );
+            self.terminal
+                .move_cursor(self.cursor_y, self.cursor_x + self.size_line_section);
         }
     }
 
@@ -409,10 +407,8 @@ impl EventHandler {
                 }
             });
 
-        mv(
-            self.cursor_y as i32,
-            (self.cursor_x + self.size_line_section) as i32,
-        );
+        self.terminal
+            .move_cursor(self.cursor_y, self.cursor_x + self.size_line_section);
     }
 
     /// Display the line content with the specified styles.
@@ -421,7 +417,7 @@ impl EventHandler {
         let mut memory: Option<(usize, usize, usize)> = None;
 
         // Move the the specified line and clear it.
-        mv(screen_y as i32, 0);
+        self.terminal.move_cursor(screen_y, 0);
         clrtoeol();
 
         // Print the line number.

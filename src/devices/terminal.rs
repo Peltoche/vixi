@@ -21,6 +21,10 @@ impl Terminal {
 
         Self {}
     }
+
+    pub fn move_cursor(&self, y: usize, x: usize) {
+        mv(y as i32, x as i32);
+    }
 }
 
 fn install_custom_panic_handler() {
