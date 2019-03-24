@@ -1,8 +1,10 @@
 pub mod config_map;
 mod key_map;
+mod keyboard;
 
 use self::config_map::ConfigMap;
 use self::key_map::{KeyMap, KeyResponse};
+use self::keyboard::Keyboard;
 
 use ncurses::*;
 use xi_rpc::Peer;
@@ -10,6 +12,7 @@ use xi_rpc::Peer;
 #[derive(Default)]
 pub struct Controller {
     view_id: String,
+    keyboard: Keyboard,
 }
 
 impl Controller {
@@ -56,7 +59,7 @@ impl Controller {
         let key_map = KeyMap::from_config(config_map).expect("failed to create the key map");
 
         loop {
-            let key = getch();
+            let key = self.keyboard.get_next_keystroke();
 
             if let Some(handler) = key_map.get_handler_for_key(key) {
                 let res = handler(&self.view_id, core);

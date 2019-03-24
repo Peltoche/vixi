@@ -1,14 +1,13 @@
 use std::collections::HashMap;
 
 use crate::controller::config_map::ConfigMap;
-use crate::controller::Action;
+use crate::controller::keyboard::*;
 
-use ncurses::*;
 use xi_rpc::Peer;
 
 pub type KeyHandler = fn(view_id: &str, &dyn Peer) -> KeyResponse;
 
-pub struct KeyMap(HashMap<i32, KeyHandler>);
+pub struct KeyMap(HashMap<KeyStroke, KeyHandler>);
 
 pub enum KeyResponse {
     Continue,
