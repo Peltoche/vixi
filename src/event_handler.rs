@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::devices::terminal::Terminal;
+
 use ncurses::*;
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
@@ -55,8 +57,8 @@ impl Style {
     }
 }
 
-#[derive(Default)]
 pub struct EventHandler {
+    terminal: Terminal,
     /// An index pointing to the Line rendered at the top of the screen.
     ///
     /// Changing its value make the screen scoll up/down.
@@ -103,6 +105,19 @@ impl xi_rpc::Handler for EventHandler {
 }
 
 impl EventHandler {
+    pub fn new(terminal: Terminal) -> Self {
+        Self {
+            terminal,
+            screen_start: 0,
+            styles: HashMap::new(),
+            cursor_x: 0,
+            cursor_y: 0,
+            buffer: Vec::new(),
+            nb_invalid_lines: 0,
+            size_line_section: 0,
+        }
+    }
+
     /// Handle the "def_style" event.
     ///
     /// This function need to create a new set of background/foreground and save

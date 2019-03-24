@@ -23,35 +23,16 @@ mod event_handler;
 mod logging;
 
 use std::io::{BufRead, BufReader};
-use std::panic;
-use std::process::{exit, ChildStderr, Command, Stdio};
-use std::sync::{Once, ONCE_INIT};
+use std::process::{ChildStderr, Command, Stdio};
 use std::thread;
 
 use controller::config_map::DEFAULT_CONFIG_MAP;
 use controller::Controller;
+use devices::terminal::Terminal;
 use event_handler::EventHandler;
 
 use ncurses::*;
 use xi_rpc::RpcLoop;
-
-static HANDLER: Once = ONCE_INIT;
-
-fn install_custom_panic_handler() {
-    HANDLER.call_once(|| {
-        let default_handler = panic::take_hook();
-        panic::set_hook(Box::new(move |info| {
-            // Clean the terminal.
-            endwin();
-
-            // Run the default panic handler.
-            default_handler(info);
-
-            // Exit with the status '1'.
-            exit(1);
-        }));
-    })
-}
 
 fn setup_logger() {
     let logging_path = dirs::home_dir()
@@ -102,8 +83,9 @@ fn main() {
     let stdin = core_process.stdin.unwrap();
     let mut rpc_loop = RpcLoop::new(stdin);
 
+    let terminal = Terminal::new();
     let mut controller = Controller::default();
-    let mut event_handler = EventHandler::default();
+    let mut event_handler = EventHandler::new(terminal);
     let raw_peer = rpc_loop.get_raw_peer();
 
     let stderr = core_process.stderr.unwrap();
@@ -117,14 +99,6 @@ fn main() {
             .unwrap();
     });
 
-    /* Setup ncurses. */
-    initscr();
-    raw();
-    keypad(stdscr(), true); // Allow for extended keyboard (like F1).
-    noecho();
-    start_color();
-
-    install_custom_panic_handler();
     controller.open_file(&raw_peer, file_path);
     controller.start_keyboard_event_loop(&raw_peer, &DEFAULT_CONFIG_MAP);
 
