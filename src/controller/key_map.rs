@@ -1,13 +1,9 @@
 use std::collections::HashMap;
 
 use crate::controller::actions::Action;
+use crate::controller::verbs::Verb;
 use crate::devices::keyboard::keys::*;
 use crate::devices::keyboard::KeyStroke;
-
-#[derive(Debug)]
-pub enum Verb {
-    Delete,
-}
 
 #[derive(Debug)]
 pub enum Noun {

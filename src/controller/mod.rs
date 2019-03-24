@@ -1,8 +1,9 @@
 mod actions;
 pub mod key_map;
+mod verbs;
 
 use self::actions::Response;
-use self::key_map::{Config, KeyMap, Noun, Verb};
+use self::key_map::{Config, KeyMap, Noun};
 use crate::devices::keyboard::Keyboard;
 use crate::devices::terminal::{RGBColor, Terminal};
 
@@ -81,18 +82,9 @@ impl Controller {
                 let key2 = self.keyboard.get_next_keystroke();
 
                 if let Some(noun) = key_map.nouns.get(&key2) {
-                    match verb {
-                        Verb::Delete => delete(noun),
-                    }
-                    continue;
+                    verbs::run(verb, noun, self.view_id.as_str(), core);
                 }
-
-                continue;
             }
         }
     }
-}
-
-fn delete(noun: &Noun) {
-    info!("delete: {:?}", noun);
 }
