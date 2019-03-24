@@ -1,8 +1,10 @@
+mod actions;
 pub mod config_map;
 mod key_map;
 
+use self::actions::Response;
 use self::config_map::ConfigMap;
-use self::key_map::{KeyMap, KeyResponse};
+use self::key_map::{KeyMap, Noun, Verb};
 use crate::devices::keyboard::Keyboard;
 use crate::devices::terminal::{RGBColor, Terminal};
 
@@ -70,14 +72,29 @@ impl Controller {
         loop {
             let key = self.keyboard.get_next_keystroke();
 
-            if let Some(handler) = key_map.get_handler_for_key(key) {
-                let res = handler(&self.view_id, core);
-
-                match res {
-                    KeyResponse::Continue => {}
-                    KeyResponse::Stop => break,
+            if let Some(action) = key_map.actions.get(&key) {
+                match actions::run(action, self.view_id.as_str(), core) {
+                    Response::Continue => continue,
+                    Response::Stop => break,
                 }
+            }
+
+            if let Some(verb) = key_map.verbs.get(&key) {
+                let key2 = self.keyboard.get_next_keystroke();
+
+                if let Some(noun) = key_map.nouns.get(&key2) {
+                    match verb {
+                        Verb::Delete => delete(noun),
+                    }
+                    continue;
+                }
+
+                continue;
             }
         }
     }
+}
+
+fn delete(noun: &Noun) {
+    info!("delete: {:?}", noun);
 }

@@ -1,57 +1,95 @@
 use std::collections::HashMap;
 
+use crate::controller::actions::Action;
 use crate::controller::config_map::ConfigMap;
 use crate::devices::keyboard::keys::*;
 use crate::devices::keyboard::KeyStroke;
 
-use xi_rpc::Peer;
+#[derive(Debug)]
+pub enum Verb {
+    Delete,
+}
 
-pub type KeyHandler = fn(view_id: &str, &dyn Peer) -> KeyResponse;
+#[derive(Debug)]
+pub enum Noun {
+    Line,
+}
 
-pub struct KeyMap(HashMap<KeyStroke, KeyHandler>);
+#[derive(Debug)]
+pub enum Modifier {}
 
-pub enum KeyResponse {
-    Continue,
-    Stop,
+pub struct KeyMap {
+    pub actions: HashMap<KeyStroke, Action>,
+    pub verbs: HashMap<KeyStroke, Verb>,
+    #[allow(dead_code)]
+    pub modifiers: HashMap<KeyStroke, Modifier>,
+    pub nouns: HashMap<KeyStroke, Noun>,
 }
 
 impl KeyMap {
     pub fn from_config(config_map: &ConfigMap) -> Result<Self, ()> {
-        let mut key_map = HashMap::with_capacity(config_map.len());
+        let mut key_map = KeyMap {
+            actions: HashMap::new(),
+            verbs: HashMap::new(),
+            modifiers: HashMap::new(),
+            nouns: HashMap::new(),
+        };
 
-        for (input, method) in config_map {
-            if input.len() == 1 {
-                let key = input
-                    .chars()
-                    .nth(0)
-                    .expect("failed to retrieve the first char of an input keymap")
-                    as i32;
+        for (key_desc, name) in config_map.verbs.iter() {
+            let keystroke =
+                convert_description_to_keystroke(&key_desc).expect("invalid verb keystroke");
 
-                key_map.insert(
-                    key,
-                    get_handler_from_name(&method)
-                        //.ok_or(|| format!("method {} invalid", method))
-                        .expect("failed to retrieve the keymap key handler"),
-                );
-            } else {
-                key_map.insert(
-                    get_key_from_name(&input).expect("invalid key name"),
-                    get_handler_from_name(&method)
-                        .expect("failed to retrieve the keymap key handler"),
-                );
+            let verb = match name.as_str() {
+                "delete" => Some(Verb::Delete),
+                _ => None,
             }
+            .expect("invalid verb name");
+
+            key_map.verbs.insert(keystroke, verb);
         }
 
-        Ok(KeyMap(key_map))
-    }
+        for (key_desc, name) in config_map.nouns.iter() {
+            let keystroke =
+                convert_description_to_keystroke(&key_desc).expect("invalid noun keystroke");
 
-    pub fn get_handler_for_key(&self, key: i32) -> Option<&KeyHandler> {
-        self.0.get(&key)
+            let noun = match name.as_str() {
+                "line" => Some(Noun::Line),
+                _ => None,
+            }
+            .expect("invalid noun name");
+
+            key_map.nouns.insert(keystroke, noun);
+        }
+
+        for (key_desc, name) in config_map.actions.iter() {
+            let keystroke =
+                convert_description_to_keystroke(&key_desc).expect("invalid action keystroke");
+
+            let action = match name.as_str() {
+                "move_up" => Some(Action::MoveUp),
+                "move_down" => Some(Action::MoveDown),
+                "move_left" => Some(Action::MoveLeft),
+                "move_right" => Some(Action::MoveRight),
+                "exit" => Some(Action::Exit),
+                "page_up" => Some(Action::PageUp),
+                "page_down" => Some(Action::PageDown),
+                _ => None,
+            }
+            .expect("invalid action name");
+
+            key_map.actions.insert(keystroke, action);
+        }
+
+        Ok(key_map)
     }
 }
 
-fn get_key_from_name(name: &str) -> Option<i32> {
-    match name {
+fn convert_description_to_keystroke(description: &str) -> Option<KeyStroke> {
+    if description.len() == 1 {
+        return Some(description.chars().nth(0).unwrap() as i32);
+    }
+
+    match description {
         "f1" => Some(KEY_F1),
         "key_up" => Some(KEY_UP),
         "key_down" => Some(KEY_DOWN),
@@ -61,60 +99,4 @@ fn get_key_from_name(name: &str) -> Option<i32> {
         "page_down" => Some(KEY_NPAGE),
         _ => None,
     }
-}
-
-fn get_handler_from_name(name: &str) -> Option<KeyHandler> {
-    match name {
-        "move_up" => Some(move_up),
-        "move_down" => Some(move_down),
-        "move_left" => Some(move_left),
-        "move_right" => Some(move_right),
-        "exit" => Some(exit),
-        "page_up" => Some(page_up),
-        "page_down" => Some(page_down),
-        _ => None,
-    }
-}
-
-fn exit(_view_id: &str, _core: &dyn Peer) -> KeyResponse {
-    KeyResponse::Stop
-}
-
-fn move_up(view_id: &str, core: &dyn Peer) -> KeyResponse {
-    core.send_rpc_notification("edit", &json!({ "method": "move_up", "view_id": view_id}));
-    KeyResponse::Continue
-}
-
-fn move_down(view_id: &str, core: &dyn Peer) -> KeyResponse {
-    core.send_rpc_notification("edit", &json!({ "method": "move_down", "view_id": view_id}));
-    KeyResponse::Continue
-}
-
-fn move_left(view_id: &str, core: &dyn Peer) -> KeyResponse {
-    core.send_rpc_notification("edit", &json!({ "method": "move_left", "view_id": view_id}));
-    KeyResponse::Continue
-}
-
-fn move_right(view_id: &str, core: &dyn Peer) -> KeyResponse {
-    core.send_rpc_notification(
-        "edit",
-        &json!({ "method": "move_right", "view_id": view_id}),
-    );
-    KeyResponse::Continue
-}
-
-fn page_up(view_id: &str, core: &dyn Peer) -> KeyResponse {
-    core.send_rpc_notification(
-        "edit",
-        &json!({ "method": "scroll_page_up", "view_id": view_id}),
-    );
-    KeyResponse::Continue
-}
-
-fn page_down(view_id: &str, core: &dyn Peer) -> KeyResponse {
-    core.send_rpc_notification(
-        "edit",
-        &json!({ "method": "scroll_page_down", "view_id": view_id}),
-    );
-    KeyResponse::Continue
 }

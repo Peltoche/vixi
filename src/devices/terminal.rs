@@ -185,13 +185,14 @@ impl LineReWriter {
 
 fn install_custom_panic_handler() {
     HANDLER.call_once(|| {
-        let default_handler = panic::take_hook();
+        //let default_handler = panic::take_hook();
         panic::set_hook(Box::new(move |info| {
             // Clean the terminal.
             endwin();
 
             // Run the default panic handler.
-            default_handler(info);
+            //default_handler(info);
+            println!("{:?}", info);
 
             // Exit with the status '1'.
             exit(1);
