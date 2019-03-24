@@ -5,7 +5,7 @@ mod verbs;
 use self::actions::Response;
 use self::key_map::{Config, KeyMap, Noun};
 use crate::devices::keyboard::Keyboard;
-use crate::devices::terminal::{RGBColor, Terminal};
+use crate::devices::terminal::Terminal;
 
 use xi_rpc::Peer;
 
@@ -38,13 +38,6 @@ impl Controller {
             .expect("failed to create the new view");
 
         self.view_id = view_id.as_str().unwrap().to_string();
-
-        // Paint all the screen with the black color in order to set an uniform
-        // background color.
-        //
-        // TODO: make the background color configurable.
-        self.terminal
-            .set_background_color(RGBColor { r: 0, g: 0, b: 0 });
 
         let (size_y, _) = self.terminal.get_size();
         core.send_rpc_notification(

@@ -57,7 +57,15 @@ impl Terminal {
 
         install_custom_panic_handler();
 
-        Self {}
+        let terminal = Self {};
+
+        // Paint all the screen with the black color in order to set an uniform
+        // background color.
+        //
+        // TODO: make the background color configurable.
+        terminal.set_background_color(RGBColor { r: 0, g: 0, b: 0 });
+
+        terminal
     }
 
     pub fn move_cursor(&self, y: u32, x: u32) {
