@@ -2,7 +2,7 @@ pub mod config_map;
 mod key_map;
 
 use self::config_map::ConfigMap;
-use self::key_map::KeyMap;
+use self::key_map::{KeyMap, KeyResponse};
 
 use ncurses::*;
 use xi_rpc::Peer;
@@ -59,10 +59,11 @@ impl Controller {
             let key = getch();
 
             if let Some(handler) = key_map.get_handler_for_key(key) {
-                let should_continue = handler(&self.view_id, core);
+                let res = handler(&self.view_id, core);
 
-                if !should_continue {
-                    break;
+                match res {
+                    KeyResponse::Continue => {}
+                    KeyResponse::Stop => break,
                 }
             }
         }

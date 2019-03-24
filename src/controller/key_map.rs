@@ -1,13 +1,19 @@
 use std::collections::HashMap;
 
 use crate::controller::config_map::ConfigMap;
+use crate::controller::Action;
 
 use ncurses::*;
 use xi_rpc::Peer;
 
-pub type KeyHandler = fn(view_id: &str, &dyn Peer) -> bool;
+pub type KeyHandler = fn(view_id: &str, &dyn Peer) -> KeyResponse;
 
 pub struct KeyMap(HashMap<i32, KeyHandler>);
+
+pub enum KeyResponse {
+    Continue,
+    Stop,
+}
 
 impl KeyMap {
     pub fn from_config(config_map: &ConfigMap) -> Result<Self, ()> {
@@ -70,45 +76,45 @@ fn get_handler_from_name(name: &str) -> Option<KeyHandler> {
     }
 }
 
-fn exit(_view_id: &str, _core: &dyn Peer) -> bool {
-    false
+fn exit(_view_id: &str, _core: &dyn Peer) -> KeyResponse {
+    KeyResponse::Stop
 }
 
-fn move_up(view_id: &str, core: &dyn Peer) -> bool {
+fn move_up(view_id: &str, core: &dyn Peer) -> KeyResponse {
     core.send_rpc_notification("edit", &json!({ "method": "move_up", "view_id": view_id}));
-    true
+    KeyResponse::Continue
 }
 
-fn move_down(view_id: &str, core: &dyn Peer) -> bool {
+fn move_down(view_id: &str, core: &dyn Peer) -> KeyResponse {
     core.send_rpc_notification("edit", &json!({ "method": "move_down", "view_id": view_id}));
-    true
+    KeyResponse::Continue
 }
 
-fn move_left(view_id: &str, core: &dyn Peer) -> bool {
+fn move_left(view_id: &str, core: &dyn Peer) -> KeyResponse {
     core.send_rpc_notification("edit", &json!({ "method": "move_left", "view_id": view_id}));
-    true
+    KeyResponse::Continue
 }
 
-fn move_right(view_id: &str, core: &dyn Peer) -> bool {
+fn move_right(view_id: &str, core: &dyn Peer) -> KeyResponse {
     core.send_rpc_notification(
         "edit",
         &json!({ "method": "move_right", "view_id": view_id}),
     );
-    true
+    KeyResponse::Continue
 }
 
-fn page_up(view_id: &str, core: &dyn Peer) -> bool {
+fn page_up(view_id: &str, core: &dyn Peer) -> KeyResponse {
     core.send_rpc_notification(
         "edit",
         &json!({ "method": "scroll_page_up", "view_id": view_id}),
     );
-    true
+    KeyResponse::Continue
 }
 
-fn page_down(view_id: &str, core: &dyn Peer) -> bool {
+fn page_down(view_id: &str, core: &dyn Peer) -> KeyResponse {
     core.send_rpc_notification(
         "edit",
         &json!({ "method": "scroll_page_down", "view_id": view_id}),
     );
-    true
+    KeyResponse::Continue
 }
