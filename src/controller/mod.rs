@@ -1,10 +1,8 @@
 mod actions;
-pub mod config_map;
-mod key_map;
+pub mod key_map;
 
 use self::actions::Response;
-use self::config_map::ConfigMap;
-use self::key_map::{KeyMap, Noun, Verb};
+use self::key_map::{Config, KeyMap, Noun, Verb};
 use crate::devices::keyboard::Keyboard;
 use crate::devices::terminal::{RGBColor, Terminal};
 
@@ -66,7 +64,7 @@ impl Controller {
         );
     }
 
-    pub fn start_keyboard_event_loop(&self, core: &dyn Peer, config_map: &ConfigMap) {
+    pub fn start_keyboard_event_loop(&self, core: &dyn Peer, config_map: &Config) {
         let key_map = KeyMap::from_config(config_map).expect("failed to create the key map");
 
         loop {

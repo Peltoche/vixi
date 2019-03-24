@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::controller::actions::Action;
-use crate::controller::config_map::ConfigMap;
 use crate::devices::keyboard::keys::*;
 use crate::devices::keyboard::KeyStroke;
 
@@ -18,6 +17,52 @@ pub enum Noun {
 #[derive(Debug)]
 pub enum Modifier {}
 
+#[derive(Default)]
+pub struct Config {
+    pub actions: HashMap<String, String>,
+    pub verbs: HashMap<String, String>,
+    #[allow(dead_code)]
+    pub modifiers: HashMap<String, String>,
+    pub nouns: HashMap<String, String>,
+}
+
+lazy_static! {
+    pub static ref DEFAULT_CONFIG: Config = {
+        let mut c= Config::default();
+
+        //
+        // Action keys
+        //
+        c.actions.insert(String::from("f1"), String::from("exit"));
+
+        // The classic arrow keys.
+        c.actions.insert(String::from("key_up"), String::from("move_up"));
+        c.actions.insert(String::from("key_down"), String::from("move_down"));
+        c.actions.insert(String::from("key_left"), String::from("move_left"));
+        c.actions.insert(String::from("key_right"), String::from("move_right"));
+        c.actions.insert(String::from("page_up"), String::from("page_up"));
+        c.actions.insert(String::from("page_down"), String::from("page_down"));
+
+        // The "vim like" keys.
+        c.actions.insert(String::from("k"), String::from("move_up"));
+        c.actions.insert(String::from("j"), String::from("move_down"));
+        c.actions.insert(String::from("h"), String::from("move_left"));
+        c.actions.insert(String::from("l"), String::from("move_right"));
+
+        //
+        // Verb keys
+        //
+        c.verbs.insert(String::from("d"), String::from("delete"));
+
+        //
+        // Nouns keys
+        //
+        c.nouns.insert(String::from("l"), String::from("line"));
+
+        c
+    };
+}
+
 pub struct KeyMap {
     pub actions: HashMap<KeyStroke, Action>,
     pub verbs: HashMap<KeyStroke, Verb>,
@@ -27,7 +72,7 @@ pub struct KeyMap {
 }
 
 impl KeyMap {
-    pub fn from_config(config_map: &ConfigMap) -> Result<Self, ()> {
+    pub fn from_config(config_map: &Config) -> Result<Self, ()> {
         let mut key_map = KeyMap {
             actions: HashMap::new(),
             verbs: HashMap::new(),

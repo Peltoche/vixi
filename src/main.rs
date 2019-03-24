@@ -26,7 +26,7 @@ use std::io::{BufRead, BufReader};
 use std::process::{ChildStderr, Command, Stdio};
 use std::thread;
 
-use controller::config_map::DEFAULT_CONFIG_MAP;
+use controller::key_map::DEFAULT_CONFIG;
 use controller::Controller;
 use devices::keyboard::Keyboard;
 use devices::terminal::Terminal;
@@ -104,7 +104,7 @@ fn main() {
     });
 
     controller.open_file(&raw_peer, file_path);
-    controller.start_keyboard_event_loop(&raw_peer, &DEFAULT_CONFIG_MAP);
+    controller.start_keyboard_event_loop(&raw_peer, &DEFAULT_CONFIG);
 
     endwin();
 }
