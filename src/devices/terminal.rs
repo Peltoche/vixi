@@ -10,6 +10,11 @@ use ncurses::*;
 /// Check the `handle_style_change` method documentation for more informations.
 const MAX_STYLE_ID: u32 = 50;
 
+/// The color id for the default background.
+const BG_COLOR_ID: u32 = 253;
+/// The pair id for the default background/foreground.
+const DEFAULT_COLOR_PAIR_ID: i16 = 254;
+
 static HANDLER: Once = ONCE_INIT;
 
 pub struct Style {
@@ -38,6 +43,7 @@ pub struct RGBColor {
     pub b: u8,
 }
 
+#[derive(Clone)]
 pub struct Terminal {}
 
 impl Terminal {
@@ -103,31 +109,32 @@ impl Terminal {
         }
 
         // Name space the foreground and background colors.
-        let fg_color_id = 50 + (color_id as i16);
-        let bg_color_id = 100 + (color_id as i16);
+        let fg_color_id = 50 + color_id;
+        let bg_color_id = 100 + color_id;
 
-        // The `init_color` method take a color range within [0..1000] but the
-        // RGBA colors received by the event are within the range [0..256]. A
-        // rough conversion is done by multiplying the event values by 4.
-        init_color(
-            fg_color_id,
-            i16::from(fg_color.r) * 4,
-            i16::from(fg_color.g) * 4,
-            i16::from(fg_color.b) * 4,
-        );
-
-        init_color(
-            bg_color_id,
-            i16::from(bg_color.r) * 4,
-            i16::from(bg_color.g) * 4,
-            i16::from(bg_color.b) * 4,
-        );
+        self.save_color(fg_color_id, fg_color);
+        self.save_color(bg_color_id, bg_color);
 
         // Save the new pair of background/foreground color with the `init_pair`
         // method. The pair_id must be the same id than the style id in order
         // to avoid translation during the rendering (cf: the
         // `print_stylized_line` method).
-        init_pair(color_id as i16, fg_color_id, bg_color_id);
+        init_pair(color_id as i16, fg_color_id as i16, bg_color_id as i16);
+    }
+
+    pub fn set_background_color(&self, color: RGBColor) {
+        // Create a new pair with the background color and white as foreground
+        // color.
+        self.save_color(BG_COLOR_ID, color);
+        init_pair(
+            DEFAULT_COLOR_PAIR_ID as i16,
+            COLOR_WHITE,
+            BG_COLOR_ID as i16,
+        );
+
+        // Apply this color everywhere in the terminal by setting some ` ` char
+        // everywhere.
+        bkgd(' ' as chtype | COLOR_PAIR(DEFAULT_COLOR_PAIR_ID) as chtype);
     }
 
     pub fn set_style(&self, style: &Style) {
@@ -146,6 +153,18 @@ impl Terminal {
         if style.italic {
             attroff(A_ITALIC());
         }
+    }
+
+    /// The `init_color` method take a color range within [0..1000] but the
+    /// RGBA colors received by the event are within the range [0..256]. A
+    /// rough conversion is done by multiplying the event values by 4.
+    fn save_color(&self, id: u32, color: RGBColor) {
+        init_color(
+            id as i16,
+            i16::from(color.r) * 4,
+            i16::from(color.g) * 4,
+            i16::from(color.b) * 4,
+        );
     }
 }
 

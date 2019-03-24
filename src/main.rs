@@ -28,6 +28,7 @@ use std::thread;
 
 use controller::config_map::DEFAULT_CONFIG_MAP;
 use controller::Controller;
+use devices::keyboard::Keyboard;
 use devices::terminal::Terminal;
 use event_handler::EventHandler;
 
@@ -83,8 +84,11 @@ fn main() {
     let stdin = core_process.stdin.unwrap();
     let mut rpc_loop = RpcLoop::new(stdin);
 
+    // Load the devices
     let terminal = Terminal::new();
-    let mut controller = Controller::default();
+    let keyboard = Keyboard::default();
+
+    let mut controller = Controller::new(terminal.clone(), keyboard);
     let mut event_handler = EventHandler::new(terminal);
     let raw_peer = rpc_loop.get_raw_peer();
 

@@ -4,17 +4,25 @@ mod key_map;
 use self::config_map::ConfigMap;
 use self::key_map::{KeyMap, KeyResponse};
 use crate::devices::keyboard::Keyboard;
+use crate::devices::terminal::{RGBColor, Terminal};
 
-use ncurses::*;
 use xi_rpc::Peer;
 
-#[derive(Default)]
 pub struct Controller {
-    view_id: String,
+    terminal: Terminal,
     keyboard: Keyboard,
+    view_id: String,
 }
 
 impl Controller {
+    pub fn new(terminal: Terminal, keyboard: Keyboard) -> Self {
+        Self {
+            terminal,
+            keyboard,
+            view_id: String::new(),
+        }
+    }
+
     pub fn open_file(&mut self, core: &dyn Peer, file_path: &str) {
         let mut xi_config_dir = dirs::config_dir().expect("failed to retrieve your config dir");
         xi_config_dir.push("xi");
@@ -34,14 +42,16 @@ impl Controller {
         // background color.
         //
         // TODO: make the background color configurable.
-        bkgd(' ' as chtype | COLOR_PAIR(COLOR_BLACK) as chtype);
+        self.terminal
+            .set_background_color(RGBColor { r: 0, g: 0, b: 0 });
 
+        let (size_y, _) = self.terminal.get_size();
         core.send_rpc_notification(
             "edit",
             &json!({
                 "method": "scroll",
                 "view_id": self.view_id,
-                "params": [0 ,getmaxy(stdscr()) + 1] // + 1 bc range not inclusive
+                "params": [0 ,size_y + 1] // + 1 bc range not inclusive
             }),
         );
 
