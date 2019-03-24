@@ -14,5 +14,16 @@ pub fn run(verb: &Verb, noun: &Noun, view_id: &str, core: &dyn Peer) {
 }
 
 fn delete(noun: &Noun, view_id: &str, core: &dyn Peer) {
-    info!("delete: {:?}", noun);
+    match noun {
+        Noun::Line => {} //_ => {
+                         //warn!("delete doesn't handle the {:?}", noun);
+                         //return;
+                         //}
+    }
+
+    info!("delete line");
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "delete_line", "view_id": view_id}),
+    );
 }
