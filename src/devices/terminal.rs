@@ -1,8 +1,19 @@
+use std::collections::HashMap;
 use std::panic;
 use std::process::exit;
 use std::sync::{Once, ONCE_INIT};
 
+use crate::event_handler::Line;
+
 use ncurses::*;
+
+#[derive(Eq, PartialEq, Debug)]
+pub enum RedrawBehavior {
+    OnlyDirty,
+    Everything,
+}
+
+const SPACES_IN_LINE_SECTION: u32 = 2;
 
 /// The style id is used to override the ncurses default colors and save the
 /// style color. If this number is two hight, some color conflicts will appeares.
@@ -11,14 +22,20 @@ use ncurses::*;
 const MAX_STYLE_ID: u32 = 50;
 
 /// The color id for the default background.
-const BG_COLOR_ID: u32 = 253;
+const BG_STYLE_ID: u32 = 253;
 /// The pair id for the default background/foreground.
 const DEFAULT_COLOR_PAIR_ID: i16 = 254;
 
+const SELECTION_STYLE_ID: u32 = 0;
+const SEARCH_RESULT_STYLE_ID: u32 = 1;
+
+const SELECTION_COLOR_NAMESPACE: u32 = 150;
+
 static HANDLER: Once = ONCE_INIT;
 
+#[derive(Debug, Clone, Copy)]
 pub struct Style {
-    pub color_id: u32,
+    pub style_id: u32,
     pub italic: bool,
 }
 
@@ -34,6 +51,7 @@ pub struct Style {
 /// let white = RGBColor{r: 255, g: 255, b: 255}
 /// let red = RGBColor{r: 255, g: 0, b: 0}
 /// ```
+#[derive(Debug, Clone, Copy)]
 pub struct RGBColor {
     /// red
     pub r: u8,
@@ -43,8 +61,11 @@ pub struct RGBColor {
     pub b: u8,
 }
 
-#[derive(Clone)]
-pub struct Terminal {}
+#[derive(Clone, Debug, Default)]
+pub struct Terminal {
+    styles: HashMap<u32, Style>,
+    size_line_section: u32,
+}
 
 impl Terminal {
     pub fn new() -> Self {
@@ -54,10 +75,21 @@ impl Terminal {
         keypad(stdscr(), true); // Allow for extended keyboard (like F1).
         noecho();
         start_color();
+        //scrollok();
 
         install_custom_panic_handler();
 
-        let terminal = Self {};
+        let mut terminal = Self::default();
+
+        // Save the color for the selection.
+        terminal.save_color(SELECTION_STYLE_ID, RGBColor { r: 250, g: 0, b: 0 });
+        // Save the color for the search.
+        terminal.save_style_set(
+            SEARCH_RESULT_STYLE_ID,
+            RGBColor { r: 250, g: 0, b: 0 },
+            RGBColor { r: 250, g: 0, b: 0 },
+            false,
+        );
 
         // Paint all the screen with the black color in order to set an uniform
         // background color.
@@ -69,11 +101,7 @@ impl Terminal {
     }
 
     pub fn move_cursor(&self, y: u32, x: u32) {
-        mv(y as i32, x as i32);
-    }
-
-    pub fn rewrite_line(&self, y: usize) -> LineReWriter {
-        LineReWriter::new(y)
+        mv(y as i32, (x + self.size_line_section) as i32);
     }
 
     /// Return the screen size in term of characters.
@@ -108,8 +136,14 @@ impl Terminal {
     /// the colors_pairs saved will override the foreground colors and the
     /// foreground colors will override the background colors leading to some
     /// randome colors sets.
-    pub fn save_color_set(&mut self, color_id: u32, fg_color: RGBColor, bg_color: RGBColor) {
-        if color_id > MAX_STYLE_ID {
+    pub fn save_style_set(
+        &mut self,
+        style_id: u32,
+        fg_color: RGBColor,
+        bg_color: RGBColor,
+        italic: bool,
+    ) {
+        if style_id > MAX_STYLE_ID {
             error!(
                 "the new style id is greater than {}, this will load to some randome colors.",
                 MAX_STYLE_ID
@@ -117,27 +151,42 @@ impl Terminal {
         }
 
         // Name space the foreground and background colors.
-        let fg_color_id = 50 + color_id;
-        let bg_color_id = 100 + color_id;
+        let fg_style_id = 50 + style_id;
+        let bg_style_id = 100 + style_id;
+        let selected_style_id = SELECTION_COLOR_NAMESPACE + style_id;
 
-        self.save_color(fg_color_id, fg_color);
-        self.save_color(bg_color_id, bg_color);
+        self.save_color(fg_style_id, fg_color);
+        self.save_color(bg_style_id, bg_color);
 
         // Save the new pair of background/foreground color with the `init_pair`
         // method. The pair_id must be the same id than the style id in order
         // to avoid translation during the rendering (cf: the
         // `print_stylized_line` method).
-        init_pair(color_id as i16, fg_color_id as i16, bg_color_id as i16);
+        init_pair(style_id as i16, fg_style_id as i16, bg_style_id as i16);
+        init_pair(
+            selected_style_id as i16,
+            fg_style_id as i16,
+            SELECTION_STYLE_ID as i16,
+        );
+
+        // Save the other metas into a map.
+        self.styles.insert(
+            style_id,
+            Style {
+                style_id: style_id,
+                italic: italic,
+            },
+        );
     }
 
     pub fn set_background_color(&self, color: RGBColor) {
         // Create a new pair with the background color and white as foreground
         // color.
-        self.save_color(BG_COLOR_ID, color);
+        self.save_color(BG_STYLE_ID, color);
         init_pair(
             DEFAULT_COLOR_PAIR_ID as i16,
             COLOR_WHITE,
-            BG_COLOR_ID as i16,
+            BG_STYLE_ID as i16,
         );
 
         // Apply this color everywhere in the terminal by setting some ` ` char
@@ -145,21 +194,112 @@ impl Terminal {
         bkgd(' ' as chtype | COLOR_PAIR(DEFAULT_COLOR_PAIR_ID) as chtype);
     }
 
-    pub fn set_style(&self, style: &Style) {
-        let attr = COLOR_PAIR(style.color_id as i16);
-        attron(attr);
+    /// Redraw the screen content.
+    ///
+    /// It take the Line corresponding to `this.buffer[this.screen_start]` and
+    /// render it as the top line and fill the screen with all the following
+    /// lines.
+    pub fn redraw_view(
+        &mut self,
+        buffer_start: u32,
+        behavior: RedrawBehavior,
+        buffer: &[Line],
+        invalid_lines: usize,
+    ) {
+        // Caculate the size of the line section.
+        //
+        // This size change in function of the number of line du to the size of
+        // the number to render. Count the number of spaces set around the section.
+        let new_size_line_section =
+            ((buffer.len() + invalid_lines).to_string().len()) as u32 + SPACES_IN_LINE_SECTION;
+        if new_size_line_section > self.size_line_section {}
+        self.size_line_section = new_size_line_section;
 
-        if style.italic {
-            attron(A_ITALIC());
+        let (size_y, _) = self.get_size();
+
+        let buffer_len = if buffer.len() as u32 - buffer_start < size_y {
+            buffer.len()
+        } else {
+            size_y as usize
+        };
+
+        let mut screen_line = 0;
+        let buffer_iter = buffer.iter().skip(buffer_start as usize).take(buffer_len);
+        for line in buffer_iter {
+            if behavior == RedrawBehavior::Everything || line.is_dirty {
+                self.rewrite_line(screen_line, &line);
+            }
+            screen_line += 1;
         }
     }
 
-    pub fn unset_style(&self, style: &Style) {
-        let attr = COLOR_PAIR(style.color_id as i16);
-        attroff(attr);
+    fn rewrite_line(&mut self, line_number: usize, line: &Line) {
+        #[derive(Clone, Debug)]
+        struct CharStyle {
+            style_id: u32,
+            selected: bool,
+            italic: bool,
+        }
 
-        if style.italic {
-            attroff(A_ITALIC());
+        mv(line_number as i32, 0);
+        clrtoeol();
+
+        // Print the line number.
+        addstr(
+            format!(
+                " {:width$} ",
+                line.ln,
+                width = (self.size_line_section - SPACES_IN_LINE_SECTION) as usize
+            )
+            .as_str(),
+        );
+
+        let mut style_map: Vec<CharStyle> = Vec::with_capacity(line.raw.len());
+        style_map.resize(
+            line.raw.len(),
+            CharStyle {
+                style_id: BG_STYLE_ID,
+                selected: false,
+                italic: false,
+            },
+        );
+
+        let mut idx = 0;
+        let mut style_iter = line.styles.iter();
+        for _ in 0..line.styles.len() / 3 {
+            let style_start = (*style_iter.next().unwrap()) as i32;
+            let style_length = (*style_iter.next().unwrap()) as i32;
+            let style_id = (*style_iter.next().unwrap()) as u32;
+
+            let style = self.styles.get(&style_id);
+
+            for i in idx + style_start..idx + style_start + style_length {
+                let char_style = &mut style_map[i as usize];
+
+                if style_id == SELECTION_STYLE_ID {
+                    char_style.selected = true;
+                } else {
+                    char_style.style_id = style_id;
+
+                    if style.unwrap().italic {
+                        char_style.italic = true;
+                    }
+                }
+            }
+            idx += style_start + style_length;
+        }
+
+        let mut content_iter = line.raw.chars().into_iter();
+        for style in style_map.iter() {
+            let attrs = if style.italic { A_ITALIC() } else { A_NORMAL() };
+
+            let style_id = if style.selected {
+                SELECTION_COLOR_NAMESPACE + style.style_id
+            } else {
+                style.style_id
+            };
+
+            addch(content_iter.next().unwrap() as chtype | attrs | COLOR_PAIR(style_id as i16));
         }
     }
 
@@ -176,31 +316,15 @@ impl Terminal {
     }
 }
 
-pub struct LineReWriter {}
-
-impl LineReWriter {
-    pub fn new(line: usize) -> Self {
-        mv(line as i32, 0);
-        clrtoeol();
-
-        Self {}
-    }
-
-    pub fn push_str(&mut self, s: &str) {
-        addstr(s);
-    }
-}
-
 fn install_custom_panic_handler() {
     HANDLER.call_once(|| {
-        //let default_handler = panic::take_hook();
+        let default_handler = panic::take_hook();
         panic::set_hook(Box::new(move |info| {
             // Clean the terminal.
             endwin();
 
             // Run the default panic handler.
-            //default_handler(info);
-            println!("{:?}", info);
+            default_handler(info);
 
             // Exit with the status '1'.
             exit(1);

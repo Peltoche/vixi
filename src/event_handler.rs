@@ -1,28 +1,18 @@
-use std::collections::HashMap;
-
-use crate::devices::terminal::{RGBColor, Style, Terminal};
+use crate::devices::terminal::{RGBColor, RedrawBehavior, Terminal};
 
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
 
-const SPACES_IN_LINE_SECTION: u32 = 2;
-
-#[derive(Eq, PartialEq, Debug)]
-enum RedrawBehavior {
-    OnlyDirty,
-    Everything,
-}
-
 #[derive(Default, Clone)]
-struct Line {
-    raw: String,
-    styles: Vec<usize>,
+pub struct Line {
+    pub raw: String,
+    pub styles: Vec<i32>,
     /// The "real" line number.
     ///
     /// A line wrapped in two lines will keep the same `ln` value.
-    ln: usize,
+    pub ln: usize,
     /// Indicate if the line needs to be rendered during the next redraw.
-    is_dirty: bool,
+    pub is_dirty: bool,
 }
 
 pub struct EventHandler {
@@ -31,8 +21,7 @@ pub struct EventHandler {
     ///
     /// Changing its value make the screen scoll up/down.
     screen_start: u32,
-
-    styles: HashMap<usize, Style>,
+    screen_width: u32,
 
     /// Cursor horizontal positions into the editing screen.
     ///
@@ -43,7 +32,6 @@ pub struct EventHandler {
 
     buffer: Vec<Line>,
     nb_invalid_lines: usize,
-    size_line_section: u32,
 }
 
 impl xi_rpc::Handler for EventHandler {
@@ -77,12 +65,11 @@ impl EventHandler {
         Self {
             terminal,
             screen_start: 0,
-            styles: HashMap::new(),
             cursor_x: 0,
             cursor_y: 0,
+            screen_width: 0,
             buffer: Vec::new(),
             nb_invalid_lines: 0,
-            size_line_section: 0,
         }
     }
 
@@ -104,8 +91,8 @@ impl EventHandler {
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
         // Override the default colors with the `init_color` method. Once save
-        // those colors will be accessible via the ids `fg_color_id` and
-        // `bg_color_id`.
+        // those colors will be accessible via the ids `fg_style_id` and
+        // `bg_style_id`.
         //
 
         // fg
@@ -123,15 +110,8 @@ impl EventHandler {
             b: bg_rgba[2],
         };
 
-        self.terminal.save_color_set(event.id, fg_color, bg_color);
-
-        self.styles.insert(
-            event.id as usize,
-            Style {
-                color_id: event.id,
-                italic: event.italic,
-            },
-        );
+        self.terminal
+            .save_style_set(event.id, fg_color, bg_color, event.italic);
     }
 
     /// Handle the "scroll_to" event.
@@ -178,17 +158,21 @@ impl EventHandler {
             ctx.get_peer().send_rpc_notification(
                 "edit",
                 &json!({
-                "method": "scroll",
-                "view_id": event.view_id,
-                "params": [self.screen_start , self.screen_start + size_y  + 1] // + 1 bc range not inclusive
+                    "method": "scroll",
+                    "view_id": event.view_id,
+                    "params": [self.screen_start , self.screen_start + size_y  + 1] // + 1 bc range not inclusive
                 }),
             );
 
-            self.redraw_view(RedrawBehavior::Everything);
+            self.terminal.redraw_view(
+                self.screen_start,
+                RedrawBehavior::Everything,
+                &self.buffer,
+                self.nb_invalid_lines,
+            );
         } else {
             // No scroll needed so it move the cursor without any redraw.
-            self.terminal
-                .move_cursor(self.cursor_y, self.cursor_x + self.size_line_section);
+            self.terminal.move_cursor(self.cursor_y, self.cursor_x);
         }
     }
 
@@ -208,17 +192,17 @@ impl EventHandler {
         #[derive(Deserialize, Debug)]
         struct Annotation {
             #[serde(rename = "type")]
-            annotation_type: String,
+            kind: String,
             n: usize,
             payloads: Option<()>,
-            ranges: Vec<Vec<i32>>,
+            ranges: Vec<[usize; 4]>,
         }
 
         #[derive(Deserialize, Debug)]
         struct LineDescription {
             cursor: Option<Vec<i32>>,
             ln: usize,
-            styles: Vec<usize>,
+            styles: Vec<i32>,
             text: String,
         }
 
@@ -243,6 +227,23 @@ impl EventHandler {
             view_id: String,
             update: Update,
         }
+
+        //let define_selection_for_line =
+        //|n, annotations: &Vec<Annotation>, margin| -> Vec<[usize; 2]> {
+        //let mut res = Vec::new();
+        //for annotation in annotations {
+        //if annotation.kind != "selection" {
+        //continue;
+        //}
+
+        //for range in annotation.ranges.iter() {
+        //if n >= range[0] && n <= range[2] {
+        //res.push([range[1] + margin, range[3] + margin]);
+        //}
+        //}
+        //}
+        //res
+        //};
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
         let mut new_buffer = Vec::new();
@@ -289,111 +290,28 @@ impl EventHandler {
             }
         }
 
-        // Caculate the size of the line section.
-        //
-        // This size change in function of the number of line du to the size of
-        // the number to render. Count the number of spaces set around the section.
-        let new_size_line_section = ((new_buffer.len() + self.nb_invalid_lines).to_string().len())
-            as u32
-            + SPACES_IN_LINE_SECTION;
-        if new_size_line_section != self.size_line_section {
-            let (size_y, size_x) = self.terminal.get_size();
+        let (size_y, size_x) = self.terminal.get_size();
+        if size_x != self.screen_width {
             ctx.get_peer().send_rpc_notification(
                 "edit",
                 &json!({
                     "method": "resize",
                     "view_id": event.view_id,
                     "params": {
-                        "width": size_x - new_size_line_section ,
+                        "width": size_x  ,
                         "height": size_y,
                     }
                 }),
             );
         }
 
-        self.size_line_section = new_size_line_section;
         self.buffer = new_buffer;
-        self.redraw_view(RedrawBehavior::OnlyDirty);
-    }
-
-    /// Redraw the screen content.
-    ///
-    /// It take the Line corresponding to `this.buffer[this.screen_start]` and
-    /// render it as the top line and fill the screen with all the following
-    /// lines.
-    fn redraw_view(&mut self, behavior: RedrawBehavior) {
-        let (size_y, _) = self.terminal.get_size();
-
-        self.buffer
-            .iter()
-            .skip(self.screen_start as usize)
-            .enumerate()
-            .take_while(|(idx, _)| (*idx as u32) < size_y)
-            .for_each(|(idx, line)| {
-                if behavior == RedrawBehavior::Everything || line.is_dirty {
-                    self.print_stylized_line(idx, line);
-                }
-            });
-
-        self.terminal
-            .move_cursor(self.cursor_y, self.cursor_x + self.size_line_section);
-    }
-
-    /// Display the line content with the specified styles.
-    fn print_stylized_line(&self, screen_y: usize, line: &Line) {
-        let mut screen_x: usize = 0;
-        let mut memory: Option<(usize, usize, usize)> = None;
-
-        let mut line_writer = self.terminal.rewrite_line(screen_y);
-
-        // Print the line number.
-        line_writer.push_str(
-            format!(
-                " {:width$} ",
-                line.ln,
-                width = (self.size_line_section - SPACES_IN_LINE_SECTION) as usize
-            )
-            .as_str(),
+        self.terminal.redraw_view(
+            self.screen_start,
+            RedrawBehavior::OnlyDirty,
+            &self.buffer,
+            self.nb_invalid_lines,
         );
-
-        let line_len = line.raw.len();
-        let mut style_iter = line.styles.iter();
-        loop {
-            let (style_start, style_length, style_id) = if let Some((start, id, length)) = memory {
-                memory = None;
-                (screen_x + start, id, length)
-            } else if let Some(style_start) = style_iter.next() {
-                (
-                    screen_x + *style_start,
-                    *style_iter.next().unwrap(),
-                    *style_iter.next().unwrap(),
-                )
-            } else {
-                (usize::max_value(), usize::max_value(), usize::max_value())
-            };
-
-            if style_start == usize::max_value() {
-                break;
-            }
-
-            if style_start == screen_x {
-                let style = &self.styles[&style_id];
-                self.terminal.set_style(&style);
-                line_writer.push_str(unsafe {
-                    line.raw
-                        .get_unchecked(style_start..(style_start + style_length))
-                });
-                self.terminal.unset_style(&style);
-
-                screen_x += style_length;
-            } else {
-                line_writer.push_str(unsafe { line.raw.get_unchecked(screen_x..style_start) });
-
-                memory = Some((style_start, style_id, style_length));
-                screen_x = style_start;
-            }
-        }
-
-        line_writer.push_str(unsafe { line.raw.get_unchecked(screen_x..line_len) });
+        self.terminal.move_cursor(self.cursor_y, self.cursor_x);
     }
 }

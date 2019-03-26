@@ -24,6 +24,6 @@ fn delete(noun: &Noun, view_id: &str, core: &dyn Peer) {
     info!("delete line");
     core.send_rpc_notification(
         "edit",
-        &json!({ "method": "delete_forward", "view_id": view_id}),
+        &json!({ "method": "move_right_and_modify_selection", "view_id": view_id}),
     );
 }
