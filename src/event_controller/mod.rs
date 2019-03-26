@@ -42,8 +42,8 @@ pub struct EventController {
     /// An index pointing to the Line rendered at the top of the screen.
     ///
     /// Changing its value make the screen scoll up/down.
-    screen_start: u32,
-    screen_width: u32,
+    screen_start: usize,
+    screen_width: usize,
 
     /// Cursor positions into the editing screen.
     ///
@@ -158,12 +158,12 @@ impl EventController {
         let mut scroll: bool = false;
         if cursor_y >= (size_y as i32) {
             // The cursor is bellow the current screen view. Trigger a scroll.
-            self.screen_start += (cursor_y as u32) - size_y + 1;
+            self.screen_start += (cursor_y as usize) - size_y + 1;
             scroll = true;
             cursor_y -= cursor_y - (size_y as i32) + 1
         } else if cursor_y <= -1 {
             // The cursor is abor the current screen view. Trigger a scroll.
-            self.screen_start -= cursor_y.checked_abs().unwrap() as u32;
+            self.screen_start -= cursor_y.checked_abs().unwrap() as usize;
             scroll = true;
             cursor_y = 0;
         }
@@ -180,15 +180,12 @@ impl EventController {
                 &json!({
                     "method": "scroll",
                     "view_id": event.view_id,
-                    "params": [self.screen_start , self.screen_start + size_y  + 1] // + 1 bc range not inclusive
+                    "params": [self.screen_start , self.screen_start + (size_y as usize)  + 1] // + 1 bc range not inclusive
                 }),
             );
 
-            self.terminal.redraw_view(
-                self.screen_start as usize,
-                RedrawBehavior::Everything,
-                &self.buffer,
-            );
+            self.terminal
+                .redraw_view(self.screen_start, RedrawBehavior::Everything, &self.buffer);
         } else {
             // No scroll needed so it move the cursor without any redraw.
             self.terminal.move_cursor(&self.cursor);
@@ -246,23 +243,6 @@ impl EventController {
             view_id: String,
             update: Update,
         }
-
-        //let define_selection_for_line =
-        //|n, annotations: &Vec<Annotation>, margin| -> Vec<[usize; 2]> {
-        //let mut res = Vec::new();
-        //for annotation in annotations {
-        //if annotation.kind != "selection" {
-        //continue;
-        //}
-
-        //for range in annotation.ranges.iter() {
-        //if n >= range[0] && n <= range[2] {
-        //res.push([range[1] + margin, range[3] + margin]);
-        //}
-        //}
-        //}
-        //res
-        //};
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
         let mut new_buffer = Buffer::default();
@@ -324,11 +304,8 @@ impl EventController {
         }
 
         self.buffer = new_buffer;
-        self.terminal.redraw_view(
-            self.screen_start as usize,
-            RedrawBehavior::OnlyDirty,
-            &self.buffer,
-        );
+        self.terminal
+            .redraw_view(self.screen_start, RedrawBehavior::OnlyDirty, &self.buffer);
         self.terminal.move_cursor(&self.cursor);
     }
 }

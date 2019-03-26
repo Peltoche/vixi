@@ -108,12 +108,12 @@ impl Terminal {
     }
 
     /// Return the screen size in term of characters.
-    pub fn get_size(&self) -> (u32, u32) {
+    pub fn get_size(&self) -> (usize, usize) {
         let mut size_x = 0;
         let mut size_y = 0;
         getmaxyx(stdscr(), &mut size_y, &mut size_x);
 
-        (size_y as u32, size_x as u32)
+        (size_y as usize, size_x as usize)
     }
 
     pub fn redraw(&mut self) {
