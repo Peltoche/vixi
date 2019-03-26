@@ -27,7 +27,6 @@ const BG_STYLE_ID: u32 = 253;
 const DEFAULT_COLOR_PAIR_ID: i16 = 254;
 
 const SELECTION_STYLE_ID: u32 = 0;
-const SEARCH_RESULT_STYLE_ID: u32 = 1;
 
 const SELECTION_COLOR_NAMESPACE: u32 = 150;
 
@@ -79,16 +78,18 @@ impl Terminal {
 
         install_custom_panic_handler();
 
-        let mut terminal = Self::default();
+        let terminal = Self::default();
 
-        // Save the color for the selection.
-        terminal.save_color(SELECTION_STYLE_ID, RGBColor { r: 250, g: 0, b: 0 });
-        // Save the color for the search.
-        terminal.save_style_set(
-            SEARCH_RESULT_STYLE_ID,
-            RGBColor { r: 250, g: 0, b: 0 },
-            RGBColor { r: 250, g: 0, b: 0 },
-            false,
+        // Save the background color for the selection.
+        //
+        // TODO: make the background color configurable.
+        terminal.save_color(
+            SELECTION_STYLE_ID,
+            RGBColor {
+                r: 70,
+                g: 70,
+                b: 70,
+            },
         );
 
         // Paint all the screen with the black color in order to set an uniform
