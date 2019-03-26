@@ -3,7 +3,7 @@ use std::panic;
 use std::process::exit;
 use std::sync::{Once, ONCE_INIT};
 
-use crate::event_controller::Line;
+use crate::event_controller::{Buffer, Line};
 
 use ncurses::*;
 
@@ -199,32 +199,33 @@ impl Terminal {
     /// It take the Line corresponding to `this.buffer[this.screen_start]` and
     /// render it as the top line and fill the screen with all the following
     /// lines.
-    pub fn redraw_view(
-        &mut self,
-        buffer_start: u32,
-        behavior: RedrawBehavior,
-        buffer: &[Line],
-        invalid_lines: usize,
-    ) {
+    pub fn redraw_view(&mut self, buffer_start: usize, behavior: RedrawBehavior, buffer: &Buffer) {
         // Caculate the size of the line section.
         //
         // This size change in function of the number of line du to the size of
         // the number to render. Count the number of spaces set around the section.
         let new_size_line_section =
-            ((buffer.len() + invalid_lines).to_string().len()) as u32 + SPACES_IN_LINE_SECTION;
-        if new_size_line_section > self.size_line_section {}
+            (buffer.total_len().to_string().len()) as u32 + SPACES_IN_LINE_SECTION;
         self.size_line_section = new_size_line_section;
 
-        let (size_y, _) = self.get_size();
+        let (screen_size_y, _) = self.get_size();
 
-        let buffer_len = if buffer.len() as u32 - buffer_start < size_y {
-            buffer.len()
+        let buffer_len = if buffer.lines_availables_after(buffer_start) < screen_size_y as usize {
+            // The number of lines inside the buffer is less than the available lines on the screen so
+            // it print all the remaining of the buffer.
+            buffer.lines_availables_after(buffer_start)
         } else {
-            size_y as usize
+            // The number of lines inside the buffer is greater than the available lines on the screen so
+            // it print only what the screen is able to show.
+            screen_size_y as usize
         };
 
         let mut screen_line = 0;
-        let buffer_iter = buffer.iter().skip(buffer_start as usize).take(buffer_len);
+        let buffer_iter = buffer
+            .lines
+            .iter()
+            .skip(buffer_start as usize)
+            .take(buffer_len);
         for line in buffer_iter {
             if behavior == RedrawBehavior::Everything || line.is_dirty {
                 self.rewrite_line(screen_line, &line);

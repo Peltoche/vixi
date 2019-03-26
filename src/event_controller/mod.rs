@@ -4,6 +4,22 @@ use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
 
 #[derive(Default, Clone)]
+pub struct Buffer {
+    pub lines: Vec<Line>,
+    pub nb_invalid_lines: usize,
+}
+
+impl Buffer {
+    pub fn total_len(&self) -> usize {
+        self.lines.len() + self.nb_invalid_lines
+    }
+
+    pub fn lines_availables_after(&self, start: usize) -> usize {
+        self.lines.len() - start
+    }
+}
+
+#[derive(Default, Clone)]
 pub struct Line {
     pub raw: String,
     pub styles: Vec<i32>,
@@ -29,9 +45,7 @@ pub struct EventController {
     /// `cursor_x` is equal to 0, its real position is `len(line_section) + 1`.
     cursor_x: u32,
     cursor_y: u32,
-
-    buffer: Vec<Line>,
-    nb_invalid_lines: usize,
+    buffer: Buffer,
 }
 
 impl xi_rpc::Handler for EventController {
@@ -68,8 +82,7 @@ impl EventController {
             cursor_x: 0,
             cursor_y: 0,
             screen_width: 0,
-            buffer: Vec::new(),
-            nb_invalid_lines: 0,
+            buffer: Buffer::default(),
         }
     }
 
@@ -165,10 +178,9 @@ impl EventController {
             );
 
             self.terminal.redraw_view(
-                self.screen_start,
+                self.screen_start as usize,
                 RedrawBehavior::Everything,
                 &self.buffer,
-                self.nb_invalid_lines,
             );
         } else {
             // No scroll needed so it move the cursor without any redraw.
@@ -246,10 +258,9 @@ impl EventController {
         //};
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
-        let mut new_buffer = Vec::new();
+        let mut new_buffer = Buffer::default();
         let mut old_idx: usize = 0;
         let mut new_idx: usize = 0;
-        self.nb_invalid_lines = 0;
 
         for operation in event.update.operations {
             match operation.kind.as_str() {
@@ -261,8 +272,8 @@ impl EventController {
                     }
 
                     for i in 0..operation.n {
-                        let old_buffer = &self.buffer[old_idx + i];
-                        new_buffer.push(Line {
+                        let old_buffer = &self.buffer.lines[old_idx + i];
+                        new_buffer.lines.push(Line {
                             raw: old_buffer.raw.clone(),
                             styles: old_buffer.styles.clone(),
                             ln: ln + i,
@@ -274,10 +285,10 @@ impl EventController {
                     old_idx += operation.n;
                 }
                 "skip" => old_idx += operation.n,
-                "invalidate" => self.nb_invalid_lines += operation.n,
+                "invalidate" => new_buffer.nb_invalid_lines += operation.n,
                 "ins" => {
                     for line in operation.lines.unwrap() {
-                        new_buffer.push(Line {
+                        new_buffer.lines.push(Line {
                             raw: line.text.to_owned(),
                             styles: line.styles,
                             ln: line.ln,
@@ -307,10 +318,9 @@ impl EventController {
 
         self.buffer = new_buffer;
         self.terminal.redraw_view(
-            self.screen_start,
+            self.screen_start as usize,
             RedrawBehavior::OnlyDirty,
             &self.buffer,
-            self.nb_invalid_lines,
         );
         self.terminal.move_cursor(self.cursor_y, self.cursor_x);
     }
