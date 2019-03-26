@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use crate::controller::actions::Action;
-use crate::controller::verbs::Verb;
 use crate::devices::keyboard::keys::*;
 use crate::devices::keyboard::KeyStroke;
+use crate::input_controller::actions::Action;
+use crate::input_controller::verbs::Verb;
 
 #[derive(Debug)]
 pub enum Noun {

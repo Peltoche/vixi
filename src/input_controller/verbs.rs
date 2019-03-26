@@ -1,4 +1,4 @@
-use crate::controller::Noun;
+use crate::input_controller::Noun;
 
 use xi_rpc::Peer;
 

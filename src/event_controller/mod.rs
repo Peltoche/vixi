@@ -15,7 +15,7 @@ pub struct Line {
     pub is_dirty: bool,
 }
 
-pub struct EventHandler {
+pub struct EventController {
     terminal: Terminal,
     /// An index pointing to the Line rendered at the top of the screen.
     ///
@@ -34,7 +34,7 @@ pub struct EventHandler {
     nb_invalid_lines: usize,
 }
 
-impl xi_rpc::Handler for EventHandler {
+impl xi_rpc::Handler for EventController {
     type Notification = RpcCall;
     type Request = RpcCall;
 
@@ -60,7 +60,7 @@ impl xi_rpc::Handler for EventHandler {
     }
 }
 
-impl EventHandler {
+impl EventController {
     pub fn new(terminal: Terminal) -> Self {
         Self {
             terminal,

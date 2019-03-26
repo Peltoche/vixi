@@ -3,7 +3,7 @@ use std::panic;
 use std::process::exit;
 use std::sync::{Once, ONCE_INIT};
 
-use crate::event_handler::Line;
+use crate::event_controller::Line;
 
 use ncurses::*;
 

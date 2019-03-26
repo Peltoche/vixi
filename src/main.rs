@@ -17,20 +17,20 @@ extern crate serde_derive;
 extern crate lazy_static;
 
 mod cli;
-mod controller;
 mod devices;
-mod event_handler;
+mod event_controller;
+mod input_controller;
 mod logging;
 
 use std::io::{BufRead, BufReader};
 use std::process::{ChildStderr, Command, Stdio};
 use std::thread;
 
-use controller::key_map::DEFAULT_CONFIG;
-use controller::Controller;
 use devices::keyboard::Keyboard;
 use devices::terminal::Terminal;
-use event_handler::EventHandler;
+use event_controller::EventController;
+use input_controller::key_map::DEFAULT_CONFIG;
+use input_controller::Controller;
 
 use ncurses::*;
 use xi_rpc::RpcLoop;
@@ -89,7 +89,7 @@ fn main() {
     let keyboard = Keyboard::default();
 
     let mut controller = Controller::new(terminal.clone(), keyboard);
-    let mut event_handler = EventHandler::new(terminal);
+    let mut event_handler = EventController::new(terminal);
     let raw_peer = rpc_loop.get_raw_peer();
 
     let stderr = core_process.stderr.unwrap();
