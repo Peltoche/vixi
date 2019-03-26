@@ -3,7 +3,7 @@ use std::panic;
 use std::process::exit;
 use std::sync::{Once, ONCE_INIT};
 
-use crate::event_controller::{Buffer, Line};
+use crate::event_controller::{Buffer, Cursor, Line};
 
 use ncurses::*;
 
@@ -100,8 +100,11 @@ impl Terminal {
         terminal
     }
 
-    pub fn move_cursor(&self, y: u32, x: u32) {
-        mv(y as i32, (x + self.size_line_section) as i32);
+    /// Move the cursor into the text space.
+    ///
+    /// This translate a position into the text area into a screen position.
+    pub fn move_cursor(&self, cursor: &Cursor) {
+        mv(cursor.y as i32, (cursor.x + self.size_line_section) as i32);
     }
 
     /// Return the screen size in term of characters.

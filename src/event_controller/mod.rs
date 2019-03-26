@@ -20,6 +20,12 @@ impl Buffer {
 }
 
 #[derive(Default, Clone)]
+pub struct Cursor {
+    pub y: u32,
+    pub x: u32,
+}
+
+#[derive(Default, Clone)]
 pub struct Line {
     pub raw: String,
     pub styles: Vec<i32>,
@@ -39,12 +45,14 @@ pub struct EventController {
     screen_start: u32,
     screen_width: u32,
 
-    /// Cursor horizontal positions into the editing screen.
+    /// Cursor positions into the editing screen.
     ///
     /// This position take into account the line_section. This means that when
-    /// `cursor_x` is equal to 0, its real position is `len(line_section) + 1`.
-    cursor_x: u32,
-    cursor_y: u32,
+    /// `cursor.x` is equal to 0, its real position is calculated dynamically
+    /// base on the size of the line section.
+    cursor: Cursor,
+
+    /// Buffer containing all the lines informations.
     buffer: Buffer,
 }
 
@@ -79,9 +87,8 @@ impl EventController {
         Self {
             terminal,
             screen_start: 0,
-            cursor_x: 0,
-            cursor_y: 0,
             screen_width: 0,
+            cursor: Cursor::default(),
             buffer: Buffer::default(),
         }
     }
@@ -162,8 +169,8 @@ impl EventController {
         }
 
         // Move the cursor at its new position.
-        self.cursor_x = event.col;
-        self.cursor_y = cursor_y as u32;
+        self.cursor.x = event.col;
+        self.cursor.y = cursor_y as u32;
 
         if scroll {
             // In case of scroll it need to redraw the screen and after it
@@ -184,7 +191,7 @@ impl EventController {
             );
         } else {
             // No scroll needed so it move the cursor without any redraw.
-            self.terminal.move_cursor(self.cursor_y, self.cursor_x);
+            self.terminal.move_cursor(&self.cursor);
         }
     }
 
@@ -322,6 +329,6 @@ impl EventController {
             RedrawBehavior::OnlyDirty,
             &self.buffer,
         );
-        self.terminal.move_cursor(self.cursor_y, self.cursor_x);
+        self.terminal.move_cursor(&self.cursor);
     }
 }
