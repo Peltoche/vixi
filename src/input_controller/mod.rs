@@ -1,19 +1,24 @@
-mod actions;
-pub mod key_map;
-mod verbs;
+pub mod actions;
+mod normal_mode;
 
-use self::actions::Response;
-use self::key_map::{Config, KeyMap, Noun};
+use self::actions::Actions;
+use self::normal_mode::{NormalMode, Response};
 use crate::devices::keyboard::Keyboard;
 use crate::devices::terminal::Terminal;
 
 use failure::Error;
 use xi_rpc::Peer;
 
+enum Mode {
+    Normal,
+}
+
 pub struct Controller {
     terminal: Terminal,
     keyboard: Keyboard,
     view_id: String,
+    normal_mode: NormalMode,
+    mode: Mode,
 }
 
 impl Controller {
@@ -22,6 +27,8 @@ impl Controller {
             terminal,
             keyboard,
             view_id: String::new(),
+            normal_mode: NormalMode::default(),
+            mode: Mode::Normal,
         }
     }
 
@@ -62,29 +69,22 @@ impl Controller {
         Ok(())
     }
 
-    pub fn start_keyboard_event_loop(
-        &self,
-        core: &dyn Peer,
-        config_map: &Config,
-    ) -> Result<(), Error> {
-        let key_map = KeyMap::from_config(config_map)?;
+    pub fn start_keyboard_event_loop(&self, core: &dyn Peer) -> Result<(), Error> {
+        let actions = Actions::default();
 
         loop {
             let key = self.keyboard.get_next_keystroke();
 
-            if let Some(action) = key_map.actions.get(&key) {
-                match actions::run(action, self.view_id.as_str(), core) {
+            if let Some(action) = actions.get(key) {
+                match self.normal_mode.handle_action(action, &self.view_id, core) {
                     Response::Continue => continue,
                     Response::Stop => break,
                 }
             }
 
-            if let Some(verb) = key_map.verbs.get(&key) {
-                let key2 = self.keyboard.get_next_keystroke();
-
-                if let Some(noun) = key_map.nouns.get(&key2) {
-                    verbs::run(verb, noun, self.view_id.as_str(), core);
-                }
+            match self.normal_mode.handle_keystroke(key, &self.view_id, core) {
+                Response::Continue => continue,
+                Response::Stop => break,
             }
         }
 

@@ -31,7 +31,6 @@ use std::thread;
 use devices::keyboard::Keyboard;
 use devices::terminal::Terminal;
 use event_controller::EventController;
-use input_controller::key_map::DEFAULT_CONFIG;
 use input_controller::Controller;
 
 use ncurses::*;
@@ -112,7 +111,7 @@ fn main() {
     }
 
     if ret.is_ok() {
-        ret = controller.start_keyboard_event_loop(&raw_peer, &DEFAULT_CONFIG);
+        ret = controller.start_keyboard_event_loop(&raw_peer);
     }
 
     if let Err(err) = ret {
