@@ -15,6 +15,8 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate failure;
 
 mod cli;
 mod devices;
@@ -23,7 +25,7 @@ mod input_controller;
 mod logging;
 
 use std::io::{BufRead, BufReader};
-use std::process::{ChildStderr, Command, Stdio};
+use std::process::{exit, ChildStderr, Command, Stdio};
 use std::thread;
 
 use devices::keyboard::Keyboard;
@@ -103,8 +105,22 @@ fn main() {
             .unwrap();
     });
 
-    controller.open_file(&raw_peer, file_path);
-    controller.start_keyboard_event_loop(&raw_peer, &DEFAULT_CONFIG);
+    let mut ret = Ok(());
+
+    if ret.is_ok() {
+        ret = controller.open_file(&raw_peer, file_path);
+    }
+
+    if ret.is_ok() {
+        ret = controller.start_keyboard_event_loop(&raw_peer, &DEFAULT_CONFIG);
+    }
+
+    if let Err(err) = ret {
+        error!("{}", err);
+        println!("{}", err);
+        endwin();
+        exit(1);
+    }
 
     endwin();
 }

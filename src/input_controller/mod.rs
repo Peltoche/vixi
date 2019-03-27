@@ -7,6 +7,7 @@ use self::key_map::{Config, KeyMap, Noun};
 use crate::devices::keyboard::Keyboard;
 use crate::devices::terminal::Terminal;
 
+use failure::Error;
 use xi_rpc::Peer;
 
 pub struct Controller {
@@ -24,8 +25,9 @@ impl Controller {
         }
     }
 
-    pub fn open_file(&mut self, core: &dyn Peer, file_path: &str) {
-        let mut xi_config_dir = dirs::config_dir().expect("failed to retrieve your config dir");
+    pub fn open_file(&mut self, core: &dyn Peer, file_path: &str) -> Result<(), Error> {
+        let mut xi_config_dir =
+            dirs::config_dir().ok_or_else(|| format_err!("config dir not found"))?;
         xi_config_dir.push("xi");
 
         core.send_rpc_notification(
@@ -56,10 +58,16 @@ impl Controller {
             "view_id": self.view_id,
             }),
         );
+
+        Ok(())
     }
 
-    pub fn start_keyboard_event_loop(&self, core: &dyn Peer, config_map: &Config) {
-        let key_map = KeyMap::from_config(config_map).expect("failed to create the key map");
+    pub fn start_keyboard_event_loop(
+        &self,
+        core: &dyn Peer,
+        config_map: &Config,
+    ) -> Result<(), Error> {
+        let key_map = KeyMap::from_config(config_map)?;
 
         loop {
             let key = self.keyboard.get_next_keystroke();
@@ -79,5 +87,7 @@ impl Controller {
                 }
             }
         }
+
+        Ok(())
     }
 }

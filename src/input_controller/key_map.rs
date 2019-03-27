@@ -5,6 +5,16 @@ use crate::devices::keyboard::KeyStroke;
 use crate::input_controller::actions::Action;
 use crate::input_controller::verbs::Verb;
 
+use failure::Error;
+
+#[derive(Debug, Fail)]
+pub enum KeyMapError {
+    #[fail(display = "Invalid keystroke \"{}\" for \"{}\"", target, key)]
+    InvalidKeystroke { key: String, target: String },
+    #[fail(display = "Invalid action \"{}\" for key \"{}\"", target, key)]
+    InvalidTarget { key: String, target: String },
+}
+
 #[derive(Debug)]
 pub enum Noun {
     Line,
@@ -24,7 +34,7 @@ pub struct Config {
 
 lazy_static! {
     pub static ref DEFAULT_CONFIG: Config = {
-        let mut c= Config::default();
+        let mut c = Config::default();
 
         //
         // Action keys
@@ -68,7 +78,7 @@ pub struct KeyMap {
 }
 
 impl KeyMap {
-    pub fn from_config(config_map: &Config) -> Result<Self, ()> {
+    pub fn from_config(config_map: &Config) -> Result<Self, Error> {
         let mut key_map = KeyMap {
             actions: HashMap::new(),
             verbs: HashMap::new(),
@@ -76,47 +86,71 @@ impl KeyMap {
             nouns: HashMap::new(),
         };
 
-        for (key_desc, name) in config_map.verbs.iter() {
+        for (key, name) in config_map.verbs.iter() {
             let keystroke =
-                convert_description_to_keystroke(&key_desc).expect("invalid verb keystroke");
+                convert_description_to_keystroke(&key).ok_or(KeyMapError::InvalidKeystroke {
+                    key: key.clone(),
+                    target: name.clone(),
+                })?;
 
             let verb = match name.as_str() {
-                "delete" => Some(Verb::Delete),
-                _ => None,
-            }
-            .expect("invalid verb name");
+                "delete" => Verb::Delete,
+                _ => {
+                    return Err(KeyMapError::InvalidTarget {
+                        key: key.clone(),
+                        target: name.clone(),
+                    }
+                    .into());
+                }
+            };
 
             key_map.verbs.insert(keystroke, verb);
         }
 
-        for (key_desc, name) in config_map.nouns.iter() {
+        for (key, name) in config_map.nouns.iter() {
             let keystroke =
-                convert_description_to_keystroke(&key_desc).expect("invalid noun keystroke");
+                convert_description_to_keystroke(&key).ok_or(KeyMapError::InvalidKeystroke {
+                    key: key.clone(),
+                    target: name.clone(),
+                })?;
 
             let noun = match name.as_str() {
-                "line" => Some(Noun::Line),
-                _ => None,
-            }
-            .expect("invalid noun name");
+                "line" => Noun::Line,
+                _ => {
+                    return Err(KeyMapError::InvalidTarget {
+                        key: key.clone(),
+                        target: name.clone(),
+                    }
+                    .into());
+                }
+            };
 
             key_map.nouns.insert(keystroke, noun);
         }
 
-        for (key_desc, name) in config_map.actions.iter() {
+        for (key, name) in config_map.actions.iter() {
             let keystroke =
-                convert_description_to_keystroke(&key_desc).expect("invalid action keystroke");
+                convert_description_to_keystroke(&key).ok_or(KeyMapError::InvalidKeystroke {
+                    key: key.clone(),
+                    target: name.clone(),
+                })?;
 
             let action = match name.as_str() {
-                "move_up" => Some(Action::MoveUp),
-                "move_down" => Some(Action::MoveDown),
-                "move_left" => Some(Action::MoveLeft),
-                "move_right" => Some(Action::MoveRight),
-                "exit" => Some(Action::Exit),
-                "page_up" => Some(Action::PageUp),
-                "page_down" => Some(Action::PageDown),
-                _ => None,
-            }
-            .expect("invalid action name");
+                "move_up" => Action::MoveUp,
+                "move_down" => Action::MoveDown,
+                "move_left" => Action::MoveLeft,
+                "move_right" => Action::MoveRight,
+                "exit" => Action::Exit,
+                "page_up" => Action::PageUp,
+                "page_down" => Action::PageDown,
+                _ => {
+                    return Err(KeyMapError::InvalidTarget {
+                        key: key.clone(),
+                        target: name.clone(),
+                    }
+                    .into());
+                }
+            };
 
             key_map.actions.insert(keystroke, action);
         }
