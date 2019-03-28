@@ -13,6 +13,14 @@ enum Mode {
     Normal,
 }
 
+impl Mode {
+    pub fn to_string(&self) -> String {
+        match self {
+            Mode::Normal => String::from("NORMAL"),
+        }
+    }
+}
+
 pub struct Controller {
     terminal: Terminal,
     keyboard: Keyboard,
@@ -61,10 +69,20 @@ impl Controller {
         core.send_rpc_notification(
             "set_language",
             &json!({
-            "language_id": "Rust",
-            "view_id": self.view_id,
+                "language_id": "Rust",
+                "view_id": self.view_id,
             }),
         );
+
+        //core.send_rpc_notification(
+        //"add_status_item",
+        //&json!({
+        //"plugin_id":  "vixi",
+        //"view_id": self.view_id,
+        //"key": "change-mode",
+        //"value": self.mode.to_string(),
+        //}),
+        //);
 
         Ok(())
     }
@@ -74,7 +92,6 @@ impl Controller {
 
         loop {
             let key = self.keyboard.get_next_keystroke();
-
             if let Some(action) = actions.get(key) {
                 match self.normal_mode.handle_action(action, &self.view_id, core) {
                     Response::Continue => continue,

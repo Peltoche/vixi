@@ -62,14 +62,16 @@ impl xi_rpc::Handler for EventController {
 
     fn handle_notification(&mut self, ctx: &RpcCtx, rpc: Self::Notification) {
         match rpc.method.as_str() {
+            "add_status_item" => self.handle_new_status_item(&rpc.params),
             "available_languages" => debug!("{}", &rpc.method),
             "available_themes" => debug!("{}", &rpc.method),
             "available_plugins" => debug!("{} -> {}", &rpc.method, &rpc.params),
             "config_changed" => debug!("{}", &rpc.method),
-            "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
-            "language_changed" => debug!("{}: -> {}", &rpc.method, &rpc.params),
             "def_style" => self.handle_style_change(&rpc.params),
+            "language_changed" => debug!("{}: -> {}", &rpc.method, &rpc.params),
+            "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
             "update" => self.handle_content_update(&ctx, &rpc.params),
+            "update_status_item" => self.update_status_item(&rpc.params),
             _ => debug!("unhandled notif {} -> {}", &rpc.method, &rpc.params),
         };
 
@@ -90,6 +92,38 @@ impl EventController {
             screen_width: 0,
             cursor: Cursor::default(),
             buffer: Buffer::default(),
+        }
+    }
+
+    fn handle_new_status_item(&mut self, body: &Value) {
+        #[derive(Deserialize, Debug)]
+        struct Event {
+            source: String,
+            key: String,
+            value: String,
+            alignment: String,
+        }
+
+        let event: Event = serde_json::from_value(body.clone()).unwrap();
+
+        match event.key.as_str() {
+            "change-mode" => self.terminal.update_status_bar_mode(&event.value),
+            _ => (),
+        }
+    }
+
+    fn update_status_item(&mut self, body: &Value) {
+        #[derive(Deserialize, Debug)]
+        struct Event {
+            key: String,
+            value: String,
+        }
+
+        let event: Event = serde_json::from_value(body.clone()).unwrap();
+
+        match event.key.as_str() {
+            "change-mode" => self.terminal.update_status_bar_mode(&event.value),
+            _ => (),
         }
     }
 

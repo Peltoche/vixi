@@ -114,7 +114,8 @@ impl Terminal {
         let mut size_y = 0;
         getmaxyx(stdscr(), &mut size_y, &mut size_x);
 
-        (size_y as usize, size_x as usize)
+        // Remove two lines for the status and the command bars.
+        ((size_y - 2) as usize, size_x as usize)
     }
 
     pub fn redraw(&mut self) {
@@ -306,6 +307,16 @@ impl Terminal {
 
             addch(content_iter.next().unwrap() as chtype | attrs | COLOR_PAIR(style_id as i16));
         }
+    }
+
+    pub fn update_status_bar_mode(&mut self, mode: &str) {
+        info!("update status: {}", mode);
+        let size_y = getmaxy(stdscr());
+
+        // Remove 1 for the command line.
+        mv(size_y - 1, 0);
+
+        addstr(&mode.to_uppercase());
     }
 
     /// The `init_color` method take a color range within [0..1000] but the

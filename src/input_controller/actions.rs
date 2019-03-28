@@ -24,7 +24,10 @@ impl Default for Actions {
     fn default() -> Self {
         let mut actions = HashMap::with_capacity(11);
 
-        actions.insert(KEY_F1, Action::Exit);
+        actions.insert(
+            KeyStroke::from_char('q').unwrap() as KeyStroke,
+            Action::Exit,
+        );
 
         // The classic arrow keys.
         actions.insert(KEY_UP, Action::MoveUp);
