@@ -60,6 +60,7 @@ impl Default for Actions {
 }
 
 impl Actions {
+    #[allow(dead_code)]
     pub fn from_config(config_map: &Config) -> Result<Self, Error> {
         let mut actions = HashMap::with_capacity(config_map.len());
 

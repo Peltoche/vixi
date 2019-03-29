@@ -24,6 +24,7 @@ impl Default for Nouns {
 }
 
 impl Nouns {
+    #[allow(dead_code)]
     pub fn from_config(config_map: &Config) -> Result<Self, Error> {
         let mut nouns = HashMap::with_capacity(config_map.len());
 

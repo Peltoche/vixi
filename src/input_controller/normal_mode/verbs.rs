@@ -7,7 +7,7 @@ use failure::Error;
 pub type Config = HashMap<String, String>;
 
 #[derive(Debug, Clone, Copy)]
-enum Verb {
+pub enum Verb {
     Delete,
 }
 
@@ -27,6 +27,7 @@ impl Default for Verbs {
 }
 
 impl Verbs {
+    #[allow(dead_code)]
     pub fn from_config(config_map: &Config) -> Result<Self, Error> {
         let mut verbs = HashMap::with_capacity(config_map.len());
 
@@ -45,11 +46,11 @@ impl Verbs {
         Ok(Self(verbs))
     }
 
-    pub fn get(&self, key: KeyStroke) -> Option<Verb> {
-        if let Some(key) = self.0.get(&key) {
-            Some(*key)
-        } else {
-            None
-        }
-    }
+    //pub fn get(&self, key: KeyStroke) -> Option<Verb> {
+    //if let Some(key) = self.0.get(&key) {
+    //Some(*key)
+    //} else {
+    //None
+    //}
+    //}
 }

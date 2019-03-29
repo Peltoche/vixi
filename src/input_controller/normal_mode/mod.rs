@@ -10,6 +10,7 @@ use failure::Error;
 use xi_rpc::Peer;
 
 #[derive(Default)]
+#[allow(dead_code)]
 pub struct Config {
     verbs: verbs::Config,
     nouns: nouns::Config,
