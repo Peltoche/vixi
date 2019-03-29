@@ -66,21 +66,21 @@ impl Controller {
             }),
         );
 
-        core.send_rpc_notification(
-            "set_language",
-            &json!({
-                "language_id": "Rust",
-                "view_id": self.view_id,
-            }),
-        );
-
         //core.send_rpc_notification(
-        //"add_status_item",
+        //"plugin",
         //&json!({
-        //"plugin_id":  "vixi",
+        //"command": "plugin_rpc",
         //"view_id": self.view_id,
+        //"receiver": "vixi",
+        //"rpc": {
+        //"method": "add_status_item",
+        //"rpc_type": "notification",
+        //"params": {
+        //"alignment": "left",
         //"key": "change-mode",
         //"value": self.mode.to_string(),
+        //}
+        //}
         //}),
         //);
 

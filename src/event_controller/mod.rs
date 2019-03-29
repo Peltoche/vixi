@@ -104,6 +104,7 @@ impl EventController {
             alignment: String,
         }
 
+        info!("receive status item: {}", body);
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
         match event.key.as_str() {
