@@ -1,3 +1,4 @@
+use std::char::*;
 use std::collections::HashMap;
 
 use crate::devices::keyboard::keys::*;
@@ -24,36 +25,21 @@ impl Default for Actions {
     fn default() -> Self {
         let mut actions = HashMap::with_capacity(11);
 
-        actions.insert(
-            KeyStroke::from_char('q').unwrap() as KeyStroke,
-            Action::Exit,
-        );
+        actions.insert(KeyStroke('q'), Action::Exit);
 
         // The classic arrow keys.
-        actions.insert(KEY_UP, Action::MoveUp);
-        actions.insert(KEY_DOWN, Action::MoveDown);
-        actions.insert(KEY_LEFT, Action::MoveLeft);
-        actions.insert(KEY_RIGHT, Action::MoveRight);
-        actions.insert(KEY_PPAGE, Action::PageUp);
-        actions.insert(KEY_NPAGE, Action::PageDown);
+        actions.insert(KeyStroke(from_u32(KEY_UP).unwrap()), Action::MoveUp);
+        actions.insert(KeyStroke(from_u32(KEY_DOWN).unwrap()), Action::MoveDown);
+        actions.insert(KeyStroke(from_u32(KEY_LEFT).unwrap()), Action::MoveLeft);
+        actions.insert(KeyStroke(from_u32(KEY_RIGHT).unwrap()), Action::MoveRight);
+        actions.insert(KeyStroke(from_u32(KEY_PPAGE).unwrap()), Action::PageUp);
+        actions.insert(KeyStroke(from_u32(KEY_NPAGE).unwrap()), Action::PageDown);
 
         // The "vim like" keys.
-        actions.insert(
-            KeyStroke::from_char('k').unwrap() as KeyStroke,
-            Action::MoveUp,
-        );
-        actions.insert(
-            KeyStroke::from_char('j').unwrap() as KeyStroke,
-            Action::MoveDown,
-        );
-        actions.insert(
-            KeyStroke::from_char('h').unwrap() as KeyStroke,
-            Action::MoveLeft,
-        );
-        actions.insert(
-            KeyStroke::from_char('l').unwrap() as KeyStroke,
-            Action::MoveRight,
-        );
+        actions.insert(KeyStroke('k'), Action::MoveUp);
+        actions.insert(KeyStroke('j'), Action::MoveDown);
+        actions.insert(KeyStroke('h'), Action::MoveLeft);
+        actions.insert(KeyStroke('l'), Action::MoveRight);
 
         Self(actions)
     }

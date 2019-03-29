@@ -11,12 +11,14 @@ use xi_rpc::Peer;
 
 enum Mode {
     Normal,
+    Insert,
 }
 
 impl Mode {
     pub fn to_string(&self) -> String {
         match self {
             Mode::Normal => String::from("NORMAL"),
+            Mode::Insert => String::from("INSERT"),
         }
     }
 }

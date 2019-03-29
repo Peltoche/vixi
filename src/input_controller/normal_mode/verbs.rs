@@ -17,10 +17,7 @@ impl Default for Verbs {
     fn default() -> Self {
         let mut verbs = HashMap::with_capacity(1);
 
-        verbs.insert(
-            KeyStroke::from_char('d').unwrap() as KeyStroke,
-            Verb::Delete,
-        );
+        verbs.insert(KeyStroke('d'), Verb::Delete);
 
         Self(verbs)
     }

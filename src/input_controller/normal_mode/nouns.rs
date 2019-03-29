@@ -17,7 +17,7 @@ impl Default for Nouns {
     fn default() -> Self {
         let mut nouns = HashMap::with_capacity(1);
 
-        nouns.insert(KeyStroke::from_char('l').unwrap() as KeyStroke, Noun::Line);
+        nouns.insert(KeyStroke('l'), Noun::Line);
 
         Self(nouns)
     }

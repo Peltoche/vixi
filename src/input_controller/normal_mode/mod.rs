@@ -36,6 +36,11 @@ impl NormalMode {
     }
 
     pub fn handle_keystroke(&self, key: KeyStroke, view_id: &str, core: &dyn Peer) -> Response {
+        match key {
+            KeyStroke('i') => info!("foobar"),
+            _ => {}
+        };
+
         Response::Continue
     }
 
