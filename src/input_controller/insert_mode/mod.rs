@@ -33,7 +33,7 @@ impl InsertMode {
             };
         }
 
-        insert_char(view_id, key.0, core);
+        insert_char(view_id, key, core);
         Response::Continue
     }
 }

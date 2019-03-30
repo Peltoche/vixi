@@ -105,6 +105,7 @@ impl Controller {
         loop {
             let key = self.keyboard.get_next_keystroke();
 
+            info!("key: {:?}", key);
             let res = match self.mode {
                 Mode::Normal => self.normal_mode.handle_keystroke(key, &self.view_id, core),
                 Mode::Insert => self.insert_mode.handle_keystroke(key, &self.view_id, core),

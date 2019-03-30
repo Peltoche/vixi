@@ -68,6 +68,9 @@ pub struct Terminal {
 
 impl Terminal {
     pub fn new() -> Self {
+        let locale_conf = LcCategory::all;
+        setlocale(locale_conf, "en_US.UTF-8");
+
         /* Setup ncurses. */
         initscr();
         raw();

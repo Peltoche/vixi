@@ -1,14 +1,21 @@
+use crate::devices::keyboard::KeyStroke;
 use crate::input_controller::Response;
+
 use xi_rpc::Peer;
 
-pub fn insert_char(view_id: &str, c: char, core: &dyn Peer) -> Response {
+pub fn insert_char(view_id: &str, key: KeyStroke, core: &dyn Peer) -> Response {
+    let output = match key {
+        KeyStroke::Char(c) => c.to_string(),
+        _ => String::from("<?>"),
+    };
+
     core.send_rpc_notification(
         "edit",
         &json!({
             "method": "insert",
             "view_id": view_id,
             "params": {
-                "chars": c.to_string(),
+                "chars": output,
             }
         }),
     );

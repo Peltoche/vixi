@@ -1,7 +1,5 @@
-use std::char::*;
 use std::collections::HashMap;
 
-use crate::devices::keyboard::keys::*;
 use crate::devices::keyboard::KeyStroke;
 
 use failure::Error;
@@ -26,22 +24,22 @@ impl Default for Actions {
     fn default() -> Self {
         let mut actions = HashMap::with_capacity(1);
 
-        actions.insert(KeyStroke('i'), Action::SwitchToInsertMode);
-        actions.insert(KeyStroke('q'), Action::Exit);
+        actions.insert(KeyStroke::Char('i'), Action::SwitchToInsertMode);
+        actions.insert(KeyStroke::Char('q'), Action::Exit);
 
         // The classic arrow keys.
-        actions.insert(KeyStroke(from_u32(KEY_UP).unwrap()), Action::MoveUp);
-        actions.insert(KeyStroke(from_u32(KEY_DOWN).unwrap()), Action::MoveDown);
-        actions.insert(KeyStroke(from_u32(KEY_LEFT).unwrap()), Action::MoveLeft);
-        actions.insert(KeyStroke(from_u32(KEY_RIGHT).unwrap()), Action::MoveRight);
-        actions.insert(KeyStroke(from_u32(KEY_PPAGE).unwrap()), Action::PageUp);
-        actions.insert(KeyStroke(from_u32(KEY_NPAGE).unwrap()), Action::PageDown);
+        actions.insert(KeyStroke::KeyUp, Action::MoveUp);
+        actions.insert(KeyStroke::KeyDown, Action::MoveDown);
+        actions.insert(KeyStroke::KeyLeft, Action::MoveLeft);
+        actions.insert(KeyStroke::KeyRight, Action::MoveRight);
+        actions.insert(KeyStroke::KeyPreviousPage, Action::PageUp);
+        actions.insert(KeyStroke::KeyNextPage, Action::PageDown);
 
         // The "vim like" keys.
-        actions.insert(KeyStroke('k'), Action::MoveUp);
-        actions.insert(KeyStroke('j'), Action::MoveDown);
-        actions.insert(KeyStroke('h'), Action::MoveLeft);
-        actions.insert(KeyStroke('l'), Action::MoveRight);
+        actions.insert(KeyStroke::Char('k'), Action::MoveUp);
+        actions.insert(KeyStroke::Char('j'), Action::MoveDown);
+        actions.insert(KeyStroke::Char('h'), Action::MoveLeft);
+        actions.insert(KeyStroke::Char('l'), Action::MoveRight);
 
         Self(actions)
     }

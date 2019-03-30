@@ -1,24 +1,39 @@
-use self::keys::*;
-use ncurses::WchResult;
 use std::char::*;
 
+use ncurses::{getch, nodelay, stdscr, WchResult};
+
+const ESC_OR_ALT_KEY: u32 = 27;
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub struct KeyStroke(pub char);
+//pub struct KeyStroke(pub char);
+pub enum KeyStroke {
+    Char(char),
+    KeyF(u32),
+    Alt(char),
+    Unknown,
+    KeyUp,
+    KeyDown,
+    KeyLeft,
+    KeyRight,
+    KeyPreviousPage,
+    KeyNextPage,
+    KeyEscape,
+}
 
 impl KeyStroke {
     pub fn from_description(description: &str) -> Option<Self> {
         if description.len() == 1 {
-            return Some(KeyStroke(description.chars().nth(0).unwrap()));
+            return Some(KeyStroke::Char(description.chars().nth(0).unwrap()));
         }
 
         match description {
-            "f1" => Some(KeyStroke(from_u32(KEY_F1).unwrap())),
-            "key_up" => Some(KeyStroke(from_u32(KEY_UP).unwrap())),
-            "key_down" => Some(KeyStroke(from_u32(KEY_DOWN).unwrap())),
-            "key_left" => Some(KeyStroke(from_u32(KEY_LEFT).unwrap())),
-            "key_right" => Some(KeyStroke(from_u32(KEY_RIGHT).unwrap())),
-            "page_up" => Some(KeyStroke(from_u32(KEY_PPAGE).unwrap())),
-            "page_down" => Some(KeyStroke(from_u32(KEY_NPAGE).unwrap())),
+            "f1" => Some(KeyStroke::KeyF(1)),
+            "key_up" => Some(KeyStroke::KeyUp),
+            "key_down" => Some(KeyStroke::KeyDown),
+            "key_left" => Some(KeyStroke::KeyLeft),
+            "key_right" => Some(KeyStroke::KeyRight),
+            "page_up" => Some(KeyStroke::KeyPreviousPage),
+            "page_down" => Some(KeyStroke::KeyNextPage),
             _ => None,
         }
     }
@@ -32,25 +47,29 @@ impl Keyboard {
         let res = ncurses::get_wch();
         if res.is_none() {
             warn!("get_wch return none");
-            return KeyStroke('?');
+            return KeyStroke::Unknown;
         }
 
-        match res.unwrap() {
-            WchResult::Char(c) => KeyStroke(from_u32(c).unwrap()),
+        let c_u32 = match res.unwrap() {
+            WchResult::Char(c) => c,
             WchResult::KeyCode(k) => {
                 warn!("unhandled keycode: {}", k);
-                KeyStroke('?')
+                '?' as u32
             }
-        }
-    }
-}
+        };
 
-pub mod keys {
-    pub const KEY_F1: u32 = ncurses::KEY_F1 as u32;
-    pub const KEY_UP: u32 = ncurses::KEY_UP as u32;
-    pub const KEY_DOWN: u32 = ncurses::KEY_DOWN as u32;
-    pub const KEY_LEFT: u32 = ncurses::KEY_LEFT as u32;
-    pub const KEY_RIGHT: u32 = ncurses::KEY_RIGHT as u32;
-    pub const KEY_PPAGE: u32 = ncurses::KEY_PPAGE as u32;
-    pub const KEY_NPAGE: u32 = ncurses::KEY_NPAGE as u32;
+        if c_u32 == ESC_OR_ALT_KEY {
+            // Don't wait for another key
+            // If it was Alt then curses has already sent the other key
+            // otherwise -1 is sent (Escape)
+            let next_key = getch();
+            if next_key == -1 {
+                return KeyStroke::KeyEscape;
+            }
+
+            return KeyStroke::Alt(from_u32(next_key as u32).unwrap_or('?'));
+        }
+
+        KeyStroke::Char(from_u32(c_u32).unwrap())
+    }
 }
