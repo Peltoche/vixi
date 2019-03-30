@@ -1,8 +1,9 @@
-pub mod actions;
+mod insert_mode;
 mod normal_mode;
+mod rpc;
 
-use self::actions::Actions;
-use self::normal_mode::{NormalMode, Response};
+use self::insert_mode::InsertMode;
+use self::normal_mode::NormalMode;
 use crate::devices::keyboard::Keyboard;
 use crate::devices::terminal::Terminal;
 
@@ -14,7 +15,16 @@ enum Mode {
     Insert,
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum Response {
+    Continue,
+    Stop,
+    SwitchToInsertMode,
+    SwitchToNormalMode,
+}
+
 impl Mode {
+    #[allow(dead_code)]
     pub fn to_string(&self) -> String {
         match self {
             Mode::Normal => String::from("NORMAL"),
@@ -28,6 +38,7 @@ pub struct Controller {
     keyboard: Keyboard,
     view_id: String,
     normal_mode: NormalMode,
+    insert_mode: InsertMode,
     mode: Mode,
 }
 
@@ -38,6 +49,7 @@ impl Controller {
             keyboard,
             view_id: String::new(),
             normal_mode: NormalMode::default(),
+            insert_mode: InsertMode::default(),
             mode: Mode::Normal,
         }
     }
@@ -89,21 +101,20 @@ impl Controller {
         Ok(())
     }
 
-    pub fn start_keyboard_event_loop(&self, core: &dyn Peer) -> Result<(), Error> {
-        let actions = Actions::default();
-
+    pub fn start_keyboard_event_loop(&mut self, core: &dyn Peer) -> Result<(), Error> {
         loop {
             let key = self.keyboard.get_next_keystroke();
-            if let Some(action) = actions.get(key) {
-                match self.normal_mode.handle_action(action, &self.view_id, core) {
-                    Response::Continue => continue,
-                    Response::Stop => break,
-                }
-            }
 
-            match self.normal_mode.handle_keystroke(key, &self.view_id, core) {
-                Response::Continue => continue,
+            let res = match self.mode {
+                Mode::Normal => self.normal_mode.handle_keystroke(key, &self.view_id, core),
+                Mode::Insert => self.insert_mode.handle_keystroke(key, &self.view_id, core),
+            };
+
+            match res {
+                Response::Continue => {}
                 Response::Stop => break,
+                Response::SwitchToInsertMode => self.mode = Mode::Insert,
+                Response::SwitchToNormalMode => self.mode = Mode::Normal,
             }
         }
 
