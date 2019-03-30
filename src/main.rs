@@ -19,13 +19,13 @@ extern crate failure;
 extern crate lazy_static;
 
 mod cli;
+mod core;
 mod devices;
 mod event_controller;
 mod input_controller;
 mod logging;
 
-use std::io::{BufRead, BufReader};
-use std::process::{exit, ChildStderr, Command, Stdio};
+use std::process::exit;
 use std::thread;
 
 use devices::keyboard::Keyboard;
@@ -44,23 +44,6 @@ fn setup_logger() {
     logging::setup(&logging_path).expect("failed to set the logger")
 }
 
-fn handle_core_stderr(stderr: ChildStderr) {
-    let buf_reader = BufReader::new(stderr);
-    for line in buf_reader.lines() {
-        if let Ok(line) = line {
-            if let Some(idx) = line.find("[INFO] ") {
-                info!("[CORE] {}", line.split_at(idx + 7).1)
-            } else if let Some(idx) = line.find("[WARN] ") {
-                warn!("[CORE] {}", line.split_at(idx + 7).1)
-            } else if let Some(idx) = line.find("[ERROR] ") {
-                error!("[CORE] {}", line.split_at(idx + 8).1)
-            } else {
-                error!("[CORE] {}", line);
-            }
-        }
-    }
-}
-
 fn main() {
     let matches = cli::build().get_matches();
 
@@ -70,39 +53,17 @@ fn main() {
 
     setup_logger();
 
-    // spawn the core core_process
-    let core_process = Command::new("xi-core")
-        //.arg("test-file")
-        .stdout(Stdio::piped())
-        .stdin(Stdio::piped())
-        .stderr(Stdio::piped())
-        .env("RUST_BACKTRACE", "1")
-        .spawn()
-        .unwrap_or_else(|e| panic!("failed to execute core: {}", e));
-
-    // Create the RpcLoop and give him access to the core via the core process
-    // stdin.
-    let stdin = core_process.stdin.unwrap();
-    let mut rpc_loop = RpcLoop::new(stdin);
-
     // Load the devices
     let terminal = Terminal::new();
     let keyboard = Keyboard::default();
 
     let mut controller = Controller::new(terminal.clone(), keyboard);
     let mut event_handler = EventController::new(terminal);
-    let raw_peer = rpc_loop.get_raw_peer();
 
-    let stderr = core_process.stderr.unwrap();
-    thread::spawn(move || handle_core_stderr(stderr));
-
-    // Start a thread used to consume the events from the core process.
-    let stdout = core_process.stdout.unwrap();
-    thread::spawn(move || {
-        rpc_loop
-            .mainloop(|| BufReader::new(stdout), &mut event_handler)
-            .unwrap();
-    });
+    let (client_to_core_writer, core_to_client_reader) = core::start_xi_core();
+    let mut front_event_loop = RpcLoop::new(client_to_core_writer);
+    let raw_peer = front_event_loop.get_raw_peer();
+    thread::spawn(move || front_event_loop.mainloop(|| core_to_client_reader, &mut event_handler));
 
     let mut ret = Ok(());
 
