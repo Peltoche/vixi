@@ -6,7 +6,7 @@ use failure::Error;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
-    SwitchToNormalMode,
+    ExitSelectionMode,
     MoveUp,
     MoveDown,
     MoveLeft,
@@ -25,7 +25,7 @@ impl Default for Actions {
     fn default() -> Self {
         let mut actions = HashMap::with_capacity(1);
 
-        actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
+        actions.insert(KeyStroke::KeyEscape, Action::ExitSelectionMode);
         actions.insert(KeyStroke::Char('y'), Action::Yank);
         actions.insert(KeyStroke::Char('p'), Action::Paste);
 
@@ -61,7 +61,7 @@ impl Actions {
                 .ok_or_else(|| format_err!("failed to parse the key {}", key_desc))?;
 
             let action = match action_name.as_str() {
-                "switch_to_normal_mode" => Action::SwitchToNormalMode,
+                "exit_selection_mode" => Action::ExitSelectionMode,
                 "move_up" => Action::MoveUp,
                 "move_down" => Action::MoveDown,
                 "move_left" => Action::MoveLeft,

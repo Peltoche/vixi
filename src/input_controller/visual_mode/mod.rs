@@ -23,7 +23,7 @@ impl VisualMode {
         let action = self.actions.get(key);
         if let Some(action) = action {
             return match action {
-                Action::SwitchToNormalMode => Response::SwitchToNormalMode,
+                Action::ExitSelectionMode => exit_selection_mode(view_id, core),
                 Action::MoveUp => move_up_and_select(view_id, core),
                 Action::MoveDown => move_down_and_select(view_id, core),
                 Action::MoveLeft => move_left_and_select(view_id, core),
