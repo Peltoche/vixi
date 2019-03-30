@@ -34,6 +34,14 @@ pub fn delete_backward(view_id: &str, core: &dyn Peer) -> Response {
     Response::Continue
 }
 
+pub fn delete_forward(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "delete_forward", "view_id": view_id}),
+    );
+    Response::Continue
+}
+
 pub fn move_up(view_id: &str, core: &dyn Peer) -> Response {
     core.send_rpc_notification("edit", &json!({ "method": "move_up", "view_id": view_id}));
     Response::Continue

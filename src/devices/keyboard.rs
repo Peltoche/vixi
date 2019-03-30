@@ -18,6 +18,7 @@ pub enum KeyStroke {
     KeyNextPage,
     KeyEscape,
     KeyBackSpace,
+    KeyDeleteChar,
 }
 
 impl KeyStroke {
@@ -51,10 +52,13 @@ impl Keyboard {
         }
 
         match res.unwrap() {
-            WchResult::KeyCode(k) => {
-                warn!("unhandled keycode: {}", k);
-                Some(KeyStroke::Char('?'))
-            }
+            WchResult::KeyCode(k) => match k as i32 {
+                330 => Some(KeyStroke::KeyDeleteChar),
+                _ => {
+                    warn!("unhandled keycode: {}", k);
+                    Some(KeyStroke::Char('?'))
+                }
+            },
 
             WchResult::Char(c) => {
                 match c as i32 {

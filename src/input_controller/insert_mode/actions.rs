@@ -7,7 +7,8 @@ use failure::Error;
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     SwitchToNormalMode,
-    DeleteChar,
+    DeleteBackward,
+    DeleteForward,
     MoveUp,
     MoveDown,
     MoveLeft,
@@ -26,7 +27,8 @@ impl Default for Actions {
 
         actions.insert(KeyStroke::Char('i'), Action::SwitchToNormalMode);
         actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
-        actions.insert(KeyStroke::KeyBackSpace, Action::DeleteChar);
+        actions.insert(KeyStroke::KeyBackSpace, Action::DeleteBackward);
+        actions.insert(KeyStroke::KeyDeleteChar, Action::DeleteForward);
 
         // The classic arrow keys.
         actions.insert(KeyStroke::KeyUp, Action::MoveUp);
