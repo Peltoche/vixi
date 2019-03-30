@@ -54,6 +54,8 @@ impl Keyboard {
         match res.unwrap() {
             WchResult::KeyCode(k) => match k as i32 {
                 330 => Some(KeyStroke::KeyDeleteChar),
+                339 => Some(KeyStroke::KeyPreviousPage),
+                338 => Some(KeyStroke::KeyNextPage),
                 _ => {
                     warn!("unhandled keycode: {}", k);
                     Some(KeyStroke::Char('?'))
