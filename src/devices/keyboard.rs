@@ -1,8 +1,8 @@
 use std::char::*;
 
-use ncurses::{getch, WchResult};
+use ncurses::*;
 
-const ESC_OR_ALT_KEY: u32 = 27;
+const ESC_OR_ALT_KEY: i32 = 27;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 //pub struct KeyStroke(pub char);
@@ -17,6 +17,7 @@ pub enum KeyStroke {
     KeyPreviousPage,
     KeyNextPage,
     KeyEscape,
+    KeyBackSpace,
 }
 
 impl KeyStroke {
@@ -33,6 +34,7 @@ impl KeyStroke {
             "key_right" => Some(KeyStroke::KeyRight),
             "page_up" => Some(KeyStroke::KeyPreviousPage),
             "page_down" => Some(KeyStroke::KeyNextPage),
+            "backspace" => Some(KeyStroke::KeyBackSpace),
             _ => None,
         }
     }
@@ -48,26 +50,35 @@ impl Keyboard {
             return None;
         }
 
-        let c_u32 = match res.unwrap() {
-            WchResult::Char(c) => c,
+        match res.unwrap() {
             WchResult::KeyCode(k) => {
                 warn!("unhandled keycode: {}", k);
-                '?' as u32
-            }
-        };
-
-        if c_u32 == ESC_OR_ALT_KEY {
-            // Don't wait for another key
-            // If it was Alt then curses has already sent the other key
-            // otherwise -1 is sent (Escape)
-            let next_key = getch();
-            if next_key == -1 {
-                return Some(KeyStroke::KeyEscape);
+                Some(KeyStroke::Char('?'))
             }
 
-            return Some(KeyStroke::Alt(from_u32(next_key as u32).unwrap_or('?')));
+            WchResult::Char(c) => {
+                match c as i32 {
+                    KEY_BACKSPACE | 127 => Some(KeyStroke::KeyBackSpace),
+                    KEY_UP => Some(KeyStroke::KeyUp),
+                    KEY_DOWN => Some(KeyStroke::KeyDown),
+                    KEY_LEFT => Some(KeyStroke::KeyLeft),
+                    KEY_RIGHT => Some(KeyStroke::KeyRight),
+                    KEY_NPAGE => Some(KeyStroke::KeyNextPage),
+                    KEY_PPAGE => Some(KeyStroke::KeyPreviousPage),
+                    ESC_OR_ALT_KEY => {
+                        // Don't wait for another key
+                        // If it was Alt then curses has already sent the other key
+                        // otherwise -1 is sent (Escape)
+                        let next_key = getch();
+                        if next_key == -1 {
+                            return Some(KeyStroke::KeyEscape);
+                        }
+
+                        Some(KeyStroke::Alt(from_u32(next_key as u32).unwrap_or('?')))
+                    }
+                    _ => Some(KeyStroke::Char(from_u32(c as u32).unwrap())),
+                }
+            }
         }
-
-        Some(KeyStroke::Char(from_u32(c_u32).unwrap()))
     }
 }

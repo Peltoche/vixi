@@ -30,6 +30,7 @@ impl InsertMode {
                 Action::MoveRight => move_right(view_id, core),
                 Action::PageUp => page_up(view_id, core),
                 Action::PageDown => page_down(view_id, core),
+                Action::DeleteChar => delete_backward(view_id, core),
             };
         }
 
