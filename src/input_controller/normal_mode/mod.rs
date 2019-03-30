@@ -21,12 +21,15 @@ pub struct Config {
 
 #[derive(Default)]
 pub struct NormalMode {
+    #[allow(dead_code)]
     verbs: Verbs,
+    #[allow(dead_code)]
     nouns: Nouns,
     actions: Actions,
 }
 
 impl NormalMode {
+    #[allow(dead_code)]
     pub fn from_config(config_map: &Config) -> Result<Self, Error> {
         Ok(NormalMode {
             verbs: Verbs::from_config(&config_map.verbs)?,

@@ -31,12 +31,16 @@ impl Keyboard {
     pub fn get_next_keystroke(&self) -> KeyStroke {
         let res = ncurses::get_wch();
         if res.is_none() {
+            warn!("get_wch return none");
             return KeyStroke('?');
         }
 
         match res.unwrap() {
             WchResult::Char(c) => KeyStroke(from_u32(c).unwrap()),
-            WchResult::KeyCode(k) => KeyStroke('?'),
+            WchResult::KeyCode(k) => {
+                warn!("unhandled keycode: {}", k);
+                KeyStroke('?')
+            }
         }
     }
 }

@@ -9,7 +9,6 @@ use failure::Error;
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     SwitchToNormalMode,
-    Exit,
     MoveUp,
     MoveDown,
     MoveLeft,
