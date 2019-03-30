@@ -43,6 +43,7 @@ impl NormalMode {
         if let Some(action) = action {
             return match action {
                 Action::SwitchToInsertMode => Response::SwitchToInsertMode,
+                Action::SwitchToVisualMode => Response::SwitchToVisualMode,
                 Action::Exit => exit(view_id, core),
                 Action::MoveUp => move_up(view_id, core),
                 Action::MoveDown => move_down(view_id, core),

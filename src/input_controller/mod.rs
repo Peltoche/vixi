@@ -1,18 +1,23 @@
 mod insert_mode;
 mod normal_mode;
+mod visual_mode;
+
 mod rpc;
 
 use self::insert_mode::InsertMode;
 use self::normal_mode::NormalMode;
+use self::visual_mode::VisualMode;
 use crate::devices::keyboard::Keyboard;
 use crate::devices::terminal::Terminal;
 
 use failure::Error;
 use xi_rpc::Peer;
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 enum Mode {
     Normal,
     Insert,
+    Visual,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -21,6 +26,7 @@ pub enum Response {
     Stop,
     SwitchToInsertMode,
     SwitchToNormalMode,
+    SwitchToVisualMode,
 }
 
 impl Mode {
@@ -29,6 +35,7 @@ impl Mode {
         match self {
             Mode::Normal => String::from("NORMAL"),
             Mode::Insert => String::from("INSERT"),
+            Mode::Visual => String::from("VISUAL"),
         }
     }
 }
@@ -39,6 +46,7 @@ pub struct Controller {
     view_id: String,
     normal_mode: NormalMode,
     insert_mode: InsertMode,
+    visual_mode: VisualMode,
     mode: Mode,
 }
 
@@ -50,6 +58,7 @@ impl Controller {
             view_id: String::new(),
             normal_mode: NormalMode::default(),
             insert_mode: InsertMode::default(),
+            visual_mode: VisualMode::default(),
             mode: Mode::Normal,
         }
     }
@@ -106,17 +115,21 @@ impl Controller {
             let key_res = self.keyboard.get_next_keystroke();
 
             if let Some(key) = key_res {
-                info!("key: {:?}", key);
+                info!("key: {:?} {:?}", self.mode, key);
                 let res = match self.mode {
                     Mode::Normal => self.normal_mode.handle_keystroke(key, &self.view_id, core),
                     Mode::Insert => self.insert_mode.handle_keystroke(key, &self.view_id, core),
+                    Mode::Visual => self.visual_mode.handle_keystroke(key, &self.view_id, core),
                 };
+
+                info!("res: {:?}", res);
 
                 match res {
                     Response::Continue => {}
                     Response::Stop => break,
                     Response::SwitchToInsertMode => self.mode = Mode::Insert,
                     Response::SwitchToNormalMode => self.mode = Mode::Normal,
+                    Response::SwitchToVisualMode => self.mode = Mode::Visual,
                 }
             }
         }
