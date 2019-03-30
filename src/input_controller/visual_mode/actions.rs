@@ -11,8 +11,8 @@ pub enum Action {
     MoveDown,
     MoveLeft,
     MoveRight,
-    PageUp,
-    PageDown,
+    //PageUp,
+    //PageDown,
 }
 
 pub type Config = HashMap<String, String>;
@@ -30,8 +30,12 @@ impl Default for Actions {
         actions.insert(KeyStroke::KeyDown, Action::MoveDown);
         actions.insert(KeyStroke::KeyLeft, Action::MoveLeft);
         actions.insert(KeyStroke::KeyRight, Action::MoveRight);
-        actions.insert(KeyStroke::KeyPreviousPage, Action::PageUp);
-        actions.insert(KeyStroke::KeyNextPage, Action::PageDown);
+
+        // The current Core implementation doesn't fail of the buffer is not
+        // already available
+        //
+        //actions.insert(KeyStroke::KeyPreviousPage, Action::PageUp);
+        //actions.insert(KeyStroke::KeyNextPage, Action::PageDown);
 
         // The "vim like" keys.
         actions.insert(KeyStroke::Char('k'), Action::MoveUp);
@@ -58,8 +62,8 @@ impl Actions {
                 "move_down" => Action::MoveDown,
                 "move_left" => Action::MoveLeft,
                 "move_right" => Action::MoveRight,
-                "page_up" => Action::PageUp,
-                "page_down" => Action::PageDown,
+                //"page_up" => Action::PageUp,
+                //"page_down" => Action::PageDown,
                 _ => return Err(format_err!("unknown action {}", action_name)),
             };
 

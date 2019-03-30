@@ -277,6 +277,7 @@ impl EventController {
             update: Update,
         }
 
+        info!("new event");
         let event: Event = serde_json::from_value(body.clone()).unwrap();
         let mut new_buffer = Buffer::default();
         let mut old_idx: usize = 0;
@@ -291,6 +292,12 @@ impl EventController {
                         is_dirty = false;
                     }
 
+                    info!(
+                        "copy: current-idx: {} - buffer size: {} - oper: {}",
+                        old_idx,
+                        self.buffer.lines.len(),
+                        operation.n
+                    );
                     for i in 0..operation.n {
                         let old_buffer = &self.buffer.lines[old_idx + i];
                         new_buffer.lines.push(Line {

@@ -28,8 +28,11 @@ impl VisualMode {
                 Action::MoveDown => move_down_and_select(view_id, core),
                 Action::MoveLeft => move_left_and_select(view_id, core),
                 Action::MoveRight => move_right_and_select(view_id, core),
-                Action::PageUp => page_up_and_select(view_id, core),
-                Action::PageDown => page_down_and_select(view_id, core),
+                // The current Core implementation doesn't fail of the buffer is not
+                // already available
+                //
+                //Action::PageUp => page_up_and_select(view_id, core),
+                //Action::PageDown => page_down_and_select(view_id, core),
             };
         }
 
