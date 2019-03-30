@@ -53,9 +53,13 @@ impl Keyboard {
 
         match res.unwrap() {
             WchResult::KeyCode(k) => match k as i32 {
-                330 => Some(KeyStroke::KeyDeleteChar),
-                339 => Some(KeyStroke::KeyPreviousPage),
-                338 => Some(KeyStroke::KeyNextPage),
+                KEY_DOWN => Some(KeyStroke::KeyDown),
+                KEY_UP => Some(KeyStroke::KeyUp),
+                KEY_LEFT => Some(KeyStroke::KeyLeft),
+                KEY_RIGHT => Some(KeyStroke::KeyRight),
+                KEY_NPAGE => Some(KeyStroke::KeyNextPage),
+                KEY_PPAGE => Some(KeyStroke::KeyPreviousPage),
+                KEY_DC => Some(KeyStroke::KeyDeleteChar),
                 _ => {
                     warn!("unhandled keycode: {}", k);
                     Some(KeyStroke::Char('?'))
@@ -65,12 +69,6 @@ impl Keyboard {
             WchResult::Char(c) => {
                 match c as i32 {
                     KEY_BACKSPACE | 127 => Some(KeyStroke::KeyBackSpace),
-                    KEY_UP => Some(KeyStroke::KeyUp),
-                    KEY_DOWN => Some(KeyStroke::KeyDown),
-                    KEY_LEFT => Some(KeyStroke::KeyLeft),
-                    KEY_RIGHT => Some(KeyStroke::KeyRight),
-                    KEY_NPAGE => Some(KeyStroke::KeyNextPage),
-                    KEY_PPAGE => Some(KeyStroke::KeyPreviousPage),
                     ESC_OR_ALT_KEY => {
                         // Don't wait for another key
                         // If it was Alt then curses has already sent the other key
