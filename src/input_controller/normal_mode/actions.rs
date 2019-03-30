@@ -15,6 +15,7 @@ pub enum Action {
     MoveRight,
     PageUp,
     PageDown,
+    Paste,
 }
 
 pub type Config = HashMap<String, String>;
@@ -28,6 +29,7 @@ impl Default for Actions {
         actions.insert(KeyStroke::Char('i'), Action::SwitchToInsertMode);
         actions.insert(KeyStroke::Char('v'), Action::SwitchToVisualMode);
         actions.insert(KeyStroke::Char('q'), Action::Exit);
+        actions.insert(KeyStroke::Char('p'), Action::Paste);
 
         // The classic arrow keys.
         actions.insert(KeyStroke::KeyUp, Action::MoveUp);
@@ -65,6 +67,7 @@ impl Actions {
                 "exit" => Action::Exit,
                 "page_up" => Action::PageUp,
                 "page_down" => Action::PageDown,
+                "paste" => Action::Paste,
                 _ => return Err(format_err!("unknown action {}", action_name)),
             };
 

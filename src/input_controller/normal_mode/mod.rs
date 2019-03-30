@@ -51,6 +51,7 @@ impl NormalMode {
                 Action::MoveRight => move_right(view_id, core),
                 Action::PageUp => page_up(view_id, core),
                 Action::PageDown => page_down(view_id, core),
+                Action::Paste => paste(view_id, core),
             };
         }
 
