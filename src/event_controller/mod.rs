@@ -65,13 +65,15 @@ impl xi_rpc::Handler for EventController {
             "add_status_item" => self.handle_new_status_item(&rpc.params),
             "available_languages" => debug!("{}", &rpc.method),
             "available_themes" => debug!("{}", &rpc.method),
-            "available_plugins" => debug!("{} -> {}", &rpc.method, &rpc.params),
+            "available_plugins" => debug!("{}", &rpc.method),
             "config_changed" => debug!("{}", &rpc.method),
             "def_style" => self.handle_style_change(&rpc.params),
-            "language_changed" => debug!("{}: -> {}", &rpc.method, &rpc.params),
+            "language_changed" => debug!("{}", &rpc.method),
             "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
             "update" => self.handle_content_update(&ctx, &rpc.params),
             "update_status_item" => self.update_status_item(&rpc.params),
+            "plugin_started" => debug!("{}: -> {}", &rpc.method, &rpc.params),
+            "theme_changed" => debug!("{}", &rpc.method),
             _ => debug!("unhandled notif {} -> {}", &rpc.method, &rpc.params),
         };
 
@@ -96,6 +98,7 @@ impl EventController {
     }
 
     fn handle_new_status_item(&mut self, body: &Value) {
+        info!("new status item: {}", body);
         #[derive(Deserialize, Debug)]
         struct Event {
             source: String,
@@ -113,6 +116,7 @@ impl EventController {
     }
 
     fn update_status_item(&mut self, body: &Value) {
+        info!("udpate status item: {}", body);
         #[derive(Deserialize, Debug)]
         struct Event {
             key: String,

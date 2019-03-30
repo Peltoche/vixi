@@ -95,15 +95,16 @@ impl Controller {
             }),
         );
 
-        //core.send_rpc_notification(
+        core.send_rpc_notification("set_theme", &json!({"theme_name": "Solarized (light)" }));
+        //let res = core.send_rpc_request(
         //"plugin",
         //&json!({
         //"command": "plugin_rpc",
         //"view_id": self.view_id,
-        //"receiver": "vixi",
+        //"receiver": "",
         //"rpc": {
         //"method": "add_status_item",
-        //"rpc_type": "notification",
+        //"rpc_type": "request",
         //"params": {
         //"alignment": "left",
         //"key": "change-mode",
@@ -121,14 +122,11 @@ impl Controller {
             let key_res = self.keyboard.get_next_keystroke();
 
             if let Some(key) = key_res {
-                info!("key: {:?} {:?}", self.mode, key);
                 let res = match self.mode {
                     Mode::Normal => self.normal_mode.handle_keystroke(key, &self.view_id, core),
                     Mode::Insert => self.insert_mode.handle_keystroke(key, &self.view_id, core),
                     Mode::Visual => self.visual_mode.handle_keystroke(key, &self.view_id, core),
                 };
-
-                info!("res: {:?}", res);
 
                 match res {
                     Response::Continue => {}
