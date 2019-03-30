@@ -116,7 +116,7 @@ pub fn move_right_and_select(view_id: &str, core: &dyn Peer) -> Response {
 pub fn page_up_and_select(view_id: &str, core: &dyn Peer) -> Response {
     core.send_rpc_notification(
         "edit",
-        &json!({ "method": "scroll_page_up_and_modify_selection", "view_id": view_id}),
+        &json!({ "method": "page_up_and_modify_selection", "view_id": view_id}),
     );
     Response::Continue
 }
@@ -124,7 +124,7 @@ pub fn page_up_and_select(view_id: &str, core: &dyn Peer) -> Response {
 pub fn page_down_and_select(view_id: &str, core: &dyn Peer) -> Response {
     core.send_rpc_notification(
         "edit",
-        &json!({ "method": "scroll_page_down_and_modify_selection", "view_id": view_id}),
+        &json!({ "method": "page_down_and_modify_selection", "view_id": view_id}),
     );
     Response::Continue
 }
