@@ -113,7 +113,7 @@ pub fn move_right_and_select(view_id: &str, core: &dyn Peer) -> Response {
     Response::Continue
 }
 
-pub fn copy(view_id: &str, core: &dyn Peer) -> Response {
+pub fn copy_selection(view_id: &str, core: &dyn Peer) -> Response {
     let res = core.send_rpc_request("edit", &json!({ "method": "copy", "view_id": view_id}));
     if let Ok(paste_buffer) = res {
         let mut buffer = PAST_BUFFER.lock().unwrap();
@@ -121,6 +121,12 @@ pub fn copy(view_id: &str, core: &dyn Peer) -> Response {
     } else {
         error!("failed to copy: {:?}", res.unwrap_err());
     }
+
+    // Remove the selection
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "collapse_selections", "view_id": view_id}),
+    );
 
     Response::Continue
 }
