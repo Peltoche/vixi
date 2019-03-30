@@ -1,6 +1,6 @@
 use std::char::*;
 
-use ncurses::{getch, nodelay, stdscr, WchResult};
+use ncurses::{getch, WchResult};
 
 const ESC_OR_ALT_KEY: u32 = 27;
 
@@ -10,7 +10,6 @@ pub enum KeyStroke {
     Char(char),
     KeyF(u32),
     Alt(char),
-    Unknown,
     KeyUp,
     KeyDown,
     KeyLeft,
@@ -43,11 +42,10 @@ impl KeyStroke {
 pub struct Keyboard {}
 
 impl Keyboard {
-    pub fn get_next_keystroke(&self) -> KeyStroke {
+    pub fn get_next_keystroke(&self) -> Option<KeyStroke> {
         let res = ncurses::get_wch();
         if res.is_none() {
-            warn!("get_wch return none");
-            return KeyStroke::Unknown;
+            return None;
         }
 
         let c_u32 = match res.unwrap() {
@@ -64,12 +62,12 @@ impl Keyboard {
             // otherwise -1 is sent (Escape)
             let next_key = getch();
             if next_key == -1 {
-                return KeyStroke::KeyEscape;
+                return Some(KeyStroke::KeyEscape);
             }
 
-            return KeyStroke::Alt(from_u32(next_key as u32).unwrap_or('?'));
+            return Some(KeyStroke::Alt(from_u32(next_key as u32).unwrap_or('?')));
         }
 
-        KeyStroke::Char(from_u32(c_u32).unwrap())
+        Some(KeyStroke::Char(from_u32(c_u32).unwrap()))
     }
 }

@@ -77,7 +77,9 @@ impl Terminal {
         keypad(stdscr(), true); // Allow for extended keyboard (like F1).
         noecho();
         start_color();
-        //scrollok();
+        //nodelay(stdscr(), true);
+        set_escdelay(0);
+        halfdelay(1);
 
         install_custom_panic_handler();
 

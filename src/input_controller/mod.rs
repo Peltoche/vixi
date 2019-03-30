@@ -103,19 +103,21 @@ impl Controller {
 
     pub fn start_keyboard_event_loop(&mut self, core: &dyn Peer) -> Result<(), Error> {
         loop {
-            let key = self.keyboard.get_next_keystroke();
+            let key_res = self.keyboard.get_next_keystroke();
 
-            info!("key: {:?}", key);
-            let res = match self.mode {
-                Mode::Normal => self.normal_mode.handle_keystroke(key, &self.view_id, core),
-                Mode::Insert => self.insert_mode.handle_keystroke(key, &self.view_id, core),
-            };
+            if let Some(key) = key_res {
+                info!("key: {:?}", key);
+                let res = match self.mode {
+                    Mode::Normal => self.normal_mode.handle_keystroke(key, &self.view_id, core),
+                    Mode::Insert => self.insert_mode.handle_keystroke(key, &self.view_id, core),
+                };
 
-            match res {
-                Response::Continue => {}
-                Response::Stop => break,
-                Response::SwitchToInsertMode => self.mode = Mode::Insert,
-                Response::SwitchToNormalMode => self.mode = Mode::Normal,
+                match res {
+                    Response::Continue => {}
+                    Response::Stop => break,
+                    Response::SwitchToInsertMode => self.mode = Mode::Insert,
+                    Response::SwitchToNormalMode => self.mode = Mode::Normal,
+                }
             }
         }
 
