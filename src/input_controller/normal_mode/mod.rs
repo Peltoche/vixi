@@ -52,9 +52,18 @@ impl NormalMode {
                 Action::PageUp => page_up(view_id, core),
                 Action::PageDown => page_down(view_id, core),
                 Action::Paste => paste(view_id, core),
+                Action::InsertLineBelow => insert_line_bellow(view_id, core),
             };
         }
 
         Response::Continue
     }
+}
+
+fn insert_line_bellow(view_id: &str, core: &dyn Peer) -> Response {
+    move_down(view_id, core);
+    insert_newline(view_id, core);
+    move_up(view_id, core);
+
+    Response::SwitchToInsertMode
 }
