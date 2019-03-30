@@ -175,13 +175,7 @@ impl Terminal {
         );
 
         // Save the other metas into a map.
-        self.styles.insert(
-            style_id,
-            Style {
-                style_id: style_id,
-                italic: italic,
-            },
-        );
+        self.styles.insert(style_id, Style { style_id, italic });
     }
 
     pub fn set_background_color(&self, color: RGBColor) {
@@ -225,17 +219,15 @@ impl Terminal {
             screen_size_y as usize
         };
 
-        let mut screen_line = 0;
         let buffer_iter = buffer
             .lines
             .iter()
             .skip(buffer_start as usize)
             .take(buffer_len);
-        for line in buffer_iter {
+        for (screen_line, line) in buffer_iter.enumerate() {
             if behavior == RedrawBehavior::Everything || line.is_dirty {
                 self.rewrite_line(screen_line, &line);
             }
-            screen_line += 1;
         }
     }
 
@@ -295,7 +287,7 @@ impl Terminal {
             idx += style_start + style_length;
         }
 
-        let mut content_iter = line.raw.chars().into_iter();
+        let mut content_iter = line.raw.chars();
         for style in style_map.iter() {
             let attrs = if style.italic { A_ITALIC() } else { A_NORMAL() };
 

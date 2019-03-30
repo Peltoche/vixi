@@ -107,9 +107,8 @@ impl EventController {
         info!("receive status item: {}", body);
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-        match event.key.as_str() {
-            "change-mode" => self.terminal.update_status_bar_mode(&event.value),
-            _ => (),
+        if let "change-mode" = event.key.as_str() {
+            self.terminal.update_status_bar_mode(&event.value);
         }
     }
 
@@ -122,9 +121,8 @@ impl EventController {
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-        match event.key.as_str() {
-            "change-mode" => self.terminal.update_status_bar_mode(&event.value),
-            _ => (),
+        if let "change-mode" = event.key.as_str() {
+            self.terminal.update_status_bar_mode(&event.value);
         }
     }
 
