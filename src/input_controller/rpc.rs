@@ -1,5 +1,5 @@
 use crate::devices::keyboard::KeyStroke;
-use crate::input_controller::Response;
+use crate::input_controller::{Response, PAST_BUFFER};
 
 use xi_rpc::Peer;
 
@@ -110,5 +110,34 @@ pub fn move_right_and_select(view_id: &str, core: &dyn Peer) -> Response {
         "edit",
         &json!({ "method": "move_right_and_modify_selection", "view_id": view_id}),
     );
+    Response::Continue
+}
+
+pub fn copy(view_id: &str, core: &dyn Peer) -> Response {
+    let res = core.send_rpc_request("edit", &json!({ "method": "copy", "view_id": view_id}));
+    if let Ok(paste_buffer) = res {
+        let mut buffer = PAST_BUFFER.lock().unwrap();
+        *buffer = Some(String::from(paste_buffer.as_str().unwrap()));
+    } else {
+        error!("failed to copy: {:?}", res.unwrap_err());
+    }
+
+    Response::Continue
+}
+
+pub fn paste(view_id: &str, core: &dyn Peer) -> Response {
+    let buffer = PAST_BUFFER.lock().unwrap();
+    if let Some(ref s) = *buffer {
+        core.send_rpc_notification(
+            "edit",
+            &json!({
+            "method": "paste",
+            "view_id": view_id,
+            "params": {
+            "chars": s,
+            }
+            }),
+        );
+    }
     Response::Continue
 }

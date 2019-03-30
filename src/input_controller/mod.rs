@@ -4,6 +4,8 @@ mod visual_mode;
 
 mod rpc;
 
+use std::sync::{Arc, Mutex};
+
 use self::insert_mode::InsertMode;
 use self::normal_mode::NormalMode;
 use self::visual_mode::VisualMode;
@@ -12,6 +14,10 @@ use crate::devices::terminal::Terminal;
 
 use failure::Error;
 use xi_rpc::Peer;
+
+lazy_static! {
+    static ref PAST_BUFFER: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
+}
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 enum Mode {

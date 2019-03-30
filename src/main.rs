@@ -15,6 +15,8 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate lazy_static;
 
 mod cli;
 mod devices;

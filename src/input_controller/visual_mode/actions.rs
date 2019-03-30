@@ -11,6 +11,8 @@ pub enum Action {
     MoveDown,
     MoveLeft,
     MoveRight,
+    Yank,
+    Paste,
     //PageUp,
     //PageDown,
 }
@@ -24,6 +26,8 @@ impl Default for Actions {
         let mut actions = HashMap::with_capacity(1);
 
         actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
+        actions.insert(KeyStroke::Char('y'), Action::Yank);
+        actions.insert(KeyStroke::Char('p'), Action::Paste);
 
         // The classic arrow keys.
         actions.insert(KeyStroke::KeyUp, Action::MoveUp);
