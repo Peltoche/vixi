@@ -23,7 +23,7 @@ const MAX_STYLE_ID: u32 = 50;
 
 /// Split the 255 available values into namespaces in which the foreground,
 /// background and selection colors are separated.
-const PAIR_NAMESPACE: u32 = MAX_STYLE_ID * 1;
+const PAIR_NAMESPACE: u32 = MAX_STYLE_ID * 0;
 const FG_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 1;
 const BG_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 2;
 const SELECTION_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 3;
@@ -317,7 +317,7 @@ impl Terminal {
             let style_id = if style.selected {
                 SELECTION_COLOR_NAMESPACE + style.style_id
             } else {
-                style.style_id
+                PAIR_NAMESPACE + style.style_id
             };
 
             addch(content_iter.next().unwrap() as chtype | attrs | COLOR_PAIR(style_id as i16));
