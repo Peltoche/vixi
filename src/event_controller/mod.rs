@@ -135,6 +135,7 @@ impl EventController {
     /// This function need to create a new set of background/foreground and save
     /// it with the given id.
     fn handle_style_change(&mut self, body: &Value) {
+        info!("style change: {}", body);
         #[derive(Deserialize, Debug)]
         struct Event {
             id: u32,

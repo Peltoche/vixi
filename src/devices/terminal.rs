@@ -21,14 +21,31 @@ const SPACES_IN_LINE_SECTION: u32 = 2;
 /// Check the `handle_style_change` method documentation for more informations.
 const MAX_STYLE_ID: u32 = 50;
 
+/// Split the 255 available values into namespaces in which the foreground,
+/// background and selection colors are separated.
+const PAIR_NAMESPACE: u32 = MAX_STYLE_ID * 1;
+const FG_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 1;
+const BG_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 2;
+const SELECTION_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 3;
+const CUSTOM_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 4;
+
 /// The color id for the default background.
-const BG_STYLE_ID: u32 = 253;
+///
+/// It use the index 0 of the BG_COLOR_NAMESPACE.
+const DEFAULT_BG_STYLE_ID: u32 = BG_COLOR_NAMESPACE;
+
 /// The pair id for the default background/foreground.
-const DEFAULT_COLOR_PAIR_ID: i16 = 254;
+///
+/// The pair_id 0 is the one used by default by the ncurse.
+const DEFAULT_COLOR_PAIR_ID: i16 = 0;
 
-const SELECTION_STYLE_ID: u32 = 0;
+/// ID for the background color id used for the selections.
+const SELECTION_BACKGROUND_COLOR_ID: u32 = CUSTOM_COLOR_NAMESPACE + 0;
 
-const SELECTION_COLOR_NAMESPACE: u32 = 150;
+/// The style id 0 is reserved for the selection style id.
+///
+/// This id is different than the pair id.
+const SELECTION_CORE_STYLE_ID: u32 = 0;
 
 static HANDLER: Once = ONCE_INIT;
 
@@ -89,7 +106,7 @@ impl Terminal {
         //
         // TODO: make the background color configurable.
         terminal.save_color(
-            SELECTION_STYLE_ID,
+            SELECTION_BACKGROUND_COLOR_ID,
             RGBColor {
                 r: 70,
                 g: 70,
@@ -161,8 +178,9 @@ impl Terminal {
         }
 
         // Name space the foreground and background colors.
-        let fg_style_id = 50 + style_id;
-        let bg_style_id = 100 + style_id;
+        let pair_id = PAIR_NAMESPACE + style_id;
+        let fg_style_id = FG_COLOR_NAMESPACE + style_id;
+        let bg_style_id = BG_COLOR_NAMESPACE + style_id;
         let selected_style_id = SELECTION_COLOR_NAMESPACE + style_id;
 
         self.save_color(fg_style_id, fg_color);
@@ -172,11 +190,11 @@ impl Terminal {
         // method. The pair_id must be the same id than the style id in order
         // to avoid translation during the rendering (cf: the
         // `print_stylized_line` method).
-        init_pair(style_id as i16, fg_style_id as i16, bg_style_id as i16);
+        init_pair(pair_id as i16, fg_style_id as i16, bg_style_id as i16);
         init_pair(
             selected_style_id as i16,
             fg_style_id as i16,
-            SELECTION_STYLE_ID as i16,
+            SELECTION_BACKGROUND_COLOR_ID as i16,
         );
 
         // Save the other metas into a map.
@@ -186,11 +204,11 @@ impl Terminal {
     pub fn set_background_color(&self, color: RGBColor) {
         // Create a new pair with the background color and white as foreground
         // color.
-        self.save_color(BG_STYLE_ID, color);
+        self.save_color(DEFAULT_BG_STYLE_ID, color);
         init_pair(
             DEFAULT_COLOR_PAIR_ID as i16,
             COLOR_WHITE,
-            BG_STYLE_ID as i16,
+            DEFAULT_BG_STYLE_ID as i16,
         );
 
         // Apply this color everywhere in the terminal by setting some ` ` char
@@ -261,7 +279,7 @@ impl Terminal {
         style_map.resize(
             line.raw.len(),
             CharStyle {
-                style_id: BG_STYLE_ID,
+                style_id: DEFAULT_COLOR_PAIR_ID as u32,
                 selected: false,
                 italic: false,
             },
@@ -279,7 +297,7 @@ impl Terminal {
             for i in idx + style_start..idx + style_start + style_length {
                 let char_style = &mut style_map[i as usize];
 
-                if style_id == SELECTION_STYLE_ID {
+                if style_id == SELECTION_CORE_STYLE_ID {
                     char_style.selected = true;
                 } else {
                     char_style.style_id = style_id;
