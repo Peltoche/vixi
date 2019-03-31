@@ -30,6 +30,7 @@ impl Action {
     }
 }
 
+#[derive(Debug)]
 pub struct Actions(HashMap<KeyStroke, Action>);
 
 impl Default for Actions {

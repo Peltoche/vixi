@@ -28,14 +28,15 @@ impl KeyStroke {
         }
 
         match description {
-            "f1" => Some(KeyStroke::KeyF(1)),
-            "key_up" => Some(KeyStroke::KeyUp),
-            "key_down" => Some(KeyStroke::KeyDown),
-            "key_left" => Some(KeyStroke::KeyLeft),
-            "key_right" => Some(KeyStroke::KeyRight),
-            "page_up" => Some(KeyStroke::KeyPreviousPage),
-            "page_down" => Some(KeyStroke::KeyNextPage),
-            "backspace" => Some(KeyStroke::KeyBackSpace),
+            "<f1>" => Some(KeyStroke::KeyF(1)),
+            "<key_up>" => Some(KeyStroke::KeyUp),
+            "<key_down>" => Some(KeyStroke::KeyDown),
+            "<key_left>" => Some(KeyStroke::KeyLeft),
+            "<key_right>" => Some(KeyStroke::KeyRight),
+            "<page_up>" => Some(KeyStroke::KeyPreviousPage),
+            "<page_down>" => Some(KeyStroke::KeyNextPage),
+            "<backspace>" => Some(KeyStroke::KeyBackSpace),
+            "<esc>" => Some(KeyStroke::KeyEscape),
             _ => None,
         }
     }

@@ -1,0 +1,62 @@
+[normal_mode]
+[[actions]]
+exit = "q"
+switch_to_insert_mode = "i"
+switch_to_visual_mode = "v"
+
+paste = "p"
+
+insert_line_below = "o"
+insert_line_above = "O"
+
+# The "classic" move keys
+move_up = "<key_up>"
+move_down = "<key_down>"
+move_left = "<key_left>"
+move_right = "<key_right>"
+
+# The "vim-like" move keys
+move_up = "k"
+move_up = "j"
+move_left = "h"
+move_right = "l"
+
+[[verbs]]
+delete = "d"
+
+[[nouns]]
+line = "l"
+
+
+
+[visual_mode]
+[[actions]]
+exit_select_mode = "<esc>"
+yank = "y"
+paste = "p"
+
+# The "classic" move keys
+move_up = "<key_up>"
+move_down = "<key_down>"
+move_left = "<key_left>"
+move_right = "<key_right>"
+
+# The "vim-like" move keys
+move_up = "k"
+move_up = "j"
+move_left = "h"
+move_right = "l"
+
+
+[insert_mode]
+[[actions]]
+exit_insert_mode = "<esc>"
+
+# The "classic" move keys
+move_up = "<key_up>"
+move_down = "<key_down>"
+move_left = "<key_left>"
+move_right = "<key_right>"
+
+page_up = "<page_up>"
+page_down = "<page_down>"

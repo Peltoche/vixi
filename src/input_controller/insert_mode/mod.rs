@@ -25,7 +25,7 @@ impl InsertMode {
         let action = self.actions.get(key);
         if let Some(action) = action {
             return match action {
-                Action::SwitchToNormalMode => Response::SwitchToNormalMode,
+                Action::ExitInsertMode => Response::SwitchToNormalMode,
                 Action::MoveUp => move_up(view_id, core),
                 Action::MoveDown => move_down(view_id, core),
                 Action::MoveLeft => move_left(view_id, core),

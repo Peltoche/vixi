@@ -22,6 +22,7 @@ impl Action {
     pub fn from_description(desc: &str) -> Option<Action> {
         match desc {
             "swtich_to_insert_mode" => Some(Action::SwitchToInsertMode),
+            "swtich_to_visual_mode" => Some(Action::SwitchToVisualMode),
             "move_up" => Some(Action::MoveUp),
             "move_down" => Some(Action::MoveDown),
             "move_left" => Some(Action::MoveLeft),

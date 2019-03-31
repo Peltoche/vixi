@@ -4,7 +4,7 @@ use crate::devices::keyboard::KeyStroke;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
-    SwitchToNormalMode,
+    ExitInsertMode,
     DeleteBackward,
     DeleteForward,
     MoveUp,
@@ -18,7 +18,7 @@ pub enum Action {
 impl Action {
     pub fn from_description(desc: &str) -> Option<Action> {
         match desc {
-            "swtich_to_normal_mode" => Some(Action::SwitchToNormalMode),
+            "exit_insert_mode" => Some(Action::ExitInsertMode),
             "move_up" => Some(Action::MoveUp),
             "move_down" => Some(Action::MoveDown),
             "move_left" => Some(Action::MoveLeft),
@@ -36,8 +36,7 @@ impl Default for Actions {
     fn default() -> Self {
         let mut actions = HashMap::with_capacity(1);
 
-        actions.insert(KeyStroke::Char('i'), Action::SwitchToNormalMode);
-        actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
+        actions.insert(KeyStroke::KeyEscape, Action::ExitInsertMode);
         actions.insert(KeyStroke::KeyBackSpace, Action::DeleteBackward);
         actions.insert(KeyStroke::KeyDeleteChar, Action::DeleteForward);
 

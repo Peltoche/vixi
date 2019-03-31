@@ -26,6 +26,8 @@ mod event_controller;
 mod input_controller;
 mod logging;
 
+use std::fs::File;
+use std::io::prelude::*;
 use std::process::exit;
 use std::thread;
 
@@ -46,17 +48,25 @@ fn setup_logger() {
     logging::setup(&logging_path).expect("failed to set the logger")
 }
 
-fn setup_config(core: &dyn Peer) -> Result<(), Error> {
+fn setup_config(core: &dyn Peer) -> Result<Config, Error> {
     let mut xi_config_dir =
         dirs::config_dir().ok_or_else(|| format_err!("config dir not found"))?;
     xi_config_dir.push("xi");
+
+    let mut vixi_config_file = xi_config_dir.clone();
+    vixi_config_file.push("vixi.toml");
+
+    let mut file = File::open(&vixi_config_file)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    let config: Config = toml::from_str(&contents)?;
 
     core.send_rpc_notification(
         "client_started",
         &json!({ "config_dir": xi_config_dir.to_str().unwrap(), }),
     );
 
-    Ok(())
+    Ok(config)
 }
 
 fn main() {
@@ -72,8 +82,7 @@ fn main() {
     let terminal = Terminal::new();
     let keyboard = Keyboard::default();
 
-    let mut controller = InputController::new(terminal.clone(), keyboard, &Config::default());
-    let mut event_handler = EventController::new(terminal);
+    let mut event_handler = EventController::new(terminal.clone());
 
     let (client_to_core_writer, core_to_client_reader) = core::start_xi_core();
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
@@ -81,26 +90,20 @@ fn main() {
     let raw_peer = front_event_loop.get_raw_peer();
     thread::spawn(move || front_event_loop.mainloop(|| core_to_client_reader, &mut event_handler));
 
-    let mut ret = Ok(());
-
-    if ret.is_ok() {
-        ret = setup_config(&raw_peer);
-    }
-
-    if ret.is_ok() {
-        ret = controller.open_file(&raw_peer, file_path);
-    }
-
-    if ret.is_ok() {
-        ret = controller.start_keyboard_event_loop(&raw_peer);
-    }
-
-    if let Err(err) = ret {
-        error!("{}", err);
-        println!("{}", err);
-        endwin();
-        exit(1);
-    }
+    let exit_res = setup_config(&raw_peer)
+        .and_then(|config| Ok(InputController::new(terminal, keyboard, &config)))
+        .and_then(|mut controller| {
+            controller.open_file(&raw_peer, file_path)?;
+            controller.start_keyboard_event_loop(&raw_peer)
+        });
 
     endwin();
+
+    match exit_res {
+        Ok(_) => exit(0),
+        Err(err) => {
+            println!("{}", err);
+            exit(1);
+        }
+    }
 }
