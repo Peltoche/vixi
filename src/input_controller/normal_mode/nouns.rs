@@ -29,6 +29,7 @@ impl Default for Nouns {
 }
 
 impl Nouns {
+    #[allow(dead_code)]
     pub fn get(&self, key: KeyStroke) -> Option<Noun> {
         if let Some(key) = self.0.get(&key) {
             Some(*key)
@@ -42,8 +43,8 @@ impl Nouns {
     }
 }
 
-impl From<HashMap<String, String>> for Nouns {
-    fn from(config_map: HashMap<String, String>) -> Self {
+impl From<&HashMap<String, String>> for Nouns {
+    fn from(config_map: &HashMap<String, String>) -> Self {
         let mut nouns = Nouns::default();
 
         for (noun_name, key_desc) in config_map.iter() {
@@ -74,7 +75,7 @@ mod tests {
     #[test]
     fn created_with_an_empty_config_keeps_the_default_values() {
         // The config is empty
-        let nouns = Nouns::from(HashMap::new());
+        let nouns = Nouns::from(&HashMap::new());
 
         // It load the default configs.
         assert_eq!(Some(Noun::Line), nouns.get(KeyStroke::Char('l')));

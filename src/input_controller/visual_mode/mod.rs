@@ -44,10 +44,10 @@ impl VisualMode {
     }
 }
 
-impl From<Config> for VisualMode {
-    fn from(config: Config) -> Self {
+impl From<&Config> for VisualMode {
+    fn from(config: &Config) -> Self {
         Self {
-            actions: Actions::from(config.actions),
+            actions: Actions::from(&config.actions),
         }
     }
 }

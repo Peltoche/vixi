@@ -4,7 +4,6 @@ mod visual_mode;
 
 mod rpc;
 
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use self::insert_mode::InsertMode;
@@ -23,9 +22,9 @@ lazy_static! {
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
     #[serde(default)]
-    normal_mode: HashMap<String, String>,
+    normal_mode: normal_mode::Config,
     #[serde(default)]
-    insert_mode: HashMap<String, String>,
+    insert_mode: insert_mode::Config,
     #[serde(default)]
     visual_mode: visual_mode::Config,
 }
@@ -68,14 +67,14 @@ pub struct InputController {
 }
 
 impl InputController {
-    pub fn new(terminal: Terminal, keyboard: Keyboard) -> Self {
+    pub fn new(terminal: Terminal, keyboard: Keyboard, config: &Config) -> Self {
         Self {
             terminal,
             keyboard,
             view_id: String::new(),
-            normal_mode: NormalMode::default(),
-            insert_mode: InsertMode::default(),
-            visual_mode: VisualMode::default(),
+            normal_mode: NormalMode::from(&config.normal_mode),
+            insert_mode: InsertMode::from(&config.insert_mode),
+            visual_mode: VisualMode::from(&config.visual_mode),
             mode: Mode::Normal,
         }
     }

@@ -29,6 +29,7 @@ impl Default for Verbs {
 }
 
 impl Verbs {
+    #[allow(dead_code)]
     pub fn get(&self, key: KeyStroke) -> Option<Verb> {
         if let Some(key) = self.0.get(&key) {
             Some(*key)
@@ -42,8 +43,8 @@ impl Verbs {
     }
 }
 
-impl From<HashMap<String, String>> for Verbs {
-    fn from(config_map: HashMap<String, String>) -> Self {
+impl From<&HashMap<String, String>> for Verbs {
+    fn from(config_map: &HashMap<String, String>) -> Self {
         let mut verbs = Verbs::default();
 
         for (verb_name, key_desc) in config_map.iter() {
@@ -74,7 +75,7 @@ mod tests {
     #[test]
     fn created_with_an_empty_config_keeps_the_default_values() {
         // The config is empty
-        let verbs = Verbs::from(HashMap::new());
+        let verbs = Verbs::from(&HashMap::new());
 
         // It load the default configs.
         assert_eq!(Some(Verb::Delete), verbs.get(KeyStroke::Char('d')));

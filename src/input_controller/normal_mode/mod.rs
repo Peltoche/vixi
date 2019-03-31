@@ -32,12 +32,12 @@ pub struct NormalMode {
     actions: Actions,
 }
 
-impl From<Config> for NormalMode {
-    fn from(config_map: Config) -> Self {
+impl From<&Config> for NormalMode {
+    fn from(config_map: &Config) -> Self {
         Self {
-            actions: Actions::from(config_map.actions),
-            nouns: Nouns::default(),
-            verbs: Verbs::default(),
+            actions: Actions::from(&config_map.actions),
+            nouns: Nouns::from(&config_map.nouns),
+            verbs: Verbs::from(&config_map.verbs),
         }
     }
 }

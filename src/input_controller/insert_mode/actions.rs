@@ -67,8 +67,8 @@ impl Actions {
     }
 }
 
-impl From<HashMap<String, String>> for Actions {
-    fn from(config_map: HashMap<String, String>) -> Self {
+impl From<&HashMap<String, String>> for Actions {
+    fn from(config_map: &HashMap<String, String>) -> Self {
         let mut actions = Actions::default();
 
         for (action_name, key_desc) in config_map.iter() {
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn created_with_an_empty_config_keeps_the_default_values() {
         // The config is empty
-        let actions = Actions::from(HashMap::new());
+        let actions = Actions::from(&HashMap::new());
 
         // It load the default configs.
         assert_eq!(Some(Action::MoveUp), actions.get(KeyStroke::KeyUp));
@@ -114,7 +114,7 @@ mod tests {
             .cloned()
             .collect();
 
-        let actions = Actions::from(config);
+        let actions = Actions::from(&config);
 
         assert_eq!(Some(Action::MoveDown), actions.get(KeyStroke::KeyUp));
     }
@@ -131,7 +131,7 @@ mod tests {
         .cloned()
         .collect();
 
-        let actions = Actions::from(config);
+        let actions = Actions::from(&config);
 
         assert_eq!(Some(Action::MoveDown), actions.get(KeyStroke::KeyDown));
         assert_eq!(Some(Action::MoveUp), actions.get(KeyStroke::KeyUp));

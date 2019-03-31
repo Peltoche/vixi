@@ -42,10 +42,10 @@ impl InsertMode {
     }
 }
 
-impl From<Config> for InsertMode {
-    fn from(config: Config) -> Self {
+impl From<&Config> for InsertMode {
+    fn from(config: &Config) -> Self {
         Self {
-            actions: Actions::from(config.actions),
+            actions: Actions::from(&config.actions),
         }
     }
 }

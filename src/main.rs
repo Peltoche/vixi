@@ -32,7 +32,7 @@ use std::thread;
 use devices::keyboard::Keyboard;
 use devices::terminal::Terminal;
 use event_controller::EventController;
-use input_controller::InputController;
+use input_controller::{Config, InputController};
 
 use failure::Error;
 use ncurses::*;
@@ -72,7 +72,7 @@ fn main() {
     let terminal = Terminal::new();
     let keyboard = Keyboard::default();
 
-    let mut controller = InputController::new(terminal.clone(), keyboard);
+    let mut controller = InputController::new(terminal.clone(), keyboard, &Config::default());
     let mut event_handler = EventController::new(terminal);
 
     let (client_to_core_writer, core_to_client_reader) = core::start_xi_core();
