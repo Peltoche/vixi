@@ -46,7 +46,7 @@ impl Mode {
     }
 }
 
-pub struct Controller {
+pub struct InputController {
     terminal: Terminal,
     keyboard: Keyboard,
     view_id: String,
@@ -56,7 +56,7 @@ pub struct Controller {
     mode: Mode,
 }
 
-impl Controller {
+impl InputController {
     pub fn new(terminal: Terminal, keyboard: Keyboard) -> Self {
         Self {
             terminal,

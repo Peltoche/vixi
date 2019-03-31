@@ -31,7 +31,7 @@ use std::thread;
 use devices::keyboard::Keyboard;
 use devices::terminal::Terminal;
 use event_controller::EventController;
-use input_controller::Controller;
+use input_controller::InputController;
 
 use ncurses::*;
 use xi_rpc::RpcLoop;
@@ -57,11 +57,12 @@ fn main() {
     let terminal = Terminal::new();
     let keyboard = Keyboard::default();
 
-    let mut controller = Controller::new(terminal.clone(), keyboard);
+    let mut controller = InputController::new(terminal.clone(), keyboard);
     let mut event_handler = EventController::new(terminal);
 
     let (client_to_core_writer, core_to_client_reader) = core::start_xi_core();
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
+
     let raw_peer = front_event_loop.get_raw_peer();
     thread::spawn(move || front_event_loop.mainloop(|| core_to_client_reader, &mut event_handler));
 
