@@ -70,15 +70,6 @@ impl InputController {
     }
 
     pub fn open_file(&mut self, core: &dyn Peer, file_path: &str) -> Result<(), Error> {
-        let mut xi_config_dir =
-            dirs::config_dir().ok_or_else(|| format_err!("config dir not found"))?;
-        xi_config_dir.push("xi");
-
-        core.send_rpc_notification(
-            "client_started",
-            &json!({ "config_dir": xi_config_dir.to_str().unwrap(), }),
-        );
-
         let view_id = core
             .send_rpc_request("new_view", &json!({ "file_path": file_path }))
             .expect("failed to create the new view");

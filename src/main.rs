@@ -33,8 +33,9 @@ use devices::terminal::Terminal;
 use event_controller::EventController;
 use input_controller::InputController;
 
+use failure::Error;
 use ncurses::*;
-use xi_rpc::RpcLoop;
+use xi_rpc::{Peer, RpcLoop};
 
 fn setup_logger() {
     let logging_path = dirs::home_dir()
@@ -42,6 +43,19 @@ fn setup_logger() {
         .join(".local/share/vixy/vixi.log");
 
     logging::setup(&logging_path).expect("failed to set the logger")
+}
+
+fn setup_config(core: &dyn Peer) -> Result<(), Error> {
+    let mut xi_config_dir =
+        dirs::config_dir().ok_or_else(|| format_err!("config dir not found"))?;
+    xi_config_dir.push("xi");
+
+    core.send_rpc_notification(
+        "client_started",
+        &json!({ "config_dir": xi_config_dir.to_str().unwrap(), }),
+    );
+
+    Ok(())
 }
 
 fn main() {
@@ -67,6 +81,10 @@ fn main() {
     thread::spawn(move || front_event_loop.mainloop(|| core_to_client_reader, &mut event_handler));
 
     let mut ret = Ok(());
+
+    if ret.is_ok() {
+        ret = setup_config(&raw_peer);
+    }
 
     if ret.is_ok() {
         ret = controller.open_file(&raw_peer, file_path);
