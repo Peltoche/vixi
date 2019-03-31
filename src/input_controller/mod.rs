@@ -4,6 +4,7 @@ mod visual_mode;
 
 mod rpc;
 
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use self::insert_mode::InsertMode;
@@ -17,6 +18,16 @@ use xi_rpc::Peer;
 
 lazy_static! {
     static ref PAST_BUFFER: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct Config {
+    #[serde(default)]
+    normal_mode: HashMap<String, String>,
+    #[serde(default)]
+    insert_mode: HashMap<String, String>,
+    #[serde(default)]
+    visual_mode: visual_mode::Config,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -131,4 +142,25 @@ impl InputController {
 
         Ok(())
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Config;
+
+    #[test]
+    fn test_config_deserialization() {
+        let config: Config = toml::from_str(
+            r#"
+        visual_mode.actions.move_down  = "key_up"
+         "#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            String::from("key_up"),
+            config.visual_mode.actions[&String::from("move_down")]
+        );
+    }
+
 }

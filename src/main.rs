@@ -17,6 +17,7 @@ extern crate serde_derive;
 extern crate failure;
 #[macro_use]
 extern crate lazy_static;
+extern crate toml;
 
 mod cli;
 mod core;

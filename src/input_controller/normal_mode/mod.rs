@@ -2,6 +2,8 @@ mod actions;
 mod nouns;
 mod verbs;
 
+use std::collections::HashMap;
+
 use self::actions::{Action, Actions};
 use self::nouns::Nouns;
 use self::verbs::Verbs;
@@ -9,14 +11,16 @@ use crate::devices::keyboard::KeyStroke;
 use crate::input_controller::rpc::*;
 use crate::input_controller::Response;
 
-use failure::Error;
 use xi_rpc::Peer;
 
-#[derive(Default)]
+#[derive(Default, Debug, Deserialize)]
 pub struct Config {
-    verbs: verbs::Config,
-    nouns: nouns::Config,
-    actions: actions::Config,
+    #[serde(default)]
+    pub actions: HashMap<String, String>,
+    #[serde(default)]
+    pub verbs: HashMap<String, String>,
+    #[serde(default)]
+    pub nouns: HashMap<String, String>,
 }
 
 #[derive(Default)]
@@ -28,16 +32,17 @@ pub struct NormalMode {
     actions: Actions,
 }
 
-impl NormalMode {
-    #[allow(dead_code)]
-    pub fn from_config(config_map: &Config) -> Result<Self, Error> {
-        Ok(NormalMode {
-            verbs: Verbs::from_config(&config_map.verbs)?,
-            nouns: Nouns::from_config(&config_map.nouns)?,
-            actions: Actions::from_config(&config_map.actions)?,
-        })
+impl From<Config> for NormalMode {
+    fn from(config_map: Config) -> Self {
+        Self {
+            actions: Actions::from(config_map.actions),
+            nouns: Nouns::default(),
+            verbs: Verbs::default(),
+        }
     }
+}
 
+impl NormalMode {
     pub fn handle_keystroke(&self, key: KeyStroke, view_id: &str, core: &dyn Peer) -> Response {
         let action = self.actions.get(key);
         if let Some(action) = action {

@@ -1,5 +1,7 @@
 mod actions;
 
+use std::collections::HashMap;
+
 use self::actions::{Action, Actions};
 use crate::devices::keyboard::KeyStroke;
 use crate::input_controller::rpc::*;
@@ -7,10 +9,10 @@ use crate::input_controller::Response;
 
 use xi_rpc::Peer;
 
-#[derive(Default)]
-#[allow(dead_code)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Config {
-    actions: actions::Config,
+    #[serde(default)]
+    pub actions: HashMap<String, String>,
 }
 
 #[derive(Default)]
@@ -30,7 +32,7 @@ impl VisualMode {
                 Action::MoveRight => move_right_and_select(view_id, core),
                 Action::Yank => copy_selection(view_id, core),
                 Action::Paste => paste(view_id, core),
-                // The current Core implementation doesn't fail of the buffer is not
+                // The current implementation fail if the buffer is not
                 // already available
                 //
                 //Action::PageUp => page_up_and_select(view_id, core),
@@ -39,5 +41,13 @@ impl VisualMode {
         }
 
         Response::Continue
+    }
+}
+
+impl From<Config> for VisualMode {
+    fn from(config: Config) -> Self {
+        Self {
+            actions: Actions::from(config.actions),
+        }
     }
 }

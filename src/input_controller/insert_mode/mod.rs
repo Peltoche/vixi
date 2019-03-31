@@ -1,5 +1,7 @@
 mod actions;
 
+use std::collections::HashMap;
+
 use self::actions::{Action, Actions};
 use crate::devices::keyboard::KeyStroke;
 use crate::input_controller::rpc::*;
@@ -7,10 +9,10 @@ use crate::input_controller::Response;
 
 use xi_rpc::Peer;
 
-#[derive(Default)]
-#[allow(dead_code)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Config {
-    actions: actions::Config,
+    #[serde(default)]
+    pub actions: HashMap<String, String>,
 }
 
 #[derive(Default)]
@@ -37,5 +39,13 @@ impl InsertMode {
 
         insert_char(view_id, key, core);
         Response::Continue
+    }
+}
+
+impl From<Config> for InsertMode {
+    fn from(config: Config) -> Self {
+        Self {
+            actions: Actions::from(config.actions),
+        }
     }
 }
