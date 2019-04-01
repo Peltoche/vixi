@@ -136,7 +136,25 @@ pub fn copy_selection(view_id: &str, core: &dyn Peer) -> Response {
         let mut buffer = PAST_BUFFER.lock().unwrap();
         *buffer = Some(String::from(paste_buffer.as_str().unwrap()));
     } else {
-        error!("failed to copy: {:?}", res.unwrap_err());
+        error!("failed to copy selection: {:?}", res.unwrap_err());
+    }
+
+    // Remove the selection
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "collapse_selections", "view_id": view_id}),
+    );
+
+    Response::SwitchToNormalMode
+}
+
+pub fn delete_selection(view_id: &str, core: &dyn Peer) -> Response {
+    let res = core.send_rpc_request("edit", &json!({ "method": "cut", "view_id": view_id}));
+    if let Ok(paste_buffer) = res {
+        let mut buffer = PAST_BUFFER.lock().unwrap();
+        *buffer = Some(String::from(paste_buffer.as_str().unwrap()));
+    } else {
+        error!("failed to delete selection: {:?}", res.unwrap_err());
     }
 
     // Remove the selection

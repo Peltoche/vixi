@@ -22,11 +22,8 @@ lazy_static! {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
-    #[serde(default)]
     normal_mode: normal_mode::Config,
-    #[serde(default)]
     insert_mode: insert_mode::Config,
-    #[serde(default)]
     visual_mode: visual_mode::Config,
 }
 

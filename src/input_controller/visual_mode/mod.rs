@@ -30,7 +30,8 @@ impl VisualMode {
                 Action::MoveDown => move_down_and_select(view_id, core),
                 Action::MoveLeft => move_left_and_select(view_id, core),
                 Action::MoveRight => move_right_and_select(view_id, core),
-                Action::Yank => copy_selection(view_id, core),
+                Action::YankSelection => copy_selection(view_id, core),
+                Action::DeleteSelection => delete_selection(view_id, core),
                 Action::Paste => paste(view_id, core),
                 // The current implementation fail if the buffer is not
                 // already available

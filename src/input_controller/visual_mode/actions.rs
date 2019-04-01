@@ -9,7 +9,8 @@ pub enum Action {
     MoveDown,
     MoveLeft,
     MoveRight,
-    Yank,
+    YankSelection,
+    DeleteSelection,
     Paste,
     //PageUp,
     //PageDown,
@@ -23,6 +24,8 @@ impl Action {
             "move_down" => Some(Action::MoveDown),
             "move_left" => Some(Action::MoveLeft),
             "move_right" => Some(Action::MoveRight),
+            "yank_selection" => Some(Action::YankSelection),
+            "delete_selection" => Some(Action::DeleteSelection),
             //"page_up" => Action::PageUp,
             //"page_down" => Action::PageDown,
             _ => None,
@@ -38,7 +41,8 @@ impl Default for Actions {
         let mut actions = HashMap::with_capacity(1);
 
         actions.insert(KeyStroke::KeyEscape, Action::ExitSelectionMode);
-        actions.insert(KeyStroke::Char('y'), Action::Yank);
+        actions.insert(KeyStroke::Char('y'), Action::YankSelection);
+        actions.insert(KeyStroke::Char('d'), Action::DeleteSelection);
         actions.insert(KeyStroke::Char('p'), Action::Paste);
 
         // The classic arrow keys.
