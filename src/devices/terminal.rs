@@ -137,7 +137,7 @@ impl Terminal {
         getmaxyx(stdscr(), &mut size_y, &mut size_x);
 
         // Remove two lines for the status and the command bars.
-        ((size_y - 2) as usize, size_x as usize)
+        ((size_y - 1) as usize, size_x as usize)
     }
 
     pub fn redraw(&mut self) {
