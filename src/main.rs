@@ -84,14 +84,22 @@ fn main() {
 
     let mut event_handler = EventController::new(terminal.clone());
 
-    let (client_to_core_writer, core_to_client_reader) = core::start_xi_core();
+    let (client_to_core_writer, core_to_client_reader, client_to_client_writer) =
+        core::start_xi_core();
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
 
     let raw_peer = front_event_loop.get_raw_peer();
     thread::spawn(move || front_event_loop.mainloop(|| core_to_client_reader, &mut event_handler));
 
     let exit_res = setup_config(&raw_peer)
-        .and_then(|config| Ok(InputController::new(terminal, keyboard, &config)))
+        .and_then(|config| {
+            Ok(InputController::new(
+                terminal,
+                keyboard,
+                client_to_client_writer,
+                &config,
+            ))
+        })
         .and_then(|mut controller| {
             controller.open_file(&raw_peer, file_path)?;
             controller.start_keyboard_event_loop(&raw_peer)

@@ -2,6 +2,7 @@ use std::io::{self, BufRead, Read, Write};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
+use serde_json::Value;
 use xi_core_lib::XiCore;
 use xi_rpc::RpcLoop;
 
@@ -57,7 +58,26 @@ impl BufRead for Reader {
     }
 }
 
-pub fn start_xi_core() -> (Writer, Reader) {
+pub struct ClientToClientWriter(Writer);
+
+impl ClientToClientWriter {
+    pub fn send_rpc_notification(&mut self, method: &str, params: &Value) {
+        let raw_content = match serde_json::to_vec(&json!({"method": method, "params": params})) {
+            Ok(raw) => raw,
+            Err(err) => {
+                error!("failed to create the notification {}: {}", method, err);
+                return;
+            }
+        };
+
+        match self.0.write(&raw_content) {
+            Ok(_) => (),
+            Err(err) => error!("failed to send the notification {}: {}", method, err),
+        };
+    }
+}
+
+pub fn start_xi_core() -> (Writer, Reader, ClientToClientWriter) {
     let mut core = XiCore::new();
 
     let (to_core_tx, to_core_rx) = channel();
@@ -65,11 +85,17 @@ pub fn start_xi_core() -> (Writer, Reader) {
     let client_to_core_reader = Reader(to_core_rx);
 
     let (from_core_tx, from_core_rx) = channel();
-    let core_to_client_writer = Writer(from_core_tx);
+    let core_to_client_writer = Writer(from_core_tx.clone());
     let core_to_client_reader = Reader(from_core_rx);
+
+    let client_to_client_writer = ClientToClientWriter(Writer(from_core_tx));
 
     let mut core_event_loop = RpcLoop::new(core_to_client_writer);
     thread::spawn(move || core_event_loop.mainloop(|| client_to_core_reader, &mut core));
 
-    (client_to_core_writer, core_to_client_reader)
+    (
+        client_to_core_writer,
+        core_to_client_reader,
+        client_to_client_writer,
+    )
 }

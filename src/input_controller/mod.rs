@@ -9,6 +9,7 @@ use std::sync::{Arc, Mutex};
 use self::insert_mode::InsertMode;
 use self::normal_mode::NormalMode;
 use self::visual_mode::VisualMode;
+use crate::core::ClientToClientWriter;
 use crate::devices::keyboard::Keyboard;
 use crate::devices::terminal::Terminal;
 
@@ -64,10 +65,16 @@ pub struct InputController {
     insert_mode: InsertMode,
     visual_mode: VisualMode,
     mode: Mode,
+    front_event_writer: ClientToClientWriter,
 }
 
 impl InputController {
-    pub fn new(terminal: Terminal, keyboard: Keyboard, config: &Config) -> Self {
+    pub fn new(
+        terminal: Terminal,
+        keyboard: Keyboard,
+        client_to_client_writer: ClientToClientWriter,
+        config: &Config,
+    ) -> Self {
         Self {
             terminal,
             keyboard,
@@ -76,6 +83,7 @@ impl InputController {
             insert_mode: InsertMode::from(&config.insert_mode),
             visual_mode: VisualMode::from(&config.visual_mode),
             mode: Mode::Normal,
+            front_event_writer: client_to_client_writer,
         }
     }
 
@@ -97,23 +105,14 @@ impl InputController {
         );
 
         core.send_rpc_notification("set_theme", &json!({"theme_name": "Solarized (light)" }));
-        //let res = core.send_rpc_request(
-        //"plugin",
-        //&json!({
-        //"command": "plugin_rpc",
-        //"view_id": self.view_id,
-        //"receiver": "",
-        //"rpc": {
-        //"method": "add_status_item",
-        //"rpc_type": "request",
-        //"params": {
-        //"alignment": "left",
-        //"key": "change-mode",
-        //"value": self.mode.to_string(),
-        //}
-        //}
-        //}),
-        //);
+        self.front_event_writer.send_rpc_notification(
+            "add_status_item",
+            &json!({
+                "key": "change-mode",
+                "value": self.mode.to_string(),
+                "alignment": "left",
+            }),
+        );
 
         Ok(())
     }
@@ -130,12 +129,21 @@ impl InputController {
                 };
 
                 match res {
-                    Response::Continue => {}
+                    Response::Continue => continue,
                     Response::Stop => break,
                     Response::SwitchToInsertMode => self.mode = Mode::Insert,
                     Response::SwitchToNormalMode => self.mode = Mode::Normal,
                     Response::SwitchToVisualMode => self.mode = Mode::Visual,
                 }
+
+                self.front_event_writer.send_rpc_notification(
+                    "add_status_item",
+                    &json!({
+                        "key": "change-mode",
+                        "value": self.mode.to_string(),
+                        "alignment": "left",
+                    }),
+                );
             }
         }
 

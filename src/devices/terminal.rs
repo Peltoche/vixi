@@ -325,7 +325,6 @@ impl Terminal {
     }
 
     pub fn update_status_bar_mode(&mut self, mode: &str) {
-        info!("update status: {}", mode);
         let size_y = getmaxy(stdscr());
 
         // Remove 1 for the command line.

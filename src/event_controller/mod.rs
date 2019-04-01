@@ -98,25 +98,23 @@ impl EventController {
     }
 
     fn handle_new_status_item(&mut self, body: &Value) {
-        info!("new status item: {}", body);
         #[derive(Deserialize, Debug)]
         struct Event {
-            source: String,
+            //source: String,
             key: String,
             value: String,
             alignment: String,
         }
 
-        info!("receive status item: {}", body);
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
         if let "change-mode" = event.key.as_str() {
             self.terminal.update_status_bar_mode(&event.value);
         }
+        self.terminal.move_cursor(&self.cursor);
     }
 
     fn update_status_item(&mut self, body: &Value) {
-        info!("udpate status item: {}", body);
         #[derive(Deserialize, Debug)]
         struct Event {
             key: String,
@@ -128,6 +126,7 @@ impl EventController {
         if let "change-mode" = event.key.as_str() {
             self.terminal.update_status_bar_mode(&event.value);
         }
+        self.terminal.move_cursor(&self.cursor);
     }
 
     /// Handle the "def_style" event.
