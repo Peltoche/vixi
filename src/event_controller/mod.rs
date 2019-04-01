@@ -1,4 +1,4 @@
-use crate::devices::terminal::{RGBColor, RedrawBehavior, Terminal};
+use crate::devices::terminal::{RGBColor, RedrawBehavior, StyleID, Terminal};
 
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
@@ -28,7 +28,7 @@ pub struct Cursor {
 #[derive(Default, Clone)]
 pub struct Line {
     pub raw: String,
-    pub styles: Vec<i32>,
+    pub styles: Vec<StyleID>,
     /// The "real" line number.
     ///
     /// A line wrapped in two lines will keep the same `ln` value.
@@ -136,7 +136,7 @@ impl EventController {
     fn handle_style_change(&mut self, body: &Value) {
         #[derive(Deserialize, Debug)]
         struct Event {
-            id: u32,
+            id: StyleID,
             #[serde(default)]
             italic: bool,
             fg_color: u32,
@@ -254,7 +254,7 @@ impl EventController {
         struct LineDescription {
             cursor: Option<Vec<i32>>,
             ln: usize,
-            styles: Vec<i32>,
+            styles: Vec<StyleID>,
             text: String,
         }
 

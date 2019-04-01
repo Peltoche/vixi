@@ -13,26 +13,28 @@ pub enum RedrawBehavior {
     Everything,
 }
 
+pub type StyleID = i16;
+
 const SPACES_IN_LINE_SECTION: u32 = 2;
 
 /// The style id is used to override the ncurses default colors and save the
 /// style color. If this number is two hight, some color conflicts will appeares.
 ///
 /// Check the `handle_style_change` method documentation for more informations.
-const MAX_STYLE_ID: u32 = 50;
+const MAX_STYLE_ID: StyleID = 50;
 
 /// Split the 255 available values into namespaces in which the foreground,
 /// background and selection colors are separated.
-const PAIR_NAMESPACE: u32 = MAX_STYLE_ID * 0;
-const FG_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 1;
-const BG_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 2;
-const SELECTION_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 3;
-const CUSTOM_COLOR_NAMESPACE: u32 = MAX_STYLE_ID * 4;
+const PAIR_NAMESPACE: i16 = MAX_STYLE_ID * 0;
+const FG_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 1;
+const BG_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 2;
+const SELECTION_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 3;
+const CUSTOM_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 4;
 
 /// The color id for the default background.
 ///
 /// It use the index 0 of the BG_COLOR_NAMESPACE.
-const DEFAULT_BG_STYLE_ID: u32 = BG_COLOR_NAMESPACE;
+const DEFAULT_BG_STYLE_ID: StyleID = BG_COLOR_NAMESPACE;
 
 /// The pair id for the default background/foreground.
 ///
@@ -40,18 +42,18 @@ const DEFAULT_BG_STYLE_ID: u32 = BG_COLOR_NAMESPACE;
 const DEFAULT_COLOR_PAIR_ID: i16 = 0;
 
 /// ID for the background color id used for the selections.
-const SELECTION_BACKGROUND_COLOR_ID: u32 = CUSTOM_COLOR_NAMESPACE + 0;
+const SELECTION_BACKGROUND_COLOR_ID: i16 = CUSTOM_COLOR_NAMESPACE + 0;
 
 /// The style id 0 is reserved for the selection style id.
 ///
 /// This id is different than the pair id.
-const SELECTION_CORE_STYLE_ID: u32 = 0;
+const SELECTION_CORE_STYLE_ID: StyleID = 0;
 
 static HANDLER: Once = ONCE_INIT;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Style {
-    pub style_id: u32,
+    pub style_id: StyleID,
     pub italic: bool,
 }
 
@@ -79,7 +81,7 @@ pub struct RGBColor {
 
 #[derive(Clone, Debug, Default)]
 pub struct Terminal {
-    styles: HashMap<u32, Style>,
+    styles: HashMap<StyleID, Style>,
     size_line_section: u32,
 }
 
@@ -108,9 +110,9 @@ impl Terminal {
         terminal.save_color(
             SELECTION_BACKGROUND_COLOR_ID,
             RGBColor {
-                r: 70,
-                g: 70,
-                b: 70,
+                r: 90,
+                g: 90,
+                b: 90,
             },
         );
 
@@ -165,7 +167,7 @@ impl Terminal {
     /// randome colors sets.
     pub fn save_style_set(
         &mut self,
-        style_id: u32,
+        style_id: StyleID,
         fg_color: RGBColor,
         bg_color: RGBColor,
         italic: bool,
@@ -190,11 +192,11 @@ impl Terminal {
         // method. The pair_id must be the same id than the style id in order
         // to avoid translation during the rendering (cf: the
         // `print_stylized_line` method).
-        init_pair(pair_id as i16, fg_style_id as i16, bg_style_id as i16);
+        init_pair(pair_id, fg_style_id, bg_style_id);
         init_pair(
-            selected_style_id as i16,
-            fg_style_id as i16,
-            SELECTION_BACKGROUND_COLOR_ID as i16,
+            selected_style_id,
+            fg_style_id,
+            SELECTION_BACKGROUND_COLOR_ID,
         );
 
         // Save the other metas into a map.
@@ -205,11 +207,7 @@ impl Terminal {
         // Create a new pair with the background color and white as foreground
         // color.
         self.save_color(DEFAULT_BG_STYLE_ID, color);
-        init_pair(
-            DEFAULT_COLOR_PAIR_ID as i16,
-            COLOR_WHITE,
-            DEFAULT_BG_STYLE_ID as i16,
-        );
+        init_pair(DEFAULT_COLOR_PAIR_ID, COLOR_WHITE, DEFAULT_BG_STYLE_ID);
 
         // Apply this color everywhere in the terminal by setting some ` ` char
         // everywhere.
@@ -257,7 +255,7 @@ impl Terminal {
     fn rewrite_line(&mut self, line_number: usize, line: &Line) {
         #[derive(Clone, Debug)]
         struct CharStyle {
-            style_id: u32,
+            style_id: StyleID,
             selected: bool,
             italic: bool,
         }
@@ -279,7 +277,7 @@ impl Terminal {
         style_map.resize(
             line.raw.len(),
             CharStyle {
-                style_id: DEFAULT_COLOR_PAIR_ID as u32,
+                style_id: DEFAULT_COLOR_PAIR_ID,
                 selected: false,
                 italic: false,
             },
@@ -290,7 +288,7 @@ impl Terminal {
         for _ in 0..line.styles.len() / 3 {
             let style_start = (*style_iter.next().unwrap()) as i32;
             let style_length = (*style_iter.next().unwrap()) as i32;
-            let style_id = (*style_iter.next().unwrap()) as u32;
+            let style_id = *style_iter.next().unwrap();
 
             let style = self.styles.get(&style_id);
 
@@ -320,7 +318,7 @@ impl Terminal {
                 PAIR_NAMESPACE + style.style_id
             };
 
-            addch(content_iter.next().unwrap() as chtype | attrs | COLOR_PAIR(style_id as i16));
+            addch(content_iter.next().unwrap() as chtype | attrs | COLOR_PAIR(style_id));
         }
     }
 
@@ -336,9 +334,9 @@ impl Terminal {
     /// The `init_color` method take a color range within [0..1000] but the
     /// RGBA colors received by the event are within the range [0..256]. A
     /// rough conversion is done by multiplying the event values by 4.
-    fn save_color(&self, id: u32, color: RGBColor) {
+    fn save_color(&self, id: StyleID, color: RGBColor) {
         init_color(
-            id as i16,
+            id,
             i16::from(color.r) * 4,
             i16::from(color.g) * 4,
             i16::from(color.b) * 4,
