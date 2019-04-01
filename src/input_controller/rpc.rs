@@ -148,14 +148,14 @@ pub fn copy_selection(view_id: &str, core: &dyn Peer) -> Response {
     Response::SwitchToNormalMode
 }
 
-pub fn delete_selection(view_id: &str, core: &dyn Peer) -> Response {
-    let res = core.send_rpc_request("edit", &json!({ "method": "cut", "view_id": view_id}));
-    if let Ok(paste_buffer) = res {
-        let mut buffer = PAST_BUFFER.lock().unwrap();
-        *buffer = Some(String::from(paste_buffer.as_str().unwrap()));
-    } else {
-        error!("failed to delete selection: {:?}", res.unwrap_err());
+pub fn cute_selection(view_id: &str, core: &dyn Peer) -> Response {
+    let cut_res = core.send_rpc_request("edit", &json!({ "method": "cut", "view_id": view_id}));
+    if cut_res.is_err() {
+        error!("failed to cut the selection: {:?}", cut_res);
     }
+
+    let mut buffer = PAST_BUFFER.lock().unwrap();
+    *buffer = Some(String::from(cut_res.unwrap().as_str().unwrap()));
 
     // Remove the selection
     core.send_rpc_notification(
