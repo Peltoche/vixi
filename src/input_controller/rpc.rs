@@ -166,17 +166,37 @@ pub fn delete_selection(view_id: &str, core: &dyn Peer) -> Response {
     Response::SwitchToNormalMode
 }
 
+pub fn delete_selection_and_paste(view_id: &str, core: &dyn Peer) -> Response {
+    let cut_res = core.send_rpc_request("edit", &json!({ "method": "cut", "view_id": view_id}));
+    if cut_res.is_err() {
+        error!("failed to cut the selection: {:?}", cut_res);
+    }
+
+    paste(view_id, core);
+
+    let mut buffer = PAST_BUFFER.lock().unwrap();
+    *buffer = Some(String::from(cut_res.unwrap().as_str().unwrap()));
+
+    // Remove the selection
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "collapse_selections", "view_id": view_id}),
+    );
+
+    Response::SwitchToNormalMode
+}
+
 pub fn paste(view_id: &str, core: &dyn Peer) -> Response {
     let buffer = PAST_BUFFER.lock().unwrap();
     if let Some(ref s) = *buffer {
         core.send_rpc_notification(
             "edit",
             &json!({
-            "method": "paste",
-            "view_id": view_id,
-            "params": {
-            "chars": s,
-            }
+                "method": "paste",
+                "view_id": view_id,
+                "params": {
+                    "chars": s,
+                }
             }),
         );
     }

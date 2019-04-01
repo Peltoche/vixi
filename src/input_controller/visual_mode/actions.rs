@@ -11,9 +11,8 @@ pub enum Action {
     MoveRight,
     YankSelection,
     DeleteSelection,
-    Paste,
-    //PageUp,
-    //PageDown,
+    DeleteSelectionAndPaste, //PageUp,
+                             //PageDown
 }
 
 impl Action {
@@ -26,6 +25,7 @@ impl Action {
             "move_right" => Some(Action::MoveRight),
             "yank_selection" => Some(Action::YankSelection),
             "delete_selection" => Some(Action::DeleteSelection),
+            "delete_selection_and_past" => Some(Action::DeleteSelectionAndPaste),
             //"page_up" => Action::PageUp,
             //"page_down" => Action::PageDown,
             _ => None,
@@ -43,7 +43,7 @@ impl Default for Actions {
         actions.insert(KeyStroke::KeyEscape, Action::ExitSelectionMode);
         actions.insert(KeyStroke::Char('y'), Action::YankSelection);
         actions.insert(KeyStroke::Char('d'), Action::DeleteSelection);
-        actions.insert(KeyStroke::Char('p'), Action::Paste);
+        actions.insert(KeyStroke::Char('p'), Action::DeleteSelectionAndPaste);
 
         // The classic arrow keys.
         actions.insert(KeyStroke::KeyUp, Action::MoveUp);
