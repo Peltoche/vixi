@@ -1,5 +1,5 @@
 [normal_mode]
-[[actions]]
+[normal_mode.actions]
 exit = "q"
 switch_to_insert_mode = "i"
 switch_to_visual_mode = "v"
@@ -17,22 +17,23 @@ move_right = "<key_right>"
 
 # The "vim-like" move keys
 move_up = "k"
-move_up = "j"
+move_down = "j"
 move_left = "h"
 move_right = "l"
 
-[[verbs]]
+[normal_mode.verbs]
 delete = "d"
 
-[[nouns]]
+[normal_mode.nouns]
 line = "l"
 
 
 
 [visual_mode]
-[[actions]]
+[visual_mode.actions]
 exit_select_mode = "<esc>"
-yank = "y"
+yank_selection = "y"
+delete_selection = "d"
 paste = "p"
 
 # The "classic" move keys
@@ -43,13 +44,13 @@ move_right = "<key_right>"
 
 # The "vim-like" move keys
 move_up = "k"
-move_up = "j"
+move_down = "j"
 move_left = "h"
 move_right = "l"
 
 
 [insert_mode]
-[[actions]]
+[insert_mode.actions]
 exit_insert_mode = "<esc>"
 
 # The "classic" move keys
