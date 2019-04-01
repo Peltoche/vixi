@@ -145,7 +145,7 @@ pub fn copy_selection(view_id: &str, core: &dyn Peer) -> Response {
         &json!({ "method": "collapse_selections", "view_id": view_id}),
     );
 
-    Response::Continue
+    Response::SwitchToNormalMode
 }
 
 pub fn paste(view_id: &str, core: &dyn Peer) -> Response {
