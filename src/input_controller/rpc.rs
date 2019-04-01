@@ -1,5 +1,5 @@
 use crate::devices::keyboard::KeyStroke;
-use crate::input_controller::{Response, PAST_BUFFER};
+use crate::input_controller::{Response, PASTE_BUFFER};
 
 use xi_rpc::Peer;
 
@@ -133,7 +133,7 @@ pub fn insert_newline(view_id: &str, core: &dyn Peer) -> Response {
 pub fn copy_selection(view_id: &str, core: &dyn Peer) -> Response {
     let res = core.send_rpc_request("edit", &json!({ "method": "copy", "view_id": view_id}));
     if let Ok(paste_buffer) = res {
-        let mut buffer = PAST_BUFFER.lock().unwrap();
+        let mut buffer = PASTE_BUFFER.lock().unwrap();
         *buffer = Some(String::from(paste_buffer.as_str().unwrap()));
     } else {
         error!("failed to copy selection: {:?}", res.unwrap_err());
@@ -154,7 +154,7 @@ pub fn cute_selection(view_id: &str, core: &dyn Peer) -> Response {
         error!("failed to cut the selection: {:?}", cut_res);
     }
 
-    let mut buffer = PAST_BUFFER.lock().unwrap();
+    let mut buffer = PASTE_BUFFER.lock().unwrap();
     *buffer = Some(String::from(cut_res.unwrap().as_str().unwrap()));
 
     // Remove the selection
@@ -174,7 +174,7 @@ pub fn delete_selection_and_paste(view_id: &str, core: &dyn Peer) -> Response {
 
     paste(view_id, core);
 
-    let mut buffer = PAST_BUFFER.lock().unwrap();
+    let mut buffer = PASTE_BUFFER.lock().unwrap();
     *buffer = Some(String::from(cut_res.unwrap().as_str().unwrap()));
 
     // Remove the selection
@@ -187,7 +187,7 @@ pub fn delete_selection_and_paste(view_id: &str, core: &dyn Peer) -> Response {
 }
 
 pub fn paste(view_id: &str, core: &dyn Peer) -> Response {
-    let buffer = PAST_BUFFER.lock().unwrap();
+    let buffer = PASTE_BUFFER.lock().unwrap();
     if let Some(ref s) = *buffer {
         core.send_rpc_notification(
             "edit",
@@ -200,5 +200,6 @@ pub fn paste(view_id: &str, core: &dyn Peer) -> Response {
             }),
         );
     }
+
     Response::Continue
 }

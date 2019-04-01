@@ -17,7 +17,7 @@ use failure::Error;
 use xi_rpc::Peer;
 
 lazy_static! {
-    static ref PAST_BUFFER: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
+    static ref PASTE_BUFFER: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 }
 
 #[derive(Debug, Default, Deserialize)]
