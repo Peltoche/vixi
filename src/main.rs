@@ -25,6 +25,7 @@ mod devices;
 mod event_controller;
 mod input_controller;
 mod logging;
+mod window;
 
 use std::fs::File;
 use std::io::prelude::*;

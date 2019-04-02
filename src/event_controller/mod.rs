@@ -1,7 +1,26 @@
+mod view;
+
 use crate::devices::terminal::{RGBColor, RedrawBehavior, StyleID, Terminal};
 
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
+
+#[derive(Deserialize, Debug)]
+pub struct LineDescription {
+    cursor: Option<Vec<i32>>,
+    ln: usize,
+    styles: Vec<StyleID>,
+    text: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Operation {
+    #[serde(rename = "op")]
+    kind: String,
+    n: usize,
+    ln: Option<usize>,
+    lines: Option<Vec<LineDescription>>,
+}
 
 #[derive(Default, Clone)]
 pub struct Buffer {
@@ -248,23 +267,6 @@ impl EventController {
             n: usize,
             payloads: Option<()>,
             ranges: Vec<[usize; 4]>,
-        }
-
-        #[derive(Deserialize, Debug)]
-        struct LineDescription {
-            cursor: Option<Vec<i32>>,
-            ln: usize,
-            styles: Vec<StyleID>,
-            text: String,
-        }
-
-        #[derive(Deserialize, Debug)]
-        struct Operation {
-            #[serde(rename = "op")]
-            kind: String,
-            n: usize,
-            ln: Option<usize>,
-            lines: Option<Vec<LineDescription>>,
         }
 
         #[derive(Deserialize, Debug)]
