@@ -1,20 +1,7 @@
-use super::{Style, StyleID, Window, WindowPosition, WindowSize};
+use super::{Window, WindowPosition, WindowSize};
+use crate::style::Style;
 
 use ncurses::*;
-
-/// The style id is used to override the ncurses default colors and save the
-/// style color. If this number is two hight, some color conflicts will appeares.
-///
-/// Check the `handle_style_change` method documentation for more informations.
-const MAX_STYLE_ID: StyleID = 50;
-
-/// Split the 255 available values into namespaces in which the foreground,
-/// background and selection colors are separated.
-const PAIR_NAMESPACE: i16 = MAX_STYLE_ID * 0;
-const FG_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 1;
-const BG_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 2;
-const SELECTION_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 3;
-const CUSTOM_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 4;
 
 pub struct Ncurses {
     win: WINDOW,
@@ -67,7 +54,6 @@ impl Window for Ncurses {
     }
 
     fn refresh(&self) {
-        info!("refresh");
         if wrefresh(self.win) == ERR {
             error!("failed to refresh screen");
         }

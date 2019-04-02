@@ -2,17 +2,12 @@ mod ncurses;
 
 pub use self::ncurses::Ncurses;
 
-pub type StyleID = i16;
+use crate::style::Style;
 
-/// The style id 0 is reserved for the selection style id.
-///
-/// This id is different than the pair id.
-const SELECTION_CORE_STYLE_ID: StyleID = 0;
-
-#[derive(Debug, Clone, Copy)]
-pub struct Style {
-    pub style_id: StyleID,
-    pub italic: bool,
+#[derive(Eq, PartialEq, Debug)]
+pub enum RedrawBehavior {
+    OnlyDirty,
+    Everything,
 }
 
 #[derive(Debug, Copy, Clone)]

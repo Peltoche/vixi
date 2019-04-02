@@ -25,6 +25,7 @@ mod devices;
 mod event_controller;
 mod input_controller;
 mod logging;
+mod style;
 mod window;
 
 use std::fs::File;

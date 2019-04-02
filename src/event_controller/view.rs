@@ -1,14 +1,12 @@
+use std::collections::HashMap;
+
 use crate::event_controller::Operation;
-use crate::window::{Style, StyleID, Window};
+use crate::style::{self, Style, StyleID, Styles};
+use crate::window::Window;
 
 use xi_rpc::RpcCtx;
 
 type ViewID = String;
-
-/// The pair id for the default background/foreground.
-///
-/// The pair_id 0 is the one used by default by the ncurse.
-const DEFAULT_COLOR_PAIR_ID: i16 = 0;
 
 /// The style id 0 is reserved for the selection style id.
 ///
@@ -64,6 +62,7 @@ pub struct View {
     ///
     /// Changing its value make the screen scoll up/down.
     screen_start: u32,
+    pub styles: Box<dyn Styles>,
 }
 
 impl View {
@@ -74,6 +73,7 @@ impl View {
             cursor: Cursor { y: 0, x: 0 },
             buffer: Buffer::default(),
             screen_start: 0,
+            styles: Box::new(style::Ncurses::new()),
         }
     }
 
@@ -121,13 +121,10 @@ impl View {
             }),
         );
 
-        self.window.refresh();
-        //self.terminal
-        //.redraw_view(self.screen_start, RedrawBehavior::Everything, &self.buffer);
+        self.redraw_view(RedrawBehavior::Everything);
     }
 
     pub fn update_buffer(&mut self, operations: Vec<Operation>) {
-        info!("receive update event");
         let mut new_buffer = Buffer::default();
         let mut old_idx: usize = 0;
         let mut new_idx: usize = 0;
@@ -227,14 +224,7 @@ impl View {
         //);
 
         let mut style_map: Vec<Style> = Vec::with_capacity(line.raw.len());
-        style_map.resize(
-            line.raw.len(),
-            Style {
-                style_id: DEFAULT_COLOR_PAIR_ID,
-                //selected: false,
-                italic: false,
-            },
-        );
+        style_map.resize(line.raw.len(), self.styles.get_default());
 
         let mut idx = 0;
         let mut style_iter = line.styles.iter();
@@ -243,20 +233,20 @@ impl View {
             let style_length = (*style_iter.next().unwrap()) as i32;
             let style_id = *style_iter.next().unwrap();
 
-            //let style = self.styles.get(&style_id);
+            let style = self.styles.get(&style_id);
 
             for i in idx + style_start..idx + style_start + style_length {
                 let char_style = &mut style_map[i as usize];
 
-                //if style_id == SELECTION_CORE_STYLE_ID {
-                //char_style.selected = true;
-                //} else {
-                //char_style.style_id = style_id;
+                if style_id == SELECTION_CORE_STYLE_ID {
+                    char_style.selected = true;
+                } else {
+                    char_style.style_id = style_id;
 
-                //if style.unwrap().italic {
-                //char_style.italic = true;
-                //}
-                //}
+                    if style.italic {
+                        char_style.italic = true;
+                    }
+                }
             }
             idx += style_start + style_length;
         }

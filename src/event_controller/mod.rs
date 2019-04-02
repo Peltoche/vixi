@@ -1,7 +1,7 @@
 pub mod view;
 
 use self::view::View;
-use crate::devices::terminal::{RGBColor, RedrawBehavior, StyleID, Terminal};
+use crate::style::{RGBColor, StyleID, Styles};
 
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
@@ -164,8 +164,9 @@ impl EventController {
             b: bg_rgba[2],
         };
 
-        //self.terminal
-        //.save_style_set(event.id, fg_color, bg_color, event.italic);
+        self.view
+            .styles
+            .save(event.id, fg_color, bg_color, event.italic);
     }
 
     /// Handle the "scroll_to" event.

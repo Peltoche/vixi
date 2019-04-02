@@ -91,15 +91,15 @@ impl InputController {
 
         self.view_id = view_id.as_str().unwrap().to_string();
 
-        let (size_y, _) = self.terminal.get_size();
-        core.send_rpc_notification(
-            "edit",
-            &json!({
-                "method": "scroll",
-                "view_id": self.view_id,
-                "params": [0 ,size_y + 1] // + 1 bc range not inclusive
-            }),
-        );
+        //let (size_y, _) = self.terminal.get_size();
+        //core.send_rpc_notification(
+        //"edit",
+        //&json!({
+        //"method": "scroll",
+        //"view_id": self.view_id,
+        //"params": [0 ,size_y + 1] // + 1 bc range not inclusive
+        //}),
+        //);
 
         core.send_rpc_notification("set_theme", &json!({"theme_name": "Solarized (light)" }));
         self.front_event_writer.send_rpc_notification(
