@@ -50,8 +50,8 @@ impl Window for Ncurses {
         }
     }
 
-    fn move_cursor_and_clear_line(&self, line: i32) {
-        if wmove(self.win, line, 0) == ERR {
+    fn move_cursor_and_clear_line(&self, line: u32) {
+        if wmove(self.win, line as i32, 0) == ERR {
             error!("failed to move the cursor for clearing the line")
         }
 
@@ -64,6 +64,13 @@ impl Window for Ncurses {
         let attrs = attrs_from_style(style);
 
         waddch(self.win, ch as chtype | attrs);
+    }
+
+    fn refresh(&self) {
+        info!("refresh");
+        if wrefresh(self.win) == ERR {
+            error!("failed to refresh screen");
+        }
     }
 }
 

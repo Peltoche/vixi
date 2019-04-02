@@ -1,5 +1,7 @@
 mod ncurses;
 
+pub use self::ncurses::Ncurses;
+
 pub type StyleID = i16;
 
 /// The style id 0 is reserved for the selection style id.
@@ -28,6 +30,7 @@ pub struct WindowSize {
 pub trait Window {
     fn get_size(&self) -> WindowSize;
     fn move_cursor(&self, y: u32, x: u32);
-    fn move_cursor_and_clear_line(&self, line: i32);
+    fn move_cursor_and_clear_line(&self, line: u32);
     fn append_ch(&self, ch: char, style: &Style);
+    fn refresh(&self);
 }

@@ -34,8 +34,10 @@ use std::thread;
 
 use devices::keyboard::Keyboard;
 use devices::terminal::Terminal;
+use event_controller::view::View;
 use event_controller::EventController;
 use input_controller::{Config, InputController};
+use window::{WindowPosition, WindowSize};
 
 use failure::Error;
 use ncurses::*;
@@ -83,14 +85,29 @@ fn main() {
     let terminal = Terminal::new();
     let keyboard = Keyboard::default();
 
-    let mut event_handler = EventController::new(terminal.clone());
-
     let (client_to_core_writer, core_to_client_reader, client_to_client_writer) =
         core::start_xi_core();
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
 
     let raw_peer = front_event_loop.get_raw_peer();
-    thread::spawn(move || front_event_loop.mainloop(|| core_to_client_reader, &mut event_handler));
+    thread::spawn(move || {
+        let mut term_y: i32 = 0;
+        let mut term_x: i32 = 0;
+        ncurses::getmaxyx(ncurses::stdscr(), &mut term_y, &mut term_x);
+        let main_window = window::Ncurses::new(
+            WindowPosition { y: 0, x: 0 },
+            WindowSize {
+                height: term_y as u32,
+                width: term_x as u32,
+            },
+        );
+
+        let main_view = View::new("view-id-1", Box::new(main_window));
+        let mut event_handler = EventController::new(main_view);
+        front_event_loop
+            .mainloop(|| core_to_client_reader, &mut event_handler)
+            .unwrap();
+    });
 
     let exit_res = setup_config(&raw_peer)
         .and_then(|config| {

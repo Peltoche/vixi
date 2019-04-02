@@ -1,9 +1,19 @@
 use crate::event_controller::Operation;
-use crate::window::{StyleID, Window};
+use crate::window::{Style, StyleID, Window};
 
 use xi_rpc::RpcCtx;
 
 type ViewID = String;
+
+/// The pair id for the default background/foreground.
+///
+/// The pair_id 0 is the one used by default by the ncurse.
+const DEFAULT_COLOR_PAIR_ID: i16 = 0;
+
+/// The style id 0 is reserved for the selection style id.
+///
+/// This id is different than the pair id.
+const SELECTION_CORE_STYLE_ID: StyleID = 0;
 
 #[derive(Debug, Clone)]
 pub struct Cursor {
@@ -29,13 +39,19 @@ pub struct Line {
     pub is_dirty: bool,
 }
 
+#[derive(Eq, PartialEq, Debug)]
+pub enum RedrawBehavior {
+    OnlyDirty,
+    Everything,
+}
+
 impl Buffer {
     pub fn total_len(&self) -> usize {
         self.lines.len() + self.nb_invalid_lines
     }
 
-    pub fn lines_availables_after(&self, start: usize) -> usize {
-        self.lines.len() - start
+    pub fn lines_availables_after(&self, start: u32) -> u32 {
+        (self.lines.len() as u32) - start
     }
 }
 
@@ -91,6 +107,7 @@ impl View {
         } else {
             // No scroll needed so it move the cursor without any redraw.
             self.window.move_cursor(self.cursor.y, self.cursor.x);
+            self.window.refresh();
         }
     }
 
@@ -104,11 +121,13 @@ impl View {
             }),
         );
 
+        self.window.refresh();
         //self.terminal
         //.redraw_view(self.screen_start, RedrawBehavior::Everything, &self.buffer);
     }
 
     pub fn update_buffer(&mut self, operations: Vec<Operation>) {
+        info!("receive update event");
         let mut new_buffer = Buffer::default();
         let mut old_idx: usize = 0;
         let mut new_idx: usize = 0;
@@ -153,5 +172,98 @@ impl View {
         }
 
         self.buffer = new_buffer;
+        self.redraw_view(RedrawBehavior::OnlyDirty);
+    }
+
+    fn redraw_view(&self, redraw_behavior: RedrawBehavior) {
+        let window_size = self.window.get_size();
+
+        let buffer_len =
+            if self.buffer.lines_availables_after(self.screen_start) < window_size.height {
+                // The number of lines inside the buffer is less than the available lines on the screen so
+                // it print all the remaining of the buffer.
+                self.buffer.lines_availables_after(self.screen_start)
+            } else {
+                // The number of lines inside the buffer is greater than the available lines on the screen so
+                // it print only what the screen is able to show.
+                window_size.height
+            };
+
+        let buffer_iter = self
+            .buffer
+            .lines
+            .iter()
+            .skip(self.screen_start as usize)
+            .take(buffer_len as usize);
+
+        for (screen_line, line) in buffer_iter.enumerate() {
+            if redraw_behavior == RedrawBehavior::Everything || line.is_dirty {
+                self.rewrite_line(screen_line as u32, &line);
+            }
+        }
+
+        self.window.move_cursor(self.cursor.y, self.cursor.x);
+        self.window.refresh();
+    }
+
+    fn rewrite_line(&self, line_number: u32, line: &Line) {
+        #[derive(Clone, Debug)]
+        struct CharStyle {
+            style_id: StyleID,
+            selected: bool,
+            italic: bool,
+        }
+
+        self.window.move_cursor_and_clear_line(line_number);
+
+        //// Print the line number.
+        //addstr(
+        //format!(
+        //" {:width$} ",
+        //line.ln,
+        //width = (self.size_line_section - SPACES_IN_LINE_SECTION) as usize
+        //)
+        //.as_str(),
+        //);
+
+        let mut style_map: Vec<Style> = Vec::with_capacity(line.raw.len());
+        style_map.resize(
+            line.raw.len(),
+            Style {
+                style_id: DEFAULT_COLOR_PAIR_ID,
+                //selected: false,
+                italic: false,
+            },
+        );
+
+        let mut idx = 0;
+        let mut style_iter = line.styles.iter();
+        for _ in 0..line.styles.len() / 3 {
+            let style_start = (*style_iter.next().unwrap()) as i32;
+            let style_length = (*style_iter.next().unwrap()) as i32;
+            let style_id = *style_iter.next().unwrap();
+
+            //let style = self.styles.get(&style_id);
+
+            for i in idx + style_start..idx + style_start + style_length {
+                let char_style = &mut style_map[i as usize];
+
+                //if style_id == SELECTION_CORE_STYLE_ID {
+                //char_style.selected = true;
+                //} else {
+                //char_style.style_id = style_id;
+
+                //if style.unwrap().italic {
+                //char_style.italic = true;
+                //}
+                //}
+            }
+            idx += style_start + style_length;
+        }
+
+        let mut content_iter = line.raw.chars();
+        for style in style_map.iter() {
+            self.window.append_ch(content_iter.next().unwrap(), style);
+        }
     }
 }

@@ -1,5 +1,6 @@
-mod view;
+pub mod view;
 
+use self::view::View;
 use crate::devices::terminal::{RGBColor, RedrawBehavior, StyleID, Terminal};
 
 use serde_json::Value;
@@ -57,22 +58,7 @@ pub struct Line {
 }
 
 pub struct EventController {
-    terminal: Terminal,
-    /// An index pointing to the Line rendered at the top of the screen.
-    ///
-    /// Changing its value make the screen scoll up/down.
-    screen_start: usize,
-    screen_width: usize,
-
-    /// Cursor positions into the editing screen.
-    ///
-    /// This position take into account the line_section. This means that when
-    /// `cursor.x` is equal to 0, its real position is calculated dynamically
-    /// base on the size of the line section.
-    cursor: Cursor,
-
-    /// Buffer containing all the lines informations.
-    buffer: Buffer,
+    view: View,
 }
 
 impl xi_rpc::Handler for EventController {
@@ -81,7 +67,8 @@ impl xi_rpc::Handler for EventController {
 
     fn handle_notification(&mut self, ctx: &RpcCtx, rpc: Self::Notification) {
         match rpc.method.as_str() {
-            "add_status_item" => self.handle_new_status_item(&rpc.params),
+            //"add_status_item" => self.handle_new_status_item(&rpc.params),
+            //"plugin_started" => debug!("{}: -> {}", &rpc.method, &rpc.params),
             "available_languages" => debug!("{}", &rpc.method),
             "available_themes" => debug!("{}", &rpc.method),
             "available_plugins" => debug!("{}", &rpc.method),
@@ -90,13 +77,11 @@ impl xi_rpc::Handler for EventController {
             "language_changed" => debug!("{}", &rpc.method),
             "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
             "update" => self.handle_content_update(&ctx, &rpc.params),
-            "update_status_item" => self.update_status_item(&rpc.params),
-            "plugin_started" => debug!("{}: -> {}", &rpc.method, &rpc.params),
             "theme_changed" => debug!("{}", &rpc.method),
             _ => debug!("unhandled notif {} -> {}", &rpc.method, &rpc.params),
         };
 
-        self.terminal.redraw();
+        //self.terminal.redraw();
     }
 
     fn handle_request(&mut self, _ctx: &RpcCtx, rpc: Self::Request) -> Result<Value, RemoteError> {
@@ -106,47 +91,41 @@ impl xi_rpc::Handler for EventController {
 }
 
 impl EventController {
-    pub fn new(terminal: Terminal) -> Self {
-        Self {
-            terminal,
-            screen_start: 0,
-            screen_width: 0,
-            cursor: Cursor::default(),
-            buffer: Buffer::default(),
-        }
+    pub fn new(view: View) -> Self {
+        Self { view }
     }
 
-    fn handle_new_status_item(&mut self, body: &Value) {
-        #[derive(Deserialize, Debug)]
-        struct Event {
-            //source: String,
-            key: String,
-            value: String,
-            alignment: String,
-        }
+    //fn handle_new_status_item(&mut self, body: &Value) {
+    //#[derive(Deserialize, Debug)]
+    //struct Event {
+    ////source: String,
+    //key: String,
+    //value: String,
+    //alignment: String,
+    //}
 
-        let event: Event = serde_json::from_value(body.clone()).unwrap();
+    //let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-        if let "change-mode" = event.key.as_str() {
-            self.terminal.update_status_bar_mode(&event.value);
-        }
-        self.terminal.move_cursor(&self.cursor);
-    }
+    //if let "change-mode" = event.key.as_str() {
+    //self.terminal.update_status_bar_mode(&event.value);
+    //}
+    //self.terminal.move_cursor(&self.cursor);
+    //}
 
-    fn update_status_item(&mut self, body: &Value) {
-        #[derive(Deserialize, Debug)]
-        struct Event {
-            key: String,
-            value: String,
-        }
+    //fn update_status_item(&mut self, body: &Value) {
+    //#[derive(Deserialize, Debug)]
+    //struct Event {
+    //key: String,
+    //value: String,
+    //}
 
-        let event: Event = serde_json::from_value(body.clone()).unwrap();
+    //let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-        if let "change-mode" = event.key.as_str() {
-            self.terminal.update_status_bar_mode(&event.value);
-        }
-        self.terminal.move_cursor(&self.cursor);
-    }
+    //if let "change-mode" = event.key.as_str() {
+    //self.terminal.update_status_bar_mode(&event.value);
+    //}
+    //self.terminal.move_cursor(&self.cursor);
+    //}
 
     /// Handle the "def_style" event.
     ///
@@ -185,8 +164,8 @@ impl EventController {
             b: bg_rgba[2],
         };
 
-        self.terminal
-            .save_style_set(event.id, fg_color, bg_color, event.italic);
+        //self.terminal
+        //.save_style_set(event.id, fg_color, bg_color, event.italic);
     }
 
     /// Handle the "scroll_to" event.
@@ -204,47 +183,7 @@ impl EventController {
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-        // TODO: Avoid to check the term size at each event by saving it.
-        // This will implicate to have some background process checking the
-        // window size changes.
-        let (size_y, _) = self.terminal.get_size();
-        let mut cursor_y = (event.line as i32) - (self.screen_start as i32);
-
-        let mut scroll: bool = false;
-        if cursor_y >= (size_y as i32) {
-            // The cursor is bellow the current screen view. Trigger a scroll.
-            self.screen_start += (cursor_y as usize) - size_y + 1;
-            scroll = true;
-            cursor_y -= cursor_y - (size_y as i32) + 1
-        } else if cursor_y <= -1 {
-            // The cursor is abor the current screen view. Trigger a scroll.
-            self.screen_start -= cursor_y.checked_abs().unwrap() as usize;
-            scroll = true;
-            cursor_y = 0;
-        }
-
-        // Move the cursor at its new position.
-        self.cursor.x = event.col;
-        self.cursor.y = cursor_y as u32;
-
-        if scroll {
-            // In case of scroll it need to redraw the screen and after it
-            // the cursor is automatically reset at (self.cursor_y/self.cursor_x).
-            ctx.get_peer().send_rpc_notification(
-                "edit",
-                &json!({
-                    "method": "scroll",
-                    "view_id": event.view_id,
-                    "params": [self.screen_start , self.screen_start + (size_y as usize)  + 1] // + 1 bc range not inclusive
-                }),
-            );
-
-            self.terminal
-                .redraw_view(self.screen_start, RedrawBehavior::Everything, &self.buffer);
-        } else {
-            // No scroll needed so it move the cursor without any redraw.
-            self.terminal.move_cursor(&self.cursor);
-        }
+        self.view.move_cursor(ctx, event.line, event.col);
     }
 
     /// Handle the "update" event.
@@ -283,67 +222,26 @@ impl EventController {
         }
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
-        let mut new_buffer = Buffer::default();
-        let mut old_idx: usize = 0;
-        let mut new_idx: usize = 0;
+        self.view.update_buffer(event.update.operations);
 
-        for operation in event.update.operations {
-            match operation.kind.as_str() {
-                "copy" => {
-                    let mut is_dirty = true;
-                    let ln = operation.ln.unwrap();
-                    if old_idx == new_idx {
-                        is_dirty = false;
-                    }
+        //let (size_y, size_x) = self.terminal.get_size();
+        //if size_x != self.screen_width {
+        //ctx.get_peer().send_rpc_notification(
+        //"edit",
+        //&json!({
+        //"method": "resize",
+        //"view_id": event.view_id,
+        //"params": {
+        //"width": size_x  ,
+        //"height": size_y,
+        //}
+        //}),
+        //);
+        //}
 
-                    for i in 0..operation.n {
-                        let old_buffer = &self.buffer.lines[old_idx + i];
-                        new_buffer.lines.push(Line {
-                            raw: old_buffer.raw.clone(),
-                            styles: old_buffer.styles.clone(),
-                            ln: ln + i,
-                            is_dirty,
-                        });
-                        new_idx += 1;
-                    }
-
-                    old_idx += operation.n;
-                }
-                "skip" => old_idx += operation.n,
-                "invalidate" => new_buffer.nb_invalid_lines += operation.n,
-                "ins" => {
-                    for line in operation.lines.unwrap() {
-                        new_buffer.lines.push(Line {
-                            raw: line.text.to_owned(),
-                            styles: line.styles,
-                            ln: line.ln,
-                            is_dirty: true,
-                        });
-                        new_idx += 1;
-                    }
-                }
-                _ => warn!("unhandled update 2: {:?}", operation),
-            }
-        }
-
-        let (size_y, size_x) = self.terminal.get_size();
-        if size_x != self.screen_width {
-            ctx.get_peer().send_rpc_notification(
-                "edit",
-                &json!({
-                    "method": "resize",
-                    "view_id": event.view_id,
-                    "params": {
-                        "width": size_x  ,
-                        "height": size_y,
-                    }
-                }),
-            );
-        }
-
-        self.buffer = new_buffer;
-        self.terminal
-            .redraw_view(self.screen_start, RedrawBehavior::OnlyDirty, &self.buffer);
-        self.terminal.move_cursor(&self.cursor);
+        //self.buffer = new_buffer;
+        //self.terminal
+        //.redraw_view(self.screen_start, RedrawBehavior::OnlyDirty, &self.buffer);
+        //self.terminal.move_cursor(&self.cursor);
     }
 }
