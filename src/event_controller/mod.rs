@@ -1,7 +1,12 @@
 pub mod view;
 
-use self::view::View;
-use crate::style::{RGBColor, StyleID, Styles};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+
+use self::view::{View, ViewID};
+use crate::style::{self, RGBColor, StyleID, Styles};
+use crate::window::{self, WindowPosition, WindowSize};
 
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
@@ -24,22 +29,6 @@ pub struct Operation {
 }
 
 #[derive(Default, Clone)]
-pub struct Buffer {
-    pub lines: Vec<Line>,
-    pub nb_invalid_lines: usize,
-}
-
-impl Buffer {
-    pub fn total_len(&self) -> usize {
-        self.lines.len() + self.nb_invalid_lines
-    }
-
-    pub fn lines_availables_after(&self, start: usize) -> usize {
-        self.lines.len() - start
-    }
-}
-
-#[derive(Default, Clone)]
 pub struct Cursor {
     pub y: u32,
     pub x: u32,
@@ -58,7 +47,9 @@ pub struct Line {
 }
 
 pub struct EventController {
-    view: View,
+    styles: Rc<RefCell<Box<dyn Styles>>>,
+    views: HashMap<ViewID, View>,
+    current: ViewID,
 }
 
 impl xi_rpc::Handler for EventController {
@@ -80,8 +71,6 @@ impl xi_rpc::Handler for EventController {
             "theme_changed" => debug!("{}", &rpc.method),
             _ => debug!("unhandled notif {} -> {}", &rpc.method, &rpc.params),
         };
-
-        //self.terminal.redraw();
     }
 
     fn handle_request(&mut self, _ctx: &RpcCtx, rpc: Self::Request) -> Result<Value, RemoteError> {
@@ -91,8 +80,14 @@ impl xi_rpc::Handler for EventController {
 }
 
 impl EventController {
-    pub fn new(view: View) -> Self {
-        Self { view }
+    pub fn new() -> Self {
+        let controller = Self {
+            styles: Rc::new(RefCell::new(Box::new(style::Ncurses::new()))),
+            views: HashMap::new(),
+            current: String::new(),
+        };
+
+        controller
     }
 
     //fn handle_new_status_item(&mut self, body: &Value) {
@@ -164,8 +159,8 @@ impl EventController {
             b: bg_rgba[2],
         };
 
-        self.view
-            .styles
+        self.styles
+            .borrow_mut()
             .save(event.id, fg_color, bg_color, event.italic);
     }
 
@@ -184,7 +179,11 @@ impl EventController {
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-        self.view.move_cursor(ctx, event.line, event.col);
+        self.create_view_if_required(ctx, &event.view_id);
+        self.views
+            .get_mut(&event.view_id)
+            .unwrap()
+            .move_cursor(ctx, event.line, event.col);
     }
 
     /// Handle the "update" event.
@@ -223,7 +222,11 @@ impl EventController {
         }
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
-        self.view.update_buffer(event.update.operations);
+        self.create_view_if_required(ctx, &event.view_id);
+        self.views
+            .get_mut(&event.view_id)
+            .unwrap()
+            .update_buffer(event.update.operations);
 
         //let (size_y, size_x) = self.terminal.get_size();
         //if size_x != self.screen_width {
@@ -244,5 +247,26 @@ impl EventController {
         //self.terminal
         //.redraw_view(self.screen_start, RedrawBehavior::OnlyDirty, &self.buffer);
         //self.terminal.move_cursor(&self.cursor);
+    }
+
+    fn create_view_if_required(&mut self, ctx: &RpcCtx, view_id: &ViewID) {
+        if self.views.contains_key(view_id) {
+            return;
+        }
+
+        info!("create view: {}", view_id);
+        let mut term_y: i32 = 0;
+        let mut term_x: i32 = 0;
+        ncurses::getmaxyx(ncurses::stdscr(), &mut term_y, &mut term_x);
+        let window = window::Ncurses::new(
+            WindowPosition { y: 0, x: 0 },
+            WindowSize {
+                height: term_y as u32,
+                width: term_x as u32,
+            },
+        );
+
+        let new_view = View::new(ctx, &view_id, Box::new(window), self.styles.clone());
+        self.views.insert(view_id.to_string(), new_view);
     }
 }

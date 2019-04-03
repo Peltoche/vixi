@@ -1,15 +1,10 @@
-use std::collections::HashMap;
 use std::panic;
 use std::process::exit;
 use std::sync::{Once, ONCE_INIT};
 
-use crate::event_controller::{Buffer, Cursor, Line};
-
 use ncurses::*;
 
-pub type StyleID = i16;
-
-const SPACES_IN_LINE_SECTION: u32 = 2;
+//const SPACES_IN_LINE_SECTION: u32 = 2;
 
 static HANDLER: Once = ONCE_INIT;
 
@@ -40,14 +35,14 @@ impl Terminal {
         terminal
     }
 
-    pub fn update_status_bar_mode(&mut self, mode: &str) {
-        let size_y = getmaxy(stdscr());
+    //pub fn update_status_bar_mode(&mut self, mode: &str) {
+    //let size_y = getmaxy(stdscr());
 
-        // Remove 1 for the command line.
-        mv(size_y - 1, 0);
+    //// Remove 1 for the command line.
+    //mv(size_y - 1, 0);
 
-        addstr(&mode.to_uppercase());
-    }
+    //addstr(&mode.to_uppercase());
+    //}
 }
 
 fn install_custom_panic_handler() {

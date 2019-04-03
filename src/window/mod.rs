@@ -4,12 +4,6 @@ pub use self::ncurses::Ncurses;
 
 use crate::style::Style;
 
-#[derive(Eq, PartialEq, Debug)]
-pub enum RedrawBehavior {
-    OnlyDirty,
-    Everything,
-}
-
 #[derive(Debug, Copy, Clone)]
 pub struct WindowPosition {
     pub y: u32,

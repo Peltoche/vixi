@@ -1,12 +1,13 @@
-use std::collections::HashMap;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use crate::event_controller::Operation;
-use crate::style::{self, Style, StyleID, Styles};
+use crate::style::{Style, StyleID, Styles};
 use crate::window::Window;
 
 use xi_rpc::RpcCtx;
 
-type ViewID = String;
+pub type ViewID = String;
 
 /// The style id 0 is reserved for the selection style id.
 ///
@@ -62,19 +63,49 @@ pub struct View {
     ///
     /// Changing its value make the screen scoll up/down.
     screen_start: u32,
-    pub styles: Box<dyn Styles>,
+    styles: Rc<RefCell<Box<dyn Styles>>>,
 }
 
 impl View {
-    pub fn new(view_id: &str, window: Box<dyn Window>) -> Self {
-        View {
+    pub fn new(
+        ctx: &RpcCtx,
+        view_id: &ViewID,
+        window: Box<dyn Window>,
+        styles: Rc<RefCell<Box<dyn Styles>>>,
+    ) -> Self {
+        let window_size = window.get_size();
+
+        let view = View {
             window,
-            id: view_id.to_owned(),
+            styles,
+            id: view_id.to_string(),
             cursor: Cursor { y: 0, x: 0 },
             buffer: Buffer::default(),
             screen_start: 0,
-            styles: Box::new(style::Ncurses::new()),
-        }
+        };
+
+        ctx.get_peer().send_rpc_notification(
+            "edit",
+            &json!({
+                "method": "resize",
+                "view_id": view_id,
+                "params": {
+                    "width": window_size.width,
+                    "height": window_size.height,
+                }
+            }),
+        );
+
+        ctx.get_peer().send_rpc_notification(
+            "edit",
+            &json!({
+            "method": "scroll",
+            "view_id": view_id,
+            "params": [0 ,window_size.height + 1] // + 1 bc range not inclusive
+            }),
+        );
+
+        view
     }
 
     pub fn move_cursor(&mut self, ctx: &RpcCtx, line: u32, col: u32) {
@@ -224,7 +255,7 @@ impl View {
         //);
 
         let mut style_map: Vec<Style> = Vec::with_capacity(line.raw.len());
-        style_map.resize(line.raw.len(), self.styles.get_default());
+        style_map.resize(line.raw.len(), self.styles.borrow().get_default());
 
         let mut idx = 0;
         let mut style_iter = line.styles.iter();
@@ -233,7 +264,7 @@ impl View {
             let style_length = (*style_iter.next().unwrap()) as i32;
             let style_id = *style_iter.next().unwrap();
 
-            let style = self.styles.get(&style_id);
+            let style = self.styles.borrow().get(&style_id);
 
             for i in idx + style_start..idx + style_start + style_length {
                 let char_style = &mut style_map[i as usize];
