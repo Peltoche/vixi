@@ -11,7 +11,6 @@ use self::normal_mode::NormalMode;
 use self::visual_mode::VisualMode;
 use crate::core::ClientToClientWriter;
 use crate::devices::keyboard::Keyboard;
-use crate::devices::terminal::Terminal;
 
 use failure::Error;
 use xi_rpc::Peer;
@@ -55,7 +54,6 @@ impl Mode {
 }
 
 pub struct InputController {
-    terminal: Terminal,
     keyboard: Keyboard,
     view_id: String,
     normal_mode: NormalMode,
@@ -67,13 +65,11 @@ pub struct InputController {
 
 impl InputController {
     pub fn new(
-        terminal: Terminal,
         keyboard: Keyboard,
         client_to_client_writer: ClientToClientWriter,
         config: &Config,
     ) -> Self {
         Self {
-            terminal,
             keyboard,
             view_id: String::new(),
             normal_mode: NormalMode::from(&config.normal_mode),

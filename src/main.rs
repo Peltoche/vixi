@@ -32,7 +32,6 @@ use std::process::exit;
 use std::thread;
 
 use devices::keyboard::Keyboard;
-use devices::terminal::Terminal;
 use event_controller::EventController;
 use input_controller::{Config, InputController};
 
@@ -79,7 +78,6 @@ fn main() {
     setup_logger();
 
     // Load the devices
-    let terminal = Terminal::new();
     let keyboard = Keyboard::default();
 
     let (client_to_core_writer, core_to_client_reader, client_to_client_writer) =
@@ -97,7 +95,6 @@ fn main() {
     let exit_res = setup_config(&raw_peer)
         .and_then(|config| {
             Ok(InputController::new(
-                terminal,
                 keyboard,
                 client_to_client_writer,
                 &config,
