@@ -9,6 +9,8 @@ use ncurses::*;
 
 static HANDLER: Once = ONCE_INIT;
 
+const STATUS_HEIGHT: u32 = 1;
+
 pub struct NcursesLayout {
     height: u32,
     width: u32,
@@ -20,6 +22,7 @@ impl NcursesLayout {
         initscr();
         raw();
         keypad(stdscr(), true); // Allow for extended keyboard (like F1).
+                                //curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
         noecho();
         start_color();
         set_escdelay(0);
@@ -43,11 +46,25 @@ impl NcursesLayout {
 
 impl Layout for NcursesLayout {
     fn create_view_window(&mut self) -> Box<dyn Window> {
-        info!("height: {} / {}", self.height, self.width);
         let window = NcursesWindow::new(
             WindowPosition { y: 0, x: 0 },
             WindowSize {
-                height: self.height,
+                height: self.height - STATUS_HEIGHT,
+                width: self.width,
+            },
+        );
+
+        Box::new(window)
+    }
+
+    fn create_new_status_bar_window(&mut self) -> Box<dyn Window> {
+        let window = NcursesWindow::new(
+            WindowPosition {
+                y: self.height - STATUS_HEIGHT,
+                x: 0,
+            },
+            WindowSize {
+                height: STATUS_HEIGHT,
                 width: self.width,
             },
         );

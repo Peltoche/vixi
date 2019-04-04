@@ -1,3 +1,4 @@
+mod status_bar;
 mod style;
 pub mod view;
 mod window;
@@ -6,11 +7,11 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use self::status_bar::StatusBar;
 use self::style::{RGBColor, StyleID, Styles};
 use self::view::{View, ViewID};
-use self::window::Layout;
-
 use self::window::ncurses::NcursesLayout;
+use self::window::Layout;
 
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
@@ -54,6 +55,8 @@ pub struct EventController {
     styles: Rc<RefCell<Box<dyn Styles>>>,
     views: HashMap<ViewID, View>,
     layout: Box<dyn Layout>,
+    status_bar: StatusBar,
+    current_view: String,
 }
 
 impl xi_rpc::Handler for EventController {
@@ -62,8 +65,9 @@ impl xi_rpc::Handler for EventController {
 
     fn handle_notification(&mut self, ctx: &RpcCtx, rpc: Self::Notification) {
         match rpc.method.as_str() {
-            //"add_status_item" => self.handle_new_status_item(&rpc.params),
-            //"plugin_started" => debug!("{}: -> {}", &rpc.method, &rpc.params),
+            "add_status_item" => self.handle_new_status_item(&rpc.params),
+            "update_status_item" => self.update_status_item(&rpc.params),
+            "plugin_started" => debug!("{}: -> {}", &rpc.method, &rpc.params),
             "available_languages" => debug!("{}", &rpc.method),
             "available_themes" => debug!("{}", &rpc.method),
             "available_plugins" => debug!("{}", &rpc.method),
@@ -85,46 +89,56 @@ impl xi_rpc::Handler for EventController {
 
 impl EventController {
     pub fn new() -> Self {
+        let mut layout = NcursesLayout::new();
+        let styles: Rc<RefCell<Box<dyn Styles>>> =
+            Rc::new(RefCell::new(Box::new(style::Ncurses::new())));
+        let status_bar = StatusBar::new(layout.create_new_status_bar_window(), styles.clone());
+
         let controller = Self {
-            styles: Rc::new(RefCell::new(Box::new(style::Ncurses::new()))),
+            styles: styles,
             views: HashMap::new(),
-            layout: Box::new(NcursesLayout::new()),
+            layout: Box::new(layout),
+            status_bar,
+            current_view: String::new(),
         };
 
         controller
     }
 
-    //fn handle_new_status_item(&mut self, body: &Value) {
-    //#[derive(Deserialize, Debug)]
-    //struct Event {
-    ////source: String,
-    //key: String,
-    //value: String,
-    //alignment: String,
-    //}
+    fn handle_new_status_item(&mut self, body: &Value) {
+        #[derive(Deserialize, Debug)]
+        struct Event {
+            //source: String,
+            key: String,
+            value: String,
+            alignment: String,
+        }
 
-    //let event: Event = serde_json::from_value(body.clone()).unwrap();
+        let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-    //if let "change-mode" = event.key.as_str() {
-    //self.terminal.update_status_bar_mode(&event.value);
-    //}
-    //self.terminal.move_cursor(&self.cursor);
-    //}
+        if let "change-mode" = event.key.as_str() {
+            self.status_bar.update_mode(&event.value);
+        }
+    }
 
-    //fn update_status_item(&mut self, body: &Value) {
-    //#[derive(Deserialize, Debug)]
-    //struct Event {
-    //key: String,
-    //value: String,
-    //}
+    fn update_status_item(&mut self, body: &Value) {
+        #[derive(Deserialize, Debug)]
+        struct Event {
+            key: String,
+            value: String,
+        }
 
-    //let event: Event = serde_json::from_value(body.clone()).unwrap();
+        let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-    //if let "change-mode" = event.key.as_str() {
-    //self.terminal.update_status_bar_mode(&event.value);
-    //}
-    //self.terminal.move_cursor(&self.cursor);
-    //}
+        if let "change-mode" = event.key.as_str() {
+            self.status_bar.update_mode(&event.value);
+
+            self.views
+                .get(&self.current_view)
+                .unwrap()
+                .reset_cursor_position();
+        }
+    }
 
     /// Handle the "def_style" event.
     ///
@@ -226,6 +240,7 @@ impl EventController {
         }
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
+
         self.create_view_if_required(ctx, &event.view_id);
         self.views
             .get_mut(&event.view_id)
@@ -258,10 +273,11 @@ impl EventController {
             return;
         }
 
-        info!("create view: {}", view_id);
         let window = self.layout.create_view_window();
 
         let new_view = View::new(ctx, &view_id, window, self.styles.clone());
         self.views.insert(view_id.to_string(), new_view);
+
+        self.current_view = view_id.to_string();
     }
 }

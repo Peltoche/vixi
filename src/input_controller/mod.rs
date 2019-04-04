@@ -125,11 +125,10 @@ impl InputController {
                 }
 
                 self.front_event_writer.send_rpc_notification(
-                    "add_status_item",
+                    "update_status_item",
                     &json!({
                         "key": "change-mode",
                         "value": self.mode.to_string(),
-                        "alignment": "left",
                     }),
                 );
             }

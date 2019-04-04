@@ -108,6 +108,11 @@ impl View {
         view
     }
 
+    pub fn reset_cursor_position(&self) {
+        self.window.move_cursor(self.cursor.y, self.cursor.x);
+        self.window.refresh();
+    }
+
     pub fn move_cursor(&mut self, ctx: &RpcCtx, line: u32, col: u32) {
         let window_size = self.window.get_size();
         let mut cursor_y = (line as i32) - (self.screen_start as i32);
