@@ -2,7 +2,7 @@ mod ncurses;
 
 pub use self::ncurses::Ncurses;
 
-use crate::style::Style;
+use super::style::Style;
 
 #[derive(Debug, Copy, Clone)]
 pub struct WindowPosition {

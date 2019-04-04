@@ -1,12 +1,14 @@
+mod style;
 pub mod view;
+mod window;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use self::style::{RGBColor, StyleID, Styles};
 use self::view::{View, ViewID};
-use crate::style::{self, RGBColor, StyleID, Styles};
-use crate::window::{self, WindowPosition, WindowSize};
+use self::window::{WindowPosition, WindowSize};
 
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
@@ -49,7 +51,6 @@ pub struct Line {
 pub struct EventController {
     styles: Rc<RefCell<Box<dyn Styles>>>,
     views: HashMap<ViewID, View>,
-    current: ViewID,
 }
 
 impl xi_rpc::Handler for EventController {
@@ -84,7 +85,6 @@ impl EventController {
         let controller = Self {
             styles: Rc::new(RefCell::new(Box::new(style::Ncurses::new()))),
             views: HashMap::new(),
-            current: String::new(),
         };
 
         controller

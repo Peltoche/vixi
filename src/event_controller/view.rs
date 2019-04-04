@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::event_controller::Operation;
-use crate::style::{Style, StyleID, Styles};
-use crate::window::Window;
+use super::style::{Style, StyleID, Styles};
+use super::window::Window;
+use super::Operation;
 
 use xi_rpc::RpcCtx;
 

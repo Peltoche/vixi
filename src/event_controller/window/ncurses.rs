@@ -1,5 +1,5 @@
 use super::{Window, WindowPosition, WindowSize};
-use crate::style::Style;
+use crate::event_controller::style::Style;
 
 use ncurses::*;
 
