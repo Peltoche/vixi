@@ -1,15 +1,15 @@
-use super::{Window, WindowPosition, WindowSize};
 use crate::event_controller::style::Style;
+use crate::event_controller::window::{Window, WindowPosition, WindowSize};
 
 use ncurses::*;
 
-pub struct Ncurses {
+pub struct NcursesWindow {
     win: WINDOW,
     size: WindowSize,
     pos: WindowPosition,
 }
 
-impl Ncurses {
+impl NcursesWindow {
     /// Create a new window at the given position with the given size.
     pub fn new(pos: WindowPosition, size: WindowSize) -> Self {
         let win = newwin(
@@ -26,7 +26,7 @@ impl Ncurses {
     }
 }
 
-impl Window for Ncurses {
+impl Window for NcursesWindow {
     fn get_size(&self) -> WindowSize {
         self.size
     }

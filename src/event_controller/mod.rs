@@ -8,7 +8,9 @@ use std::rc::Rc;
 
 use self::style::{RGBColor, StyleID, Styles};
 use self::view::{View, ViewID};
-use self::window::{WindowPosition, WindowSize};
+use self::window::Layout;
+
+use self::window::ncurses::NcursesLayout;
 
 use serde_json::Value;
 use xi_rpc::{RemoteError, RpcCall, RpcCtx};
@@ -51,6 +53,7 @@ pub struct Line {
 pub struct EventController {
     styles: Rc<RefCell<Box<dyn Styles>>>,
     views: HashMap<ViewID, View>,
+    layout: Box<dyn Layout>,
 }
 
 impl xi_rpc::Handler for EventController {
@@ -85,6 +88,7 @@ impl EventController {
         let controller = Self {
             styles: Rc::new(RefCell::new(Box::new(style::Ncurses::new()))),
             views: HashMap::new(),
+            layout: Box::new(NcursesLayout::new()),
         };
 
         controller
@@ -255,18 +259,9 @@ impl EventController {
         }
 
         info!("create view: {}", view_id);
-        let mut term_y: i32 = 0;
-        let mut term_x: i32 = 0;
-        ncurses::getmaxyx(ncurses::stdscr(), &mut term_y, &mut term_x);
-        let window = window::Ncurses::new(
-            WindowPosition { y: 0, x: 0 },
-            WindowSize {
-                height: term_y as u32,
-                width: term_x as u32,
-            },
-        );
+        let window = self.layout.create_view_window();
 
-        let new_view = View::new(ctx, &view_id, Box::new(window), self.styles.clone());
+        let new_view = View::new(ctx, &view_id, window, self.styles.clone());
         self.views.insert(view_id.to_string(), new_view);
     }
 }

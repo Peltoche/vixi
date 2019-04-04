@@ -1,6 +1,4 @@
-mod ncurses;
-
-pub use self::ncurses::Ncurses;
+pub mod ncurses;
 
 use super::style::Style;
 
@@ -22,4 +20,8 @@ pub trait Window {
     fn move_cursor_and_clear_line(&self, line: u32);
     fn append_ch(&self, ch: char, style: &Style);
     fn refresh(&self);
+}
+
+pub trait Layout {
+    fn create_view_window(&mut self) -> Box<dyn Window>;
 }
