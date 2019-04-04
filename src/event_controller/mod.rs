@@ -19,7 +19,7 @@ use xi_rpc::{RemoteError, RpcCall, RpcCtx};
 #[derive(Deserialize, Debug)]
 pub struct LineDescription {
     cursor: Option<Vec<i32>>,
-    ln: usize,
+    ln: Option<usize>,
     styles: Vec<StyleID>,
     text: String,
 }
@@ -157,11 +157,6 @@ impl EventController {
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
-        // Override the default colors with the `init_color` method. Once save
-        // those colors will be accessible via the ids `fg_style_id` and
-        // `bg_style_id`.
-        //
-
         // fg
         let fg_rgba: [u8; 4] = event.fg_color.to_le_bytes();
         let fg_color = RGBColor {
@@ -246,26 +241,6 @@ impl EventController {
             .get_mut(&event.view_id)
             .unwrap()
             .update_buffer(event.update.operations);
-
-        //let (size_y, size_x) = self.terminal.get_size();
-        //if size_x != self.screen_width {
-        //ctx.get_peer().send_rpc_notification(
-        //"edit",
-        //&json!({
-        //"method": "resize",
-        //"view_id": event.view_id,
-        //"params": {
-        //"width": size_x  ,
-        //"height": size_y,
-        //}
-        //}),
-        //);
-        //}
-
-        //self.buffer = new_buffer;
-        //self.terminal
-        //.redraw_view(self.screen_start, RedrawBehavior::OnlyDirty, &self.buffer);
-        //self.terminal.move_cursor(&self.cursor);
     }
 
     fn create_view_if_required(&mut self, ctx: &RpcCtx, view_id: &ViewID) {

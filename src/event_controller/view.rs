@@ -13,6 +13,7 @@ pub type ViewID = String;
 ///
 /// This id is different than the pair id.
 const SELECTION_CORE_STYLE_ID: StyleID = 0;
+const SPACES_IN_LINE_SECTION: usize = 2;
 
 #[derive(Debug, Clone)]
 pub struct Cursor {
@@ -33,7 +34,7 @@ pub struct Line {
     /// The "real" line number.
     ///
     /// A line wrapped in two lines will keep the same `ln` value.
-    pub ln: usize,
+    pub ln: Option<usize>,
     /// Indicate if the line needs to be rendered during the next redraw.
     pub is_dirty: bool,
 }
@@ -64,6 +65,7 @@ pub struct View {
     /// Changing its value make the screen scoll up/down.
     screen_start: u32,
     styles: Rc<RefCell<Box<dyn Styles>>>,
+    width_line_section: u32,
 }
 
 impl View {
@@ -82,6 +84,7 @@ impl View {
             cursor: Cursor { y: 0, x: 0 },
             buffer: Buffer::default(),
             screen_start: 0,
+            width_line_section: 0,
         };
 
         ctx.get_peer().send_rpc_notification(
@@ -109,7 +112,8 @@ impl View {
     }
 
     pub fn reset_cursor_position(&self) {
-        self.window.move_cursor(self.cursor.y, self.cursor.x);
+        self.window
+            .move_cursor(self.cursor.y + self.width_line_section, self.cursor.x);
         self.window.refresh();
     }
 
@@ -131,7 +135,7 @@ impl View {
         }
 
         // Move the cursor at its new position.
-        self.cursor.x = col;
+        self.cursor.x = col + self.width_line_section;
         self.cursor.y = cursor_y as u32;
 
         if scroll {
@@ -169,7 +173,7 @@ impl View {
             match operation.kind.as_str() {
                 "copy" => {
                     let mut is_dirty = true;
-                    let ln = operation.ln.unwrap();
+
                     if old_idx == new_idx {
                         is_dirty = false;
                     }
@@ -179,7 +183,7 @@ impl View {
                         new_buffer.lines.push(Line {
                             raw: old_buffer.raw.clone(),
                             styles: old_buffer.styles.clone(),
-                            ln: ln + i,
+                            ln: operation.ln.map(|ln| ln + i),
                             is_dirty,
                         });
                         new_idx += 1;
@@ -203,6 +207,9 @@ impl View {
                 _ => warn!("unhandled update: {:?}", operation),
             }
         }
+
+        self.width_line_section =
+            ((new_buffer.total_len().to_string().len()) + SPACES_IN_LINE_SECTION) as u32;
 
         self.buffer = new_buffer;
         self.redraw_view(RedrawBehavior::OnlyDirty);
@@ -249,15 +256,21 @@ impl View {
 
         self.window.move_cursor_and_clear_line(line_number);
 
-        //// Print the line number.
-        //addstr(
-        //format!(
-        //" {:width$} ",
-        //line.ln,
-        //width = (self.size_line_section - SPACES_IN_LINE_SECTION) as usize
-        //)
-        //.as_str(),
-        //);
+        // Print the line number.
+        let ln = match line.ln {
+            Some(ln) => ln.to_string(),
+            None => String::from(""),
+        };
+
+        self.window.append_str(
+            format!(
+                " {:width$} ",
+                ln,
+                width = (self.width_line_section as usize) - SPACES_IN_LINE_SECTION
+            )
+            .as_str(),
+            &self.styles.borrow().get_default(),
+        );
 
         let mut style_map: Vec<Style> = Vec::with_capacity(line.raw.len());
         style_map.resize(line.raw.len(), self.styles.borrow().get_default());
