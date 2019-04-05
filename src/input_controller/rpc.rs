@@ -1,4 +1,4 @@
-use crate::devices::keyboard::KeyStroke;
+use crate::input_controller::keyboard::KeyStroke;
 use crate::input_controller::{Response, PASTE_BUFFER};
 
 use xi_rpc::Peer;

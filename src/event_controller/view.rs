@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use super::style::{Style, StyleID, Styles};
+use super::style::{StyleID, Styles, SELECTION_STYLE_ID};
 use super::window::Window;
 use super::Operation;
 
@@ -9,10 +9,6 @@ use xi_rpc::RpcCtx;
 
 pub type ViewID = String;
 
-/// The style id 0 is reserved for the selection style id.
-///
-/// This id is different than the pair id.
-const SELECTION_CORE_STYLE_ID: StyleID = 0;
 const SPACES_IN_LINE_SECTION: usize = 2;
 
 #[derive(Debug, Clone)]
@@ -109,12 +105,6 @@ impl View {
         );
 
         view
-    }
-
-    pub fn reset_cursor_position(&self) {
-        self.window
-            .move_cursor(self.cursor.y + self.width_line_section, self.cursor.x);
-        self.window.refresh();
     }
 
     pub fn move_cursor(&mut self, ctx: &RpcCtx, line: u32, col: u32) {
@@ -262,6 +252,7 @@ impl View {
             None => String::from(""),
         };
 
+        self.styles.borrow().set_default();
         self.window.append_str(
             format!(
                 " {:width$} ",
@@ -269,11 +260,11 @@ impl View {
                 width = (self.width_line_section as usize) - SPACES_IN_LINE_SECTION
             )
             .as_str(),
-            &self.styles.borrow().get_default(),
         );
 
-        let mut style_map: Vec<Style> = Vec::with_capacity(line.raw.len());
-        style_map.resize(line.raw.len(), self.styles.borrow().get_default());
+        let styles = self.styles.borrow();
+        //let mut style_map: Vec<Option<Style>> = Vec::with_capacity(line.raw.len());
+        //style_map.resize(line.raw.len(), None);
 
         let mut idx = 0;
         let mut style_iter = line.styles.iter();
@@ -282,27 +273,44 @@ impl View {
             let style_length = (*style_iter.next().unwrap()) as i32;
             let style_id = *style_iter.next().unwrap();
 
-            let style = self.styles.borrow().get(&style_id);
-
-            for i in idx + style_start..idx + style_start + style_length {
-                let char_style = &mut style_map[i as usize];
-
-                if style_id == SELECTION_CORE_STYLE_ID {
-                    char_style.selected = true;
-                } else {
-                    char_style.style_id = style_id;
-
-                    if style.italic {
-                        char_style.italic = true;
-                    }
-                }
+            if style_id == SELECTION_STYLE_ID {
+                continue;
             }
+
+            styles.set(&style_id);
+
+            unsafe {
+                self.window.append_str(
+                    line.raw
+                        .get_unchecked(idx as usize..(idx + style_length) as usize),
+                );
+            }
+
+            //for i in idx + style_start..idx + style_start + style_length {
+            //let char_style = &mut style_map[i as usize];
+
+            //if style_id == SELECTION_CORE_STYLE_ID {
+            //char_style.selected = true;
+            //} else {
+            //char_style.style_id = style_id;
+
+            //if style.italic {
+            //char_style.italic = true;
+            //}
+            //}
+            //}
             idx += style_start + style_length;
         }
 
-        let mut content_iter = line.raw.chars();
-        for style in style_map.iter() {
-            self.window.append_ch(content_iter.next().unwrap(), style);
+        styles.set_default();
+        unsafe {
+            self.window
+                .append_str(line.raw.get_unchecked(idx as usize..line.raw.len()));
         }
+        //let mut content_iter = line.raw.chars();
+        //for style in style_map.iter() {
+        //styles.set(&style);
+        //self.window.append_ch(content_iter.next().unwrap());
+        //}
     }
 }

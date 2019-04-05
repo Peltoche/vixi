@@ -45,7 +45,7 @@ impl NcursesLayout {
 }
 
 impl Layout for NcursesLayout {
-    fn create_view_window(&mut self) -> Box<dyn Window> {
+    fn create_view_window(&self) -> Box<dyn Window> {
         let window = NcursesWindow::new(
             WindowPosition { y: 0, x: 0 },
             WindowSize {
@@ -57,7 +57,7 @@ impl Layout for NcursesLayout {
         Box::new(window)
     }
 
-    fn create_new_status_bar_window(&mut self) -> Box<dyn Window> {
+    fn create_new_status_bar_window(&self) -> Box<dyn Window> {
         let window = NcursesWindow::new(
             WindowPosition {
                 y: self.height - STATUS_HEIGHT,
@@ -70,6 +70,10 @@ impl Layout for NcursesLayout {
         );
 
         Box::new(window)
+    }
+
+    fn clear(&self) {
+        endwin();
     }
 }
 

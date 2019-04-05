@@ -17,26 +17,29 @@ extern crate serde_derive;
 extern crate failure;
 #[macro_use]
 extern crate lazy_static;
+extern crate termion;
 extern crate toml;
 
 mod cli;
 mod core;
-mod devices;
 mod event_controller;
 mod input_controller;
 mod logging;
 
+use std::cell::RefCell;
 use std::fs::File;
 use std::io::prelude::*;
 use std::process::exit;
+use std::rc::Rc;
 use std::thread;
 
-use devices::keyboard::Keyboard;
-use event_controller::EventController;
+use event_controller::style::TermionStyles;
+use event_controller::window::TermionLayout;
+use event_controller::{EventController, Styles};
+use input_controller::keyboard::TermionKeyboard;
 use input_controller::{Config, InputController};
 
 use failure::Error;
-use ncurses::*;
 use xi_rpc::{Peer, RpcLoop};
 
 fn setup_logger() {
@@ -77,16 +80,22 @@ fn main() {
 
     setup_logger();
 
-    // Load the devices
-    let keyboard = Keyboard::default();
-
     let (client_to_core_writer, core_to_client_reader, client_to_client_writer) =
         core::start_xi_core();
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
 
+    //let mut layout = NcursesLayout::new();
+    //Rc::new(RefCell::new(Box::new(style::NcursesStyles::new())));
+
     let raw_peer = front_event_loop.get_raw_peer();
     thread::spawn(move || {
-        let mut event_handler = EventController::new();
+        let layout = TermionLayout::new();
+
+        let styles: Rc<RefCell<Box<dyn Styles>>> = Rc::new(RefCell::new(Box::new(
+            TermionStyles::new(layout.get_writer()),
+        )));
+
+        let mut event_handler = EventController::new(Box::new(layout), styles.clone());
         front_event_loop
             .mainloop(|| core_to_client_reader, &mut event_handler)
             .unwrap();
@@ -95,7 +104,7 @@ fn main() {
     let exit_res = setup_config(&raw_peer)
         .and_then(|config| {
             Ok(InputController::new(
-                keyboard,
+                Box::new(TermionKeyboard::default()),
                 client_to_client_writer,
                 &config,
             ))
@@ -105,7 +114,7 @@ fn main() {
             controller.start_keyboard_event_loop(&raw_peer)
         });
 
-    endwin();
+    //layout.clear();
 
     match exit_res {
         Ok(_) => exit(0),

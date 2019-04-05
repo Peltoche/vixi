@@ -1,13 +1,15 @@
 mod ncurses;
+pub mod termion;
 
-pub use self::ncurses::Ncurses;
+pub use self::ncurses::NcursesStyles;
+pub use self::termion::TermionStyles;
 
 pub type StyleID = i16;
 
 /// The style id 0 is reserved for the selection style id.
 ///
 /// This id is different than the pair id.
-const SELECTION_STYLE_ID: StyleID = 0;
+pub const SELECTION_STYLE_ID: StyleID = 0;
 
 /// An RGB color description.
 ///
@@ -31,15 +33,8 @@ pub struct RGBColor {
     pub b: u8,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Style {
-    pub style_id: StyleID,
-    pub italic: bool,
-    pub selected: bool,
-}
-
 pub trait Styles {
-    fn get(&self, style_id: &StyleID) -> Style;
-    fn get_default(&self) -> Style;
+    fn set(&self, style_id: &StyleID);
+    fn set_default(&self);
     fn save(&mut self, style_id: StyleID, fg_color: RGBColor, bg_color: RGBColor, italic: bool);
 }

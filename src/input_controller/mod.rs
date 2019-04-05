@@ -1,16 +1,16 @@
 mod insert_mode;
+pub mod keyboard;
 mod normal_mode;
-mod visual_mode;
-
 mod rpc;
+mod visual_mode;
 
 use std::sync::{Arc, Mutex};
 
 use self::insert_mode::InsertMode;
+use self::keyboard::Keyboard;
 use self::normal_mode::NormalMode;
 use self::visual_mode::VisualMode;
 use crate::core::ClientToClientWriter;
-use crate::devices::keyboard::Keyboard;
 
 use failure::Error;
 use xi_rpc::Peer;
@@ -54,7 +54,7 @@ impl Mode {
 }
 
 pub struct InputController {
-    keyboard: Keyboard,
+    keyboard: Box<dyn Keyboard>,
     view_id: String,
     normal_mode: NormalMode,
     insert_mode: InsertMode,
@@ -65,7 +65,7 @@ pub struct InputController {
 
 impl InputController {
     pub fn new(
-        keyboard: Keyboard,
+        keyboard: Box<dyn Keyboard>,
         client_to_client_writer: ClientToClientWriter,
         config: &Config,
     ) -> Self {

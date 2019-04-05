@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{RGBColor, Style, StyleID, Styles};
+use super::{RGBColor, StyleID, Styles};
 
 use ncurses::*;
 
@@ -26,12 +26,19 @@ const CUSTOM_COLOR_NAMESPACE: i16 = MAX_STYLE_ID * 4;
 /// ID for the background color id used for the selections.
 const SELECTION_BACKGROUND_COLOR_ID: i16 = CUSTOM_COLOR_NAMESPACE + 0;
 
+#[derive(Debug, Clone, Copy)]
+pub struct Style {
+    pub style_id: StyleID,
+    pub italic: bool,
+    pub selected: bool,
+}
+
 #[derive(Debug)]
-pub struct Ncurses {
+pub struct NcursesStyles {
     styles: HashMap<StyleID, Style>,
 }
 
-impl Ncurses {
+impl NcursesStyles {
     pub fn new() -> Self {
         let client = Self {
             styles: HashMap::new(),
@@ -65,22 +72,26 @@ impl Ncurses {
     }
 }
 
-impl Styles for Ncurses {
-    fn get(&self, style_id: &StyleID) -> Style {
+impl Styles for NcursesStyles {
+    fn set(&self, style_id: &StyleID) {
         match self.styles.get(style_id) {
-            Some(res) => *res,
+            Some(style) => {
+                let mut attrs = COLOR_PAIR(style.style_id);
+                attrs = attrs | if style.italic { A_ITALIC() } else { A_NORMAL() };
+                if attrset(attrs) == ERR {
+                    error!("failed to set the style {}", style_id);
+                }
+            }
             None => {
                 error!("failed to retrieve the style {}", style_id);
-                self.get_default()
+                self.set_default()
             }
         }
     }
 
-    fn get_default(&self) -> Style {
-        Style {
-            style_id: DEFAULT_COLOR_PAIR_ID,
-            italic: false,
-            selected: false,
+    fn set_default(&self) {
+        if attrset(COLOR_PAIR(DEFAULT_COLOR_PAIR_ID) | A_NORMAL()) == ERR {
+            error!("failed to set the default");
         }
     }
 

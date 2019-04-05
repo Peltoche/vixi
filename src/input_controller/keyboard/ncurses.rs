@@ -1,52 +1,16 @@
 use std::char::*;
 
+use super::{KeyStroke, Keyboard};
+
 use ncurses::*;
 
 const ESC_OR_ALT_KEY: i32 = 27;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-//pub struct KeyStroke(pub char);
-pub enum KeyStroke {
-    Char(char),
-    KeyF(u32),
-    Alt(char),
-    KeyUp,
-    KeyDown,
-    KeyLeft,
-    KeyRight,
-    KeyPreviousPage,
-    KeyNextPage,
-    KeyEscape,
-    KeyBackSpace,
-    KeyDeleteChar,
-}
-
-impl KeyStroke {
-    pub fn from_description(description: &str) -> Option<Self> {
-        if description.len() == 1 {
-            return Some(KeyStroke::Char(description.chars().nth(0).unwrap()));
-        }
-
-        match description {
-            "<f1>" => Some(KeyStroke::KeyF(1)),
-            "<key_up>" => Some(KeyStroke::KeyUp),
-            "<key_down>" => Some(KeyStroke::KeyDown),
-            "<key_left>" => Some(KeyStroke::KeyLeft),
-            "<key_right>" => Some(KeyStroke::KeyRight),
-            "<page_up>" => Some(KeyStroke::KeyPreviousPage),
-            "<page_down>" => Some(KeyStroke::KeyNextPage),
-            "<backspace>" => Some(KeyStroke::KeyBackSpace),
-            "<esc>" => Some(KeyStroke::KeyEscape),
-            _ => None,
-        }
-    }
-}
-
 #[derive(Default)]
-pub struct Keyboard {}
+pub struct NcursesKeyboard {}
 
-impl Keyboard {
-    pub fn get_next_keystroke(&self) -> Option<KeyStroke> {
+impl Keyboard for NcursesKeyboard {
+    fn get_next_keystroke(&mut self) -> Option<KeyStroke> {
         let res = ncurses::get_wch();
         if res.is_none() {
             return None;

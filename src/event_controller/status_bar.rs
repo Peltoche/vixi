@@ -15,9 +15,11 @@ impl StatusBar {
     }
 
     pub fn update_mode(&mut self, mode: &str) {
+        self.window.save_cursor_pos();
         self.window.move_cursor_and_clear_line(0);
-        self.window
-            .append_str(mode, &self.styles.borrow().get_default());
+        self.styles.borrow().set_default();
+        self.window.append_str(mode);
+        self.window.restore_cursor_pos();
         self.window.refresh();
     }
 }

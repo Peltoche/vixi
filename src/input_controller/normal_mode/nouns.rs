@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::devices::keyboard::KeyStroke;
+use crate::input_controller::keyboard::KeyStroke;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Noun {

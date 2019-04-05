@@ -1,16 +1,17 @@
 mod status_bar;
-mod style;
+pub mod style;
 pub mod view;
-mod window;
+pub mod window;
+
+pub use self::style::Styles;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 use self::status_bar::StatusBar;
-use self::style::{RGBColor, StyleID, Styles};
+use self::style::{RGBColor, StyleID};
 use self::view::{View, ViewID};
-use self::window::ncurses::NcursesLayout;
 use self::window::Layout;
 
 use serde_json::Value;
@@ -88,16 +89,13 @@ impl xi_rpc::Handler for EventController {
 }
 
 impl EventController {
-    pub fn new() -> Self {
-        let mut layout = NcursesLayout::new();
-        let styles: Rc<RefCell<Box<dyn Styles>>> =
-            Rc::new(RefCell::new(Box::new(style::Ncurses::new())));
+    pub fn new(layout: Box<dyn Layout>, styles: Rc<RefCell<Box<dyn Styles>>>) -> Self {
         let status_bar = StatusBar::new(layout.create_new_status_bar_window(), styles.clone());
 
         let controller = Self {
-            styles: styles,
+            styles,
+            layout,
             views: HashMap::new(),
-            layout: Box::new(layout),
             status_bar,
             current_view: String::new(),
         };
@@ -132,11 +130,6 @@ impl EventController {
 
         if let "change-mode" = event.key.as_str() {
             self.status_bar.update_mode(&event.value);
-
-            self.views
-                .get(&self.current_view)
-                .unwrap()
-                .reset_cursor_position();
         }
     }
 

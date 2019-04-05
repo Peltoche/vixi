@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use self::actions::{Action, Actions};
 use self::nouns::Nouns;
 use self::verbs::Verbs;
-use crate::devices::keyboard::KeyStroke;
+use super::keyboard::KeyStroke;
 use crate::input_controller::rpc::*;
 use crate::input_controller::Response;
 
