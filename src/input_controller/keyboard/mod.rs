@@ -1,7 +1,5 @@
-mod ncurses;
 mod termion;
 
-pub use self::ncurses::NcursesKeyboard;
 pub use self::termion::TermionKeyboard;
 
 pub trait Keyboard {

@@ -1,7 +1,5 @@
-pub mod ncurses;
 pub mod termion;
 
-pub use self::ncurses::NcursesLayout;
 pub use self::termion::TermionLayout;
 
 #[derive(Debug, Copy, Clone)]
@@ -29,5 +27,4 @@ pub trait Window {
 pub trait Layout {
     fn create_view_window(&self) -> Box<dyn Window>;
     fn create_new_status_bar_window(&self) -> Box<dyn Window>;
-    fn clear(&self);
 }

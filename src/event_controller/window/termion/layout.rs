@@ -6,7 +6,7 @@ use super::window::TermionWindow;
 use crate::event_controller::window::{Layout, Window, WindowPosition, WindowSize};
 
 use termion::clear;
-use termion::color::{self, DetectColors};
+use termion::color::DetectColors;
 use termion::raw::IntoRawMode;
 
 const STATUS_HEIGHT: u32 = 1;

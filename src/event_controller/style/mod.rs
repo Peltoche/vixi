@@ -1,7 +1,5 @@
-mod ncurses;
 pub mod termion;
 
-pub use self::ncurses::NcursesStyles;
 pub use self::termion::TermionStyles;
 
 pub type StyleID = i16;

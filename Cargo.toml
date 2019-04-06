@@ -30,10 +30,6 @@ toml = "0.5.0"
 features = ["suggestions", "color", "wrap_help"]
 version = "2.32.0"
 
-[dependencies.ncurses]
-features = ["extended_colors", "wide", "wide_chtype"]
-version = "5.99.0"
-
 [dependencies.xi-core-lib]
 branch = "master"
 git = "https://github.com/xi-editor/xi-editor"

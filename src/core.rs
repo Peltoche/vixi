@@ -4,7 +4,7 @@ use std::thread;
 
 use serde_json::Value;
 use xi_core_lib::XiCore;
-use xi_rpc::{Error, RpcLoop};
+use xi_rpc::RpcLoop;
 
 /// Wraps an instance of `mpsc::Sender`, implementing `Write`.
 ///

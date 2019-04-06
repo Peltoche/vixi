@@ -1,6 +1,4 @@
-use std::io::{stdin, Bytes, Read};
-use std::thread;
-use std::time::Duration;
+use std::io::stdin;
 
 use super::{KeyStroke, Keyboard};
 

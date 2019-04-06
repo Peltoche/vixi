@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate serde_json;
-extern crate ncurses;
 extern crate xi_core_lib;
 extern crate xi_rpc;
 #[macro_use]
@@ -32,7 +31,6 @@ use std::io::prelude::*;
 use std::process::exit;
 use std::rc::Rc;
 use std::thread;
-use std::time;
 
 use event_controller::style::TermionStyles;
 use event_controller::window::TermionLayout;
@@ -86,7 +84,7 @@ fn main() {
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
 
     let raw_peer = front_event_loop.get_raw_peer();
-    thread::spawn(move || {
+    let child = thread::spawn(move || {
         let layout = TermionLayout::new();
 
         let styles: Rc<RefCell<Box<dyn Styles>>> = Rc::new(RefCell::new(Box::new(
@@ -112,7 +110,7 @@ fn main() {
             controller.start_keyboard_event_loop(&raw_peer)
         });
 
-    thread::sleep(time::Duration::from_millis(50));
+    child.join().unwrap();
 
     match exit_res {
         Ok(_) => exit(0),
