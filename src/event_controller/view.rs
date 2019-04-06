@@ -263,8 +263,6 @@ impl View {
         );
 
         let styles = self.styles.borrow();
-        //let mut style_map: Vec<Option<Style>> = Vec::with_capacity(line.raw.len());
-        //style_map.resize(line.raw.len(), None);
 
         let mut idx = 0;
         let mut style_iter = line.styles.iter();
@@ -286,19 +284,6 @@ impl View {
                 );
             }
 
-            //for i in idx + style_start..idx + style_start + style_length {
-            //let char_style = &mut style_map[i as usize];
-
-            //if style_id == SELECTION_CORE_STYLE_ID {
-            //char_style.selected = true;
-            //} else {
-            //char_style.style_id = style_id;
-
-            //if style.italic {
-            //char_style.italic = true;
-            //}
-            //}
-            //}
             idx += style_start + style_length;
         }
 
@@ -307,10 +292,5 @@ impl View {
             self.window
                 .append_str(line.raw.get_unchecked(idx as usize..line.raw.len()));
         }
-        //let mut content_iter = line.raw.chars();
-        //for style in style_map.iter() {
-        //styles.set(&style);
-        //self.window.append_ch(content_iter.next().unwrap());
-        //}
     }
 }
