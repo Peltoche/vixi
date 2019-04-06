@@ -32,6 +32,7 @@ use std::io::prelude::*;
 use std::process::exit;
 use std::rc::Rc;
 use std::thread;
+use std::time;
 
 use event_controller::style::TermionStyles;
 use event_controller::window::TermionLayout;
@@ -84,9 +85,6 @@ fn main() {
         core::start_xi_core();
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
 
-    //let mut layout = NcursesLayout::new();
-    //Rc::new(RefCell::new(Box::new(style::NcursesStyles::new())));
-
     let raw_peer = front_event_loop.get_raw_peer();
     thread::spawn(move || {
         let layout = TermionLayout::new();
@@ -114,7 +112,7 @@ fn main() {
             controller.start_keyboard_event_loop(&raw_peer)
         });
 
-    //layout.clear();
+    thread::sleep(time::Duration::from_millis(50));
 
     match exit_res {
         Ok(_) => exit(0),

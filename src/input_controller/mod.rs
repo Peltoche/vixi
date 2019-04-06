@@ -97,11 +97,6 @@ impl InputController {
             }),
         );
 
-        //self.front_event_writer.send_rpc_notification(
-        //"layout",
-        //&json!({"method": "display_view", "params": {"view_id": self.view_id}}),
-        //);
-
         Ok(())
     }
 
@@ -133,6 +128,9 @@ impl InputController {
                 );
             }
         }
+
+        self.front_event_writer
+            .send_rpc_notification("command", &json!({"method": "exit"}));
 
         Ok(())
     }

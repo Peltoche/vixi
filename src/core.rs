@@ -4,7 +4,7 @@ use std::thread;
 
 use serde_json::Value;
 use xi_core_lib::XiCore;
-use xi_rpc::RpcLoop;
+use xi_rpc::{Error, RpcLoop};
 
 /// Wraps an instance of `mpsc::Sender`, implementing `Write`.
 ///
@@ -48,13 +48,33 @@ impl BufRead for Reader {
     }
 
     fn read_line(&mut self, buf: &mut String) -> io::Result<usize> {
-        match self.0.recv() {
-            Ok(s) => {
-                buf.push_str(&s);
-                Ok(s.len())
-            }
-            Err(_) => Ok(0),
+        let event = match self.0.recv() {
+            Ok(s) => s,
+            Err(_) => return Ok(0),
+        };
+
+        if &event == r#"{"method":"command","params":{"method":"exit"}}"# {
+            // It receive a close commmand from the writer indicating the chan
+            // should be closes. The event is sent by the InputController when
+            // the user ask to quit the program.
+            //
+            // This method is required because the chan producers a shared between
+            // The InputController and the EventController threads and it's
+            // impossible for the InputController to close the EventController
+            // channel.
+            //
+            // When the Reader receives the command, it close the channel between
+            // the InputController which lead to the following steps in order:
+            // - The channel between the the InputController and the Core close itself.
+            // - The Core event loop stop itself safely.
+            // - The channel between the Core and the EventController close itself.
+            // - The the EventController event loop stop itself safely.
+            // - The main exit.
+            return Ok(0);
         }
+
+        buf.push_str(&event);
+        Ok(event.len())
     }
 }
 

@@ -67,26 +67,4 @@ impl Layout for TermionLayout {
 
         Box::new(window)
     }
-
-    fn clear(&self) {
-        let mut writer = self.writer.borrow_mut();
-
-        write!(
-            writer,
-            "{}{}{}",
-            color::Fg(color::Reset),
-            color::Bg(color::Reset),
-            termion::clear::All,
-        )
-        .unwrap();
-
-        writer.flush().unwrap();
-    }
-}
-
-impl Drop for TermionLayout {
-    fn drop(&mut self) {
-        info!("clear terminal");
-        self.clear();
-    }
 }

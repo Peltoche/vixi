@@ -7,14 +7,6 @@ use super::{RGBColor, StyleID, Styles};
 
 use termion::color;
 
-/// The pair id for the default background/foreground.
-///
-/// The pair_id 0 is the one used by default by the ncurse.
-pub const DEFAULT_COLOR_PAIR_ID: i16 = 0;
-
-///// ID for the background color id used for the selections.
-//const SELECTION_BACKGROUND_COLOR_ID: i16 = CUSTOM_COLOR_NAMESPACE + 0;
-
 #[derive(Debug, Clone, Copy)]
 pub struct Style {
     pub background: termion::color::Rgb,
@@ -39,18 +31,6 @@ impl TermionStyles {
             default_foreground: color::Rgb(255, 255, 255),
         };
 
-        // Save the background color for the selection.
-        //
-        // TODO: make the background color configurable.
-        //client.save_color(
-        //SELECTION_BACKGROUND_COLOR_ID,
-        //RGBColor {
-        //r: 90,
-        //g: 90,
-        //b: 90,
-        //},
-        //);
-
         client
     }
 }
@@ -59,7 +39,6 @@ impl Styles for TermionStyles {
     fn set(&self, style_id: &StyleID) {
         match self.styles.get(style_id) {
             Some(res) => {
-                //info!("apply: bg: {:?} / fg: {:?}", res.background, res.foreground);
                 write!(
                     self.writer.borrow_mut(),
                     "{}{}",
@@ -87,7 +66,6 @@ impl Styles for TermionStyles {
 
     fn save(&mut self, style_id: StyleID, fg_color: RGBColor, bg_color: RGBColor, italic: bool) {
         // Save the other metas into a map.
-        info!("save style: bf: {:?} / fg: {:?}", bg_color, fg_color);
         self.styles.insert(
             style_id,
             Style {
