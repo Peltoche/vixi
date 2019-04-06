@@ -1,16 +1,25 @@
-use std::io::stdin;
+use std::io::Read;
 
 use super::{KeyStroke, Keyboard};
 
 use termion::event::Key;
-use termion::input::TermRead;
+use termion::input::{Keys, TermRead};
 
-#[derive(Default)]
-pub struct TermionKeyboard {}
+pub struct TermionKeyboard<R: Read> {
+    key_reader: Keys<R>,
+}
 
-impl Keyboard for TermionKeyboard {
+impl<R: Read> TermionKeyboard<R> {
+    pub fn from_reader(reader: R) -> Self {
+        Self {
+            key_reader: reader.keys(),
+        }
+    }
+}
+
+impl<R: Read> Keyboard for TermionKeyboard<R> {
     fn get_next_keystroke(&mut self) -> Option<KeyStroke> {
-        let res = stdin().keys().next();
+        let res = self.key_reader.next();
         if res.is_none() {
             return None;
         }

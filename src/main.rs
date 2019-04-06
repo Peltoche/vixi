@@ -28,6 +28,7 @@ mod logging;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::prelude::*;
+use std::io::stdin;
 use std::process::exit;
 use std::rc::Rc;
 use std::thread;
@@ -100,7 +101,7 @@ fn main() {
     let exit_res = setup_config(&raw_peer)
         .and_then(|config| {
             Ok(InputController::new(
-                Box::new(TermionKeyboard::default()),
+                Box::new(TermionKeyboard::from_reader(stdin())),
                 client_to_client_writer,
                 &config,
             ))
