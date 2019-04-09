@@ -158,7 +158,6 @@ impl View {
         let mut old_idx: usize = 0;
         let mut new_idx: usize = 0;
 
-        let mut updated_lines = 0;
         let styles = self.styles.borrow();
         for operation in operations {
             match operation.kind.as_str() {
@@ -181,7 +180,6 @@ impl View {
                 "invalidate" => new_buffer.nb_invalid_lines += operation.n,
                 "ins" => {
                     for line in operation.lines.unwrap() {
-                        updated_lines += 1;
                         new_buffer.lines.push(Line {
                             raw: styles.apply_to(line.styles, &line.text),
                             ln: line.ln,
@@ -194,7 +192,6 @@ impl View {
             }
         }
 
-        info!("updated lines: {}", updated_lines);
         self.width_line_section =
             ((new_buffer.total_len().to_string().len()) + SPACES_IN_LINE_SECTION) as u32;
 
