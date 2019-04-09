@@ -34,6 +34,15 @@ pub struct Operation {
     lines: Option<Vec<LineDescription>>,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct Annotation {
+    #[serde(rename = "type")]
+    kind: String,
+    n: usize,
+    payloads: Option<()>,
+    ranges: Vec<[usize; 4]>,
+}
+
 #[derive(Default, Clone)]
 pub struct Cursor {
     pub y: u32,
@@ -143,27 +152,30 @@ impl EventController {
             id: StyleID,
             #[serde(default)]
             italic: bool,
-            fg_color: u32,
-            #[serde(default)]
-            bg_color: u32,
+            fg_color: Option<u32>,
+            bg_color: Option<u32>,
         }
 
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
         // fg
-        let fg_rgba: [u8; 4] = event.fg_color.to_le_bytes();
-        let fg_color = RGBColor {
-            r: fg_rgba[0],
-            g: fg_rgba[1],
-            b: fg_rgba[2],
-        };
+        let fg_color = event.fg_color.map(|fg| {
+            let rgba = fg.to_le_bytes();
+            RGBColor {
+                r: rgba[0],
+                g: rgba[1],
+                b: rgba[2],
+            }
+        });
 
-        let bg_rgba: [u8; 4] = event.bg_color.to_le_bytes();
-        let bg_color = RGBColor {
-            r: bg_rgba[0],
-            g: bg_rgba[1],
-            b: bg_rgba[2],
-        };
+        let bg_color = event.bg_color.map(|bg| {
+            let rgba = bg.to_le_bytes();
+            RGBColor {
+                r: rgba[0],
+                g: rgba[1],
+                b: rgba[2],
+            }
+        });
 
         self.styles
             .borrow_mut()
@@ -206,15 +218,6 @@ impl EventController {
     /// - "ins" -> Insert some new content.
     fn handle_content_update(&mut self, ctx: &RpcCtx, body: &Value) {
         #[derive(Deserialize, Debug)]
-        struct Annotation {
-            #[serde(rename = "type")]
-            kind: String,
-            n: usize,
-            payloads: Option<()>,
-            ranges: Vec<[usize; 4]>,
-        }
-
-        #[derive(Deserialize, Debug)]
         struct Update {
             annotations: Vec<Annotation>,
             #[serde(rename = "ops")]
@@ -230,10 +233,9 @@ impl EventController {
         let event: Event = serde_json::from_value(body.clone()).unwrap();
 
         self.create_view_if_required(ctx, &event.view_id);
-        self.views
-            .get_mut(&event.view_id)
-            .unwrap()
-            .update_buffer(event.update.operations);
+        let view = self.views.get_mut(&event.view_id).unwrap();
+
+        view.update_buffer(event.update.operations);
     }
 
     fn create_view_if_required(&mut self, ctx: &RpcCtx, view_id: &ViewID) {

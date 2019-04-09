@@ -88,9 +88,8 @@ fn main() {
     let child = thread::spawn(move || {
         let layout = TermionLayout::new();
 
-        let styles: Rc<RefCell<Box<dyn Styles>>> = Rc::new(RefCell::new(Box::new(
-            TermionStyles::new(layout.get_writer()),
-        )));
+        let styles: Rc<RefCell<Box<dyn Styles>>> =
+            Rc::new(RefCell::new(Box::new(TermionStyles::new())));
 
         let mut event_handler = EventController::new(Box::new(layout), styles.clone());
         front_event_loop

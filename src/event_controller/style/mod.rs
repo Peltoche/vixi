@@ -4,10 +4,14 @@ pub use self::termion::TermionStyles;
 
 pub type StyleID = i16;
 
+pub const STYLE_LEN: usize = 20;
+
 /// The style id 0 is reserved for the selection style id.
 ///
 /// This id is different than the pair id.
 pub const SELECTION_STYLE_ID: StyleID = 0;
+
+pub const LINE_SECTION_STYLE_ID: StyleID = 9999;
 
 /// An RGB color description.
 ///
@@ -31,8 +35,28 @@ pub struct RGBColor {
     pub b: u8,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct Style {
+    pub background: Option<String>,
+    pub foreground: Option<String>,
+    pub italic: bool,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct StyleRange {
+    start: u32,
+    end: u32,
+    style: Style,
+}
+
 pub trait Styles {
-    fn set(&self, style_id: &StyleID);
-    fn set_default(&self);
-    fn save(&mut self, style_id: StyleID, fg_color: RGBColor, bg_color: RGBColor, italic: bool);
+    fn append_with_style(&self, to_append: &str, style_id: &StyleID, dest: &mut String);
+    fn apply_to(&self, inputs: Vec<i16>, input: &str) -> String;
+    fn save(
+        &mut self,
+        style_id: StyleID,
+        fg_color: Option<RGBColor>,
+        bg_color: Option<RGBColor>,
+        italic: bool,
+    );
 }

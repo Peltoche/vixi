@@ -70,7 +70,7 @@ mod tests {
     use std::collections::HashMap;
 
     use super::{Verb, Verbs};
-    use crate::devices::keyboard::KeyStroke;
+    use crate::input_controller::keyboard::KeyStroke;
 
     #[test]
     fn created_with_an_empty_config_keeps_the_default_values() {

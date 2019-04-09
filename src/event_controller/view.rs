@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use super::style::{StyleID, Styles, SELECTION_STYLE_ID};
+use super::style::{Styles, LINE_SECTION_STYLE_ID, STYLE_LEN};
 use super::window::Window;
 use super::Operation;
 
@@ -26,7 +26,6 @@ pub struct Buffer {
 #[derive(Debug, Default, Clone)]
 pub struct Line {
     pub raw: String,
-    pub styles: Vec<StyleID>,
     /// The "real" line number.
     ///
     /// A line wrapped in two lines will keep the same `ln` value.
@@ -159,6 +158,8 @@ impl View {
         let mut old_idx: usize = 0;
         let mut new_idx: usize = 0;
 
+        let mut updated_lines = 0;
+        let styles = self.styles.borrow();
         for operation in operations {
             match operation.kind.as_str() {
                 "copy" => {
@@ -172,7 +173,6 @@ impl View {
                         let old_buffer = &self.buffer.lines[old_idx + i];
                         new_buffer.lines.push(Line {
                             raw: old_buffer.raw.clone(),
-                            styles: old_buffer.styles.clone(),
                             ln: operation.ln.map(|ln| ln + i),
                             is_dirty,
                         });
@@ -185,9 +185,9 @@ impl View {
                 "invalidate" => new_buffer.nb_invalid_lines += operation.n,
                 "ins" => {
                     for line in operation.lines.unwrap() {
+                        updated_lines += 1;
                         new_buffer.lines.push(Line {
-                            raw: line.text.to_owned(),
-                            styles: line.styles,
+                            raw: styles.apply_to(line.styles, &line.text),
                             ln: line.ln,
                             is_dirty: true,
                         });
@@ -198,6 +198,7 @@ impl View {
             }
         }
 
+        info!("updated lines: {}", updated_lines);
         self.width_line_section =
             ((new_buffer.total_len().to_string().len()) + SPACES_IN_LINE_SECTION) as u32;
 
@@ -205,8 +206,9 @@ impl View {
         self.redraw_view(RedrawBehavior::OnlyDirty);
     }
 
-    fn redraw_view(&self, redraw_behavior: RedrawBehavior) {
+    pub fn redraw_view(&self, redraw_behavior: RedrawBehavior) {
         let window_size = self.window.get_size();
+        let styles_registry = self.styles.borrow();
 
         let buffer_len =
             if self.buffer.lines_availables_after(self.screen_start) < window_size.height {
@@ -228,69 +230,28 @@ impl View {
 
         for (screen_line, line) in buffer_iter.enumerate() {
             if redraw_behavior == RedrawBehavior::Everything || line.is_dirty {
-                self.rewrite_line(screen_line as u32, &line);
+                self.window.move_cursor_and_clear_line(screen_line as u32);
+
+                // Print the line number.
+                let ln = match line.ln {
+                    Some(ln) => ln.to_string(),
+                    None => String::from(""),
+                };
+
+                let line_size = (self.width_line_section as usize) - SPACES_IN_LINE_SECTION;
+                let mut line_section = String::with_capacity(line_size + STYLE_LEN);
+                styles_registry.append_with_style(
+                    &format!(" {:width$} ", ln, width = line_size),
+                    &LINE_SECTION_STYLE_ID,
+                    &mut line_section,
+                );
+
+                self.window.append_str(&line_section);
+                self.window.append_str(&line.raw);
             }
         }
 
         self.window.move_cursor(self.cursor.y, self.cursor.x);
         self.window.refresh();
-    }
-
-    fn rewrite_line(&self, line_number: u32, line: &Line) {
-        #[derive(Clone, Debug)]
-        struct CharStyle {
-            style_id: StyleID,
-            selected: bool,
-            italic: bool,
-        }
-
-        self.window.move_cursor_and_clear_line(line_number);
-
-        // Print the line number.
-        let ln = match line.ln {
-            Some(ln) => ln.to_string(),
-            None => String::from(""),
-        };
-
-        self.styles.borrow().set_default();
-        self.window.append_str(
-            format!(
-                " {:width$} ",
-                ln,
-                width = (self.width_line_section as usize) - SPACES_IN_LINE_SECTION
-            )
-            .as_str(),
-        );
-
-        let styles = self.styles.borrow();
-
-        let mut idx = 0;
-        let mut style_iter = line.styles.iter();
-        for _ in 0..line.styles.len() / 3 {
-            let style_start = (*style_iter.next().unwrap()) as i32;
-            let style_length = (*style_iter.next().unwrap()) as i32;
-            let style_id = *style_iter.next().unwrap();
-
-            if style_id == SELECTION_STYLE_ID {
-                continue;
-            }
-
-            styles.set(&style_id);
-
-            unsafe {
-                self.window.append_str(
-                    line.raw
-                        .get_unchecked(idx as usize..(idx + style_length) as usize),
-                );
-            }
-
-            idx += style_start + style_length;
-        }
-
-        styles.set_default();
-        unsafe {
-            self.window
-                .append_str(line.raw.get_unchecked(idx as usize..line.raw.len()));
-        }
     }
 }

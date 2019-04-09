@@ -93,7 +93,7 @@ mod tests {
     use std::collections::HashMap;
 
     use super::{Action, Actions};
-    use crate::devices::keyboard::KeyStroke;
+    use crate::input_controller::keyboard::KeyStroke;
 
     #[test]
     fn created_with_an_empty_config_keeps_the_default_values() {
@@ -108,10 +108,11 @@ mod tests {
     fn a_config_value_override_the_defaults() {
         // The default for "key_up" is "move_up" but the config should modifiate
         // the behavior.
-        let config: HashMap<String, String> = [(String::from("move_down"), String::from("key_up"))]
-            .iter()
-            .cloned()
-            .collect();
+        let config: HashMap<String, String> =
+            [(String::from("move_down"), String::from("<key_up>"))]
+                .iter()
+                .cloned()
+                .collect();
 
         let actions = Actions::from(&config);
 
@@ -123,7 +124,7 @@ mod tests {
         // The default for "key_up" is "move_up" but the config should modifiate
         // the behavior.
         let config: HashMap<String, String> = [
-            (String::from("move_up"), String::from("key_up")),
+            (String::from("move_up"), String::from("<key_up>")),
             (String::from("move_down"), String::from("invalid_key")),
         ]
         .iter()

@@ -21,8 +21,11 @@ lazy_static! {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
+    #[serde(default)]
     normal_mode: normal_mode::Config,
+    #[serde(default)]
     insert_mode: insert_mode::Config,
+    #[serde(default)]
     visual_mode: visual_mode::Config,
 }
 
@@ -144,13 +147,15 @@ mod tests {
     fn test_config_deserialization() {
         let config: Config = toml::from_str(
             r#"
-        visual_mode.actions.move_down  = "key_up"
+            [visual_mode]
+            [visual_mode.actions]
+            move_down  = "<key_up>"
          "#,
         )
         .unwrap();
 
         assert_eq!(
-            String::from("key_up"),
+            String::from("<key_up>"),
             config.visual_mode.actions[&String::from("move_down")]
         );
     }

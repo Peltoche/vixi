@@ -57,11 +57,6 @@ impl Window for TermionWindow {
         write!(self.writer.borrow_mut(), "{}", s).unwrap();
     }
 
-    //fn append_ch(&self, ch: char) {
-    //// Do not handle the colors for now.
-    //write!(self.writer.borrow_mut(), "{}", ch).unwrap();
-    //}
-
     fn refresh(&self) {
         self.writer.borrow_mut().flush().unwrap();
     }
