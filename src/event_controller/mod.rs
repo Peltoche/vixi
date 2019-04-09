@@ -99,17 +99,15 @@ impl xi_rpc::Handler for EventController {
 
 impl EventController {
     pub fn new(layout: Box<dyn Layout>, styles: Rc<RefCell<Box<dyn Styles>>>) -> Self {
-        let status_bar = StatusBar::new(layout.create_new_status_bar_window(), styles.clone());
+        let status_bar = StatusBar::new(layout.create_new_status_bar_window());
 
-        let controller = Self {
+        Self {
             styles,
             layout,
             views: HashMap::new(),
             status_bar,
             current_view: String::new(),
-        };
-
-        controller
+        }
     }
 
     fn handle_new_status_item(&mut self, body: &Value) {
@@ -238,7 +236,7 @@ impl EventController {
         view.update_buffer(event.update.operations);
     }
 
-    fn create_view_if_required(&mut self, ctx: &RpcCtx, view_id: &ViewID) {
+    fn create_view_if_required(&mut self, ctx: &RpcCtx, view_id: &str) {
         if self.views.contains_key(view_id) {
             return;
         }

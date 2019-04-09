@@ -6,8 +6,8 @@ use super::{
 };
 
 lazy_static! {
-    static ref BG_RESET: String = format!("{}", color::bg_reset());
-    static ref FG_RESET: String = format!("{}", color::fg_reset());
+    static ref BG_RESET: String = color::bg_reset().to_string();
+    static ref FG_RESET: String = color::fg_reset().to_string();
     static ref EMPTY_STYLE: Style = Style {
         background: None,
         foreground: None,
@@ -48,10 +48,10 @@ impl TermionStyles {
 }
 
 impl Styles for TermionStyles {
-    fn append_with_style(&self, to_append: &str, style_id: &StyleID, dest: &mut String) {
+    fn append_with_style(&self, to_append: &str, style_id: StyleID, dest: &mut String) {
         use std::fmt::Write;
 
-        match self.styles.get(style_id) {
+        match self.styles.get(&style_id) {
             Some(res) => {
                 let (bg_color, bg_reset): (&str, &str) = match &res.background {
                     Some(color) => (color, &BG_RESET),
@@ -89,8 +89,8 @@ impl Styles for TermionStyles {
         self.styles.insert(
             style_id,
             Style {
-                background: bg_color.map(|bg| color::bg(bg)),
-                foreground: fg_color.map(|fg| color::fg(fg)),
+                background: bg_color.map(color::bg),
+                foreground: fg_color.map(color::fg),
                 italic,
             },
         );
@@ -124,8 +124,8 @@ impl TermionStyles {
         let mut input_iter = inputs.iter();
         let mut idx = 0;
         for _ in 0..inputs.len() / 3 {
-            let style_start = (*input_iter.next().unwrap()) as i32;
-            let style_length = *input_iter.next().unwrap() as i32;
+            let style_start = i32::from(*input_iter.next().unwrap());
+            let style_length = i32::from(*input_iter.next().unwrap());
             let style_id = *input_iter.next().unwrap() as StyleID;
 
             let style = match self.styles.get(&style_id) {
@@ -165,7 +165,7 @@ impl TermionStyles {
         // The style_len() need to be done outside the while loop because it
         // need to be dynamic due to the fact that we can insert some new
         // RangeStyle.
-        if styles.len() == 0 {
+        if styles.is_empty() {
             return;
         }
         let mut style_len = styles.len() - 1;
@@ -204,10 +204,10 @@ impl TermionStyles {
                 styles[idx].style = Style {
                     background: color_after
                         .background
-                        .or(style_before.style.background.clone()),
+                        .or_else(|| style_before.style.background.clone()),
                     foreground: color_after
                         .foreground
-                        .or(style_before.style.foreground.clone()),
+                        .or_else(|| style_before.style.foreground.clone()),
                     italic: style_after.style.italic || style_before.style.italic,
                 };
             } else if styles[idx].end > styles[idx + 1].end {
@@ -280,10 +280,10 @@ impl TermionStyles {
                     style: Style {
                         background: color_after
                             .background
-                            .or(style_before.style.background.clone()),
+                            .or_else(|| style_before.style.background.clone()),
                         foreground: color_after
                             .foreground
-                            .or(style_before.style.foreground.clone()),
+                            .or_else(|| style_before.style.foreground.clone()),
                         italic: style_after.style.italic || style_before.style.italic,
                     },
                 };

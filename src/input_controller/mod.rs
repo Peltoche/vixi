@@ -47,7 +47,7 @@ pub enum Response {
 
 impl Mode {
     #[allow(dead_code)]
-    pub fn to_string(&self) -> String {
+    pub fn to_string(self) -> String {
         match self {
             Mode::Normal => String::from("NORMAL"),
             Mode::Insert => String::from("INSERT"),

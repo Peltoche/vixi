@@ -66,7 +66,7 @@ pub struct View {
 impl View {
     pub fn new(
         ctx: &RpcCtx,
-        view_id: &ViewID,
+        view_id: &str,
         window: Box<dyn Window>,
         styles: Rc<RefCell<Box<dyn Styles>>>,
     ) -> Self {
@@ -163,11 +163,7 @@ impl View {
         for operation in operations {
             match operation.kind.as_str() {
                 "copy" => {
-                    let mut is_dirty = true;
-
-                    if old_idx == new_idx {
-                        is_dirty = false;
-                    }
+                    let is_dirty = old_idx != new_idx;
 
                     for i in 0..operation.n {
                         let old_buffer = &self.buffer.lines[old_idx + i];
@@ -242,7 +238,7 @@ impl View {
                 let mut line_section = String::with_capacity(line_size + STYLE_LEN);
                 styles_registry.append_with_style(
                     &format!(" {:width$} ", ln, width = line_size),
-                    &LINE_SECTION_STYLE_ID,
+                    LINE_SECTION_STYLE_ID,
                     &mut line_section,
                 );
 

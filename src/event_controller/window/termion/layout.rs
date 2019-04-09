@@ -28,13 +28,9 @@ impl TermionLayout {
 
         Self {
             writer: Rc::new(RefCell::new(Box::new(stdout))),
-            height: height as u32,
-            width: width as u32,
+            height: u32::from(height),
+            width: u32::from(width),
         }
-    }
-
-    pub fn get_writer(&self) -> Rc<RefCell<Box<dyn Write>>> {
-        self.writer.clone()
     }
 }
 

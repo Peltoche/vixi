@@ -50,7 +50,7 @@ pub struct StyleRange {
 }
 
 pub trait Styles {
-    fn append_with_style(&self, to_append: &str, style_id: &StyleID, dest: &mut String);
+    fn append_with_style(&self, to_append: &str, style_id: StyleID, dest: &mut String);
     fn apply_to(&self, inputs: Vec<i16>, input: &str) -> String;
     fn save(
         &mut self,

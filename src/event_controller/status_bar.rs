@@ -1,17 +1,12 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
-use super::style::Styles;
 use super::window::Window;
 
 pub struct StatusBar {
     window: Box<dyn Window>,
-    styles: Rc<RefCell<Box<dyn Styles>>>,
 }
 
 impl StatusBar {
-    pub fn new(window: Box<dyn Window>, styles: Rc<RefCell<Box<dyn Styles>>>) -> Self {
-        Self { window, styles }
+    pub fn new(window: Box<dyn Window>) -> Self {
+        Self { window }
     }
 
     pub fn update_mode(&mut self, mode: &str) {

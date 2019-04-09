@@ -19,12 +19,9 @@ impl<R: Read> TermionKeyboard<R> {
 
 impl<R: Read> Keyboard for TermionKeyboard<R> {
     fn get_next_keystroke(&mut self) -> Option<KeyStroke> {
-        let res = self.key_reader.next();
-        if res.is_none() {
-            return None;
-        }
+        let res = self.key_reader.next()?;
 
-        match res.unwrap().unwrap() {
+        match res.unwrap() {
             Key::Backspace => Some(KeyStroke::KeyBackSpace),
             Key::Left => Some(KeyStroke::KeyLeft),
             Key::Right => Some(KeyStroke::KeyRight),
