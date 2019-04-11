@@ -14,6 +14,7 @@ impl StatusBar {
         self.window.move_cursor_and_clear_line(0);
 
         self.window.append_str(&mode);
+        self.window.restore_cursor_pos();
         self.window.refresh();
     }
 }
