@@ -128,29 +128,13 @@ impl View {
         self.cursor.y = cursor_y as u32;
 
         if scroll {
-            self.scroll_to(
-                ctx,
-                self.screen_start,
-                self.screen_start + window_size.height,
-            );
+            // The scroll require a full redraw
+            self.redraw_view(RedrawBehavior::Everything);
         } else {
             // No scroll needed so it move the cursor without any redraw.
             self.window.move_cursor(self.cursor.y, self.cursor.x);
             self.window.refresh();
         }
-    }
-
-    pub fn scroll_to(&mut self, ctx: &RpcCtx, start: u32, end: u32) {
-        ctx.get_peer().send_rpc_notification(
-            "edit",
-            &json!({
-                "method": "scroll",
-                "view_id": self.id,
-                "params": [start , start + end  + 1], // + 1 bc range not inclusive
-            }),
-        );
-
-        self.redraw_view(RedrawBehavior::Everything);
     }
 
     pub fn update_buffer(&mut self, operations: Vec<Operation>) {
