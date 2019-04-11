@@ -56,6 +56,7 @@ impl Default for Actions {
         actions.insert(KeyStroke::KeyDown, Action::MoveDown);
         actions.insert(KeyStroke::KeyLeft, Action::MoveLeft);
         actions.insert(KeyStroke::KeyRight, Action::MoveRight);
+
         actions.insert(KeyStroke::KeyPreviousPage, Action::PageUp);
         actions.insert(KeyStroke::KeyNextPage, Action::PageDown);
 

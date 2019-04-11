@@ -21,6 +21,9 @@ move_down = "j"
 move_left = "h"
 move_right = "l"
 
+page_up = "<page_up>"
+page_down = "<page_down>"
+
 [normal_mode.verbs]
 delete = "d"
 
