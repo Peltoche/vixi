@@ -38,5 +38,10 @@ git = "https://github.com/xi-editor/xi-editor"
 branch = "master"
 git = "https://github.com/xi-editor/xi-editor"
 
+[dependencies.xi-trace]
+branch = "master"
+git = "https://github.com/xi-editor/xi-editor"
+features = ["chrome_trace_event"]
+
 [workspace]
 members = ["./plugins/*"]

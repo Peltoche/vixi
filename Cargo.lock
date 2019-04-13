@@ -1141,6 +1141,7 @@ dependencies = [
  "version_check 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "xi-core-lib 0.2.0 (git+https://github.com/xi-editor/xi-editor)",
  "xi-rpc 0.2.0 (git+https://github.com/xi-editor/xi-editor)",
+ "xi-trace 0.1.0 (git+https://github.com/xi-editor/xi-editor)",
 ]
 
 [[package]]

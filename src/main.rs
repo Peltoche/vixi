@@ -18,6 +18,7 @@ extern crate failure;
 extern crate lazy_static;
 extern crate termion;
 extern crate toml;
+extern crate xi_trace;
 
 mod cli;
 mod core;
@@ -27,6 +28,7 @@ mod logging;
 
 use std::cell::RefCell;
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::prelude::*;
 use std::io::stdin;
 use std::process::exit;
@@ -41,6 +43,7 @@ use input_controller::{Config, InputController};
 
 use failure::Error;
 use xi_rpc::{Peer, RpcLoop};
+use xi_trace::chrome_trace_dump;
 
 fn setup_logger() {
     let logging_path = dirs::home_dir()
@@ -80,6 +83,11 @@ fn main() {
 
     setup_logger();
 
+    xi_trace::enable_tracing();
+    if xi_trace::is_enabled() {
+        info!("trace enabled");
+    }
+
     let (client_to_core_writer, core_to_client_reader, client_to_client_writer) =
         core::start_xi_core();
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
@@ -111,6 +119,17 @@ fn main() {
         });
 
     child.join().unwrap();
+
+    let samples = xi_trace::samples_cloned_unsorted();
+    let mut serialized = Vec::<u8>::new();
+    chrome_trace_dump::serialize(&samples, &mut serialized).unwrap();
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open("./trace.out")
+        .unwrap();
+
+    file.write_all(&serialized).unwrap();
 
     match exit_res {
         Ok(_) => exit(0),
