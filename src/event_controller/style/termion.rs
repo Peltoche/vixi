@@ -366,11 +366,12 @@ mod tests {
         style_registry.save(2, Some(RGBColor { r: 0, g: 255, b: 0 }), None, false);
         style_registry.save(3, Some(RGBColor { r: 0, g: 0, b: 255 }), None, false);
 
-        let res = style_registry.new_line_descriptor(styles);
+        let mut res = style_registry.convert_to_style_range(styles);
+        style_registry.serialize_style_ranges(&mut res);
 
-        assert_eq!(3, res.0.len());
+        assert_eq!(3, res.len());
         assert_eq!(
-            res.0[0],
+            res[0],
             StyleRange {
                 start: 0,
                 end: 3,
@@ -383,7 +384,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[1],
+            res[1],
             StyleRange {
                 start: 3,
                 end: 7,
@@ -396,7 +397,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[2],
+            res[2],
             StyleRange {
                 start: 11,
                 end: 13,
@@ -421,11 +422,12 @@ mod tests {
         style_registry.save(1, Some(RGBColor { r: 255, g: 0, b: 0 }), None, false);
         style_registry.save(2, None, Some(RGBColor { r: 0, g: 255, b: 0 }), false);
 
-        let res = style_registry.new_line_descriptor(styles);
+        let mut res = style_registry.convert_to_style_range(styles);
+        style_registry.serialize_style_ranges(&mut res);
 
-        assert_eq!(3, res.0.len());
+        assert_eq!(3, res.len());
         assert_eq!(
-            res.0[0],
+            res[0],
             StyleRange {
                 start: 0,
                 end: 2,
@@ -438,7 +440,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[1],
+            res[1],
             StyleRange {
                 start: 2,
                 end: 4,
@@ -451,7 +453,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[2],
+            res[2],
             StyleRange {
                 start: 4,
                 end: 6,
@@ -476,11 +478,12 @@ mod tests {
         style_registry.save(1, Some(RGBColor { r: 255, g: 0, b: 0 }), None, false);
         style_registry.save(2, None, Some(RGBColor { r: 0, g: 255, b: 0 }), false);
 
-        let res = style_registry.new_line_descriptor(styles);
+        let mut res = style_registry.convert_to_style_range(styles);
+        style_registry.serialize_style_ranges(&mut res);
 
-        assert_eq!(3, res.0.len());
+        assert_eq!(3, res.len());
         assert_eq!(
-            res.0[0],
+            res[0],
             StyleRange {
                 start: 0,
                 end: 2,
@@ -493,7 +496,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[1],
+            res[1],
             StyleRange {
                 start: 2,
                 end: 6,
@@ -506,7 +509,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[2],
+            res[2],
             StyleRange {
                 start: 6,
                 end: 8,
@@ -532,11 +535,12 @@ mod tests {
         style_registry.save(2, None, Some(RGBColor { r: 0, g: 255, b: 0 }), false);
         style_registry.save(3, Some(RGBColor { r: 0, g: 0, b: 255 }), None, false);
 
-        let res = style_registry.new_line_descriptor(styles);
+        let mut res = style_registry.convert_to_style_range(styles);
+        style_registry.serialize_style_ranges(&mut res);
 
-        assert_eq!(4, res.0.len());
+        assert_eq!(4, res.len());
         assert_eq!(
-            res.0[0],
+            res[0],
             StyleRange {
                 start: 0,
                 end: 2,
@@ -549,7 +553,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[1],
+            res[1],
             StyleRange {
                 start: 2,
                 end: 4,
@@ -562,7 +566,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[2],
+            res[2],
             StyleRange {
                 start: 4,
                 end: 6,
@@ -575,7 +579,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.0[3],
+            res[3],
             StyleRange {
                 start: 6,
                 end: 10,
