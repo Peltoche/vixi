@@ -10,10 +10,10 @@ This frontend is under heavy development. A lot of stuff can break and change.
 ## Current State
 
 - Commands
-  - Insert Mode (trigger with `i`/`o`/`O` in normal mode)
+  - Insert Mode (triggered with `i`/`o`/`O` in normal mode)
     - [x] All the basic movements (arrow/pageUp/pageDown)
     - [x] Write some stuff
-  - Visual Mode (trigger with `v` in normal mode)
+  - Visual Mode (triggered with `v` in normal mode)
     - [x] All the basic movements (arrow/hjkl/pageUp/pageDown)
     - [x] Delete a region (`d`)
     - [x] Yank a region (`y`)
@@ -25,7 +25,7 @@ This frontend is under heavy development. A lot of stuff can break and change.
     - [x] Insert line below (`o`)
     - [x] Insert line above (`O`)
     - [x] Handle an action with
-  - Action Mode (trigger with `<space>` in normal mode)
+  - Action Mode (triggered with `<space>` in normal mode)
     - [ ] Write into a file (`w`) (WIP)
     - [x] Quite (`q`)
     - [ ] Find
