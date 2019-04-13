@@ -1,3 +1,5 @@
+action_key = "<space>"
+
 [normal_mode]
 [normal_mode.actions]
 exit = "q"

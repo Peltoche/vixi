@@ -7,7 +7,7 @@ mod visual_mode;
 use std::sync::{Arc, Mutex};
 
 use self::insert_mode::InsertMode;
-use self::keyboard::Keyboard;
+use self::keyboard::{KeyStroke, Keyboard};
 use self::normal_mode::NormalMode;
 use self::visual_mode::VisualMode;
 use crate::core::ClientToClientWriter;
@@ -21,6 +21,8 @@ lazy_static! {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
+    #[serde(default)]
+    action_key: String,
     #[serde(default)]
     normal_mode: normal_mode::Config,
     #[serde(default)]
@@ -57,6 +59,7 @@ impl Mode {
 }
 
 pub struct InputController {
+    action_key: KeyStroke,
     keyboard: Box<dyn Keyboard>,
     view_id: String,
     normal_mode: NormalMode,
@@ -73,6 +76,8 @@ impl InputController {
         config: &Config,
     ) -> Self {
         Self {
+            action_key: KeyStroke::from_description(&config.action_key)
+                .unwrap_or(KeyStroke::KeySpace),
             keyboard,
             view_id: String::new(),
             normal_mode: NormalMode::from(&config.normal_mode),
@@ -108,6 +113,10 @@ impl InputController {
             let key_res = self.keyboard.get_next_keystroke();
 
             if let Some(key) = key_res {
+                if self.mode != Mode::Insert && key == self.action_key {
+                    info!("action mode");
+                }
+
                 let res = match self.mode {
                     Mode::Normal => self.normal_mode.handle_keystroke(key, &self.view_id, core),
                     Mode::Insert => self.insert_mode.handle_keystroke(key, &self.view_id, core),

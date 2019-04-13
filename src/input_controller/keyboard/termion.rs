@@ -38,6 +38,7 @@ impl<R: Read> Keyboard for TermionKeyboard<R> {
             Key::Ctrl(_) => None,
             Key::Null => None,
             Key::Esc => Some(KeyStroke::KeyEscape),
+            Key::Char(' ') => Some(KeyStroke::KeySpace),
             Key::Char(c) => Some(KeyStroke::Char(c)),
             _ => None,
         }
