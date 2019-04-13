@@ -84,15 +84,21 @@ fn main() {
     setup_logger();
 
     xi_trace::enable_tracing();
-    if xi_trace::is_enabled() {
-        info!("trace enabled");
-    }
+    if xi_trace::is_enabled() {}
 
     let (client_to_core_writer, core_to_client_reader, client_to_client_writer) =
         core::start_xi_core();
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
 
     let raw_peer = front_event_loop.get_raw_peer();
+    let config = match setup_config(&raw_peer) {
+        Ok(config) => config,
+        Err(err) => {
+            println!("failed to load the configuration: {}", err);
+            exit(1);
+        }
+    };
+
     let child = thread::spawn(move || {
         let layout = TermionLayout::new();
 
@@ -105,18 +111,21 @@ fn main() {
             .unwrap();
     });
 
-    let exit_res = setup_config(&raw_peer)
-        .and_then(|config| {
-            Ok(InputController::new(
-                Box::new(TermionKeyboard::from_reader(stdin())),
-                client_to_client_writer,
-                &config,
-            ))
-        })
-        .and_then(|mut controller| {
-            controller.open_file(&raw_peer, file_path)?;
-            controller.start_keyboard_event_loop(&raw_peer)
-        });
+    let mut input_controller = InputController::new(
+        Box::new(TermionKeyboard::from_reader(stdin())),
+        client_to_client_writer,
+        &config,
+    );
+
+    if let Err(err) = input_controller.open_file(&raw_peer, file_path) {
+        println!("failed to open {}: {}", file_path, err);
+        exit(1);
+    }
+
+    if let Err(err) = input_controller.start_keyboard_event_loop(&raw_peer) {
+        println!("an error occured: {}", err);
+        exit(1);
+    }
 
     child.join().unwrap();
 
@@ -130,12 +139,4 @@ fn main() {
         .unwrap();
 
     file.write_all(&serialized).unwrap();
-
-    match exit_res {
-        Ok(_) => exit(0),
-        Err(err) => {
-            println!("{}", err);
-            exit(1);
-        }
-    }
 }
