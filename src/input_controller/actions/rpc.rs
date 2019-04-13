@@ -1,9 +1,10 @@
+use crate::core::ClientToClientWriter;
 use crate::input_controller::keyboard::KeyStroke;
 use crate::input_controller::{Response, PASTE_BUFFER};
 
 use xi_rpc::Peer;
 
-pub fn insert_char(view_id: &str, key: KeyStroke, core: &dyn Peer) -> Response {
+pub fn insert_keystroke(view_id: &str, key: KeyStroke, core: &dyn Peer) -> Response {
     let output = match key {
         KeyStroke::Char(c) => c.to_string(),
         _ => String::from("<?>"),
@@ -29,23 +30,8 @@ pub fn quite(view_id: &str, core: &dyn Peer) -> Response {
     Response::Stop
 }
 
-pub fn write_to_file(view_id: &str, core: &dyn Peer) -> Response {
-    core.send_rpc_notification(
-        "save",
-        &json!({
-            "view_id": view_id,
-            "file_path": "./tmp/foobar",
-        }),
-    );
-
-    Response::SwitchToNormalMode
-}
-
-pub fn exit_selection_mode(view_id: &str, core: &dyn Peer) -> Response {
-    core.send_rpc_notification(
-        "edit",
-        &json!({ "method": "collapse_selections", "view_id": view_id}),
-    );
+pub fn write_to_file(view_id: &str, core: &mut ClientToClientWriter) -> Response {
+    core.send_rpc_notification("save-view", &json!({ "view_id": view_id, }));
 
     Response::SwitchToNormalMode
 }
@@ -145,7 +131,7 @@ pub fn insert_newline(view_id: &str, core: &dyn Peer) -> Response {
     Response::Continue
 }
 
-pub fn copy_selection(view_id: &str, core: &dyn Peer) -> Response {
+pub fn yank_selection(view_id: &str, core: &dyn Peer) -> Response {
     let res = core.send_rpc_request("edit", &json!({ "method": "copy", "view_id": view_id}));
     if let Ok(paste_buffer) = res {
         let mut buffer = PASTE_BUFFER.lock().unwrap();
@@ -181,7 +167,7 @@ pub fn cute_selection(view_id: &str, core: &dyn Peer) -> Response {
     Response::SwitchToNormalMode
 }
 
-pub fn delete_selection_and_paste(view_id: &str, core: &dyn Peer) -> Response {
+pub fn cute_selection_and_paste(view_id: &str, core: &dyn Peer) -> Response {
     let cut_res = core.send_rpc_request("edit", &json!({ "method": "cut", "view_id": view_id}));
     if cut_res.is_err() {
         error!("failed to cut the selection: {:?}", cut_res);
@@ -217,4 +203,19 @@ pub fn paste(view_id: &str, core: &dyn Peer) -> Response {
     }
 
     Response::Continue
+}
+
+pub fn insert_line_bellow(view_id: &str, core: &dyn Peer) -> Response {
+    move_down(view_id, core);
+    insert_newline(view_id, core);
+    move_up(view_id, core);
+
+    Response::SwitchToInsertMode
+}
+
+pub fn insert_line_above(view_id: &str, core: &dyn Peer) -> Response {
+    insert_newline(view_id, core);
+    move_up(view_id, core);
+
+    Response::SwitchToInsertMode
 }

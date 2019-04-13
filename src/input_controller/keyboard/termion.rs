@@ -31,7 +31,7 @@ impl<R: Read> Keyboard for TermionKeyboard<R> {
             Key::End => None,
             Key::PageUp => Some(KeyStroke::KeyPreviousPage),
             Key::PageDown => Some(KeyStroke::KeyNextPage),
-            Key::Delete => Some(KeyStroke::KeyDeleteChar),
+            Key::Delete => Some(KeyStroke::KeyDelete),
             Key::Insert => None,
             Key::F(n) => Some(KeyStroke::KeyF(n)),
             Key::Alt(c) => Some(KeyStroke::Alt(c)),
