@@ -6,7 +6,7 @@ use crate::input_controller::keyboard::KeyStroke;
 pub enum Action {
     SwitchToInsertMode,
     SwitchToVisualMode,
-    Exit,
+    SwitchToActionMode,
     MoveUp,
     MoveDown,
     MoveLeft,
@@ -23,11 +23,11 @@ impl Action {
         match desc {
             "switch_to_insert_mode" => Some(Action::SwitchToInsertMode),
             "switch_to_visual_mode" => Some(Action::SwitchToVisualMode),
+            "switch_to_action_mode" => Some(Action::SwitchToActionMode),
             "move_up" => Some(Action::MoveUp),
             "move_down" => Some(Action::MoveDown),
             "move_left" => Some(Action::MoveLeft),
             "move_right" => Some(Action::MoveRight),
-            "exit" => Some(Action::Exit),
             "page_up" => Some(Action::PageUp),
             "page_down" => Some(Action::PageDown),
             "paste" => Some(Action::Paste),
@@ -44,9 +44,9 @@ impl Default for Actions {
     fn default() -> Self {
         let mut actions = HashMap::with_capacity(1);
 
+        actions.insert(KeyStroke::KeySpace, Action::SwitchToActionMode);
         actions.insert(KeyStroke::Char('i'), Action::SwitchToInsertMode);
         actions.insert(KeyStroke::Char('v'), Action::SwitchToVisualMode);
-        actions.insert(KeyStroke::Char('q'), Action::Exit);
         actions.insert(KeyStroke::Char('p'), Action::Paste);
         actions.insert(KeyStroke::Char('o'), Action::InsertLineBellow);
         actions.insert(KeyStroke::Char('O'), Action::InsertLineAbove);

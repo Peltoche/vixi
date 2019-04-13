@@ -1,10 +1,9 @@
-action_key = "<space>"
-
 [normal_mode]
 [normal_mode.actions]
 exit = "q"
 switch_to_insert_mode = "i"
 switch_to_visual_mode = "v"
+switch_to_action_mode = "<space>"
 
 paste = "p"
 

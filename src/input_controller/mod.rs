@@ -1,13 +1,16 @@
-mod insert_mode;
 pub mod keyboard;
-mod normal_mode;
 mod rpc;
+
+mod action_mode;
+mod insert_mode;
+mod normal_mode;
 mod visual_mode;
 
 use std::sync::{Arc, Mutex};
 
+use self::action_mode::ActionMode;
 use self::insert_mode::InsertMode;
-use self::keyboard::{KeyStroke, Keyboard};
+use self::keyboard::Keyboard;
 use self::normal_mode::NormalMode;
 use self::visual_mode::VisualMode;
 use crate::core::ClientToClientWriter;
@@ -22,13 +25,13 @@ lazy_static! {
 #[derive(Debug, Default, Deserialize)]
 pub struct Config {
     #[serde(default)]
-    action_key: String,
-    #[serde(default)]
     normal_mode: normal_mode::Config,
     #[serde(default)]
     insert_mode: insert_mode::Config,
     #[serde(default)]
     visual_mode: visual_mode::Config,
+    #[serde(default)]
+    action_mode: action_mode::Config,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -36,6 +39,7 @@ enum Mode {
     Normal,
     Insert,
     Visual,
+    Action,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -45,6 +49,7 @@ pub enum Response {
     SwitchToInsertMode,
     SwitchToNormalMode,
     SwitchToVisualMode,
+    SwitchToActionMode,
 }
 
 impl Mode {
@@ -54,17 +59,18 @@ impl Mode {
             Mode::Normal => String::from("NORMAL"),
             Mode::Insert => String::from("INSERT"),
             Mode::Visual => String::from("VISUAL"),
+            Mode::Action => String::from("ACTION"),
         }
     }
 }
 
 pub struct InputController {
-    action_key: KeyStroke,
     keyboard: Box<dyn Keyboard>,
     view_id: String,
     normal_mode: NormalMode,
     insert_mode: InsertMode,
     visual_mode: VisualMode,
+    action_mode: ActionMode,
     mode: Mode,
     front_event_writer: ClientToClientWriter,
 }
@@ -76,13 +82,12 @@ impl InputController {
         config: &Config,
     ) -> Self {
         Self {
-            action_key: KeyStroke::from_description(&config.action_key)
-                .unwrap_or(KeyStroke::KeySpace),
             keyboard,
             view_id: String::new(),
             normal_mode: NormalMode::from(&config.normal_mode),
             insert_mode: InsertMode::from(&config.insert_mode),
             visual_mode: VisualMode::from(&config.visual_mode),
+            action_mode: ActionMode::from(&config.action_mode),
             mode: Mode::Normal,
             front_event_writer: client_to_client_writer,
         }
@@ -113,14 +118,11 @@ impl InputController {
             let key_res = self.keyboard.get_next_keystroke();
 
             if let Some(key) = key_res {
-                if self.mode != Mode::Insert && key == self.action_key {
-                    info!("action mode");
-                }
-
                 let res = match self.mode {
                     Mode::Normal => self.normal_mode.handle_keystroke(key, &self.view_id, core),
                     Mode::Insert => self.insert_mode.handle_keystroke(key, &self.view_id, core),
                     Mode::Visual => self.visual_mode.handle_keystroke(key, &self.view_id, core),
+                    Mode::Action => self.action_mode.handle_keystroke(key, &self.view_id, core),
                 };
 
                 match res {
@@ -129,6 +131,7 @@ impl InputController {
                     Response::SwitchToInsertMode => self.mode = Mode::Insert,
                     Response::SwitchToNormalMode => self.mode = Mode::Normal,
                     Response::SwitchToVisualMode => self.mode = Mode::Visual,
+                    Response::SwitchToActionMode => self.mode = Mode::Action,
                 }
 
                 self.front_event_writer.send_rpc_notification(

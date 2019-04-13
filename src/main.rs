@@ -134,7 +134,8 @@ fn main() {
     chrome_trace_dump::serialize(&samples, &mut serialized).unwrap();
     let mut file = OpenOptions::new()
         .write(true)
-        .create_new(true)
+        .create(true)
+        .truncate(true)
         .open("./trace.out")
         .unwrap();
 

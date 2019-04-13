@@ -47,9 +47,9 @@ impl NormalMode {
         let action = self.actions.get(key);
         if let Some(action) = action {
             return match action {
+                Action::SwitchToActionMode => Response::SwitchToActionMode,
                 Action::SwitchToInsertMode => Response::SwitchToInsertMode,
                 Action::SwitchToVisualMode => Response::SwitchToVisualMode,
-                Action::Exit => exit(view_id, core),
                 Action::MoveUp => move_up(view_id, core),
                 Action::MoveDown => move_down(view_id, core),
                 Action::MoveLeft => move_left(view_id, core),

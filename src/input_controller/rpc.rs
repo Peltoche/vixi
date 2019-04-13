@@ -22,11 +22,23 @@ pub fn insert_char(view_id: &str, key: KeyStroke, core: &dyn Peer) -> Response {
     Response::Continue
 }
 
-pub fn exit(view_id: &str, core: &dyn Peer) -> Response {
+pub fn quite(view_id: &str, core: &dyn Peer) -> Response {
     core.send_rpc_notification("close_view", &json!({ "view_id": view_id }));
     core.send_rpc_notification("exit", &json!({}));
 
     Response::Stop
+}
+
+pub fn write_to_file(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification(
+        "save",
+        &json!({
+            "view_id": view_id,
+            "file_path": "./tmp/foobar",
+        }),
+    );
+
+    Response::SwitchToNormalMode
 }
 
 pub fn exit_selection_mode(view_id: &str, core: &dyn Peer) -> Response {
