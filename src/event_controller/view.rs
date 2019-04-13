@@ -51,6 +51,7 @@ impl Buffer {
 }
 
 pub struct View {
+    #[allow(dead_code)]
     id: ViewID,
     cursor: Cursor,
     buffer: Buffer,
@@ -106,7 +107,7 @@ impl View {
         view
     }
 
-    pub fn move_cursor(&mut self, ctx: &RpcCtx, line: u32, col: u32) {
+    pub fn move_cursor(&mut self, _ctx: &RpcCtx, line: u32, col: u32) {
         let window_size = self.window.get_size();
         let mut cursor_y = (line as i32) - (self.screen_start as i32);
 
