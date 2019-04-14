@@ -77,9 +77,9 @@ The Visual mode is used to select some text and manipulate it.
 |     p    | Delete the selection and past the previous deletion |
 
 
-#### Command mode
+#### Action mode
 
-The Command mode is used to make some generic action like saving or exiting.
+The Action mode is used to make some generic action like saving or exiting.
 
 | **Key** |   **Description**   |
 |:-------:|:-------------------:|
