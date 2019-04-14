@@ -112,10 +112,10 @@ impl InputController {
 
             if let Some(key) = key_res {
                 let mut action = match self.mode {
-                    Mode::Normal => self.normal_mode.get_action_from_keystroke(&key),
-                    Mode::Insert => self.insert_mode.get_action_from_keystroke(&key),
-                    Mode::Visual => self.visual_mode.get_action_from_keystroke(&key),
-                    Mode::Action => self.action_mode.get_action_from_keystroke(&key),
+                    Mode::Normal => self.normal_mode.get_action_from_keystroke(key),
+                    Mode::Insert => self.insert_mode.get_action_from_keystroke(key),
+                    Mode::Visual => self.visual_mode.get_action_from_keystroke(key),
+                    Mode::Action => self.action_mode.get_action_from_keystroke(key),
                 };
 
                 if action.is_none() && self.mode == Mode::Insert {
