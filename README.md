@@ -16,8 +16,8 @@ Vim used by 80% of users.
 
 ## Configuration
 
-All the keybinding presented below can be overriden via the `keyboard.toml`
-configuration file. You can find an [example of keyboard.toml config](./resources/keyboard.toml)
+All the keybinding presented below can be overriden via the `keyboard.vim`
+configuration file. You can find an [example of keyboard.toml config](./resources/keyboard.vim)
 which will overrid all the default values with the exact same values.
 
 Those configuration files should live inside a `vixi` folder placed into the
