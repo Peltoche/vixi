@@ -1,13 +1,14 @@
-mod actions;
+mod commands;
+pub mod config;
 pub mod keyboard;
-mod mode_actions;
+mod modes;
 
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use self::actions::{Action, Response};
+use self::commands::{Command, Response};
+use self::config::Config;
 use self::keyboard::{KeyStroke, Keyboard};
-use self::mode_actions::ModeActions;
+use self::modes::ModeCommands;
 use crate::core::ClientToClientWriter;
 
 use failure::Error;
@@ -15,18 +16,6 @@ use xi_rpc::Peer;
 
 lazy_static! {
     static ref PASTE_BUFFER: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
-}
-
-#[derive(Debug, Default, Deserialize)]
-pub struct Config {
-    #[serde(default)]
-    normal_mode: HashMap<String, String>,
-    #[serde(default)]
-    insert_mode: HashMap<String, String>,
-    #[serde(default)]
-    visual_mode: HashMap<String, String>,
-    #[serde(default)]
-    action_mode: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -52,10 +41,10 @@ impl Mode {
 pub struct InputController {
     keyboard: Box<dyn Keyboard>,
     view_id: String,
-    normal_mode: ModeActions,
-    insert_mode: ModeActions,
-    visual_mode: ModeActions,
-    action_mode: ModeActions,
+    normal_mode: ModeCommands,
+    insert_mode: ModeCommands,
+    visual_mode: ModeCommands,
+    action_mode: ModeCommands,
     mode: Mode,
     front_event_writer: ClientToClientWriter,
 }
@@ -69,10 +58,10 @@ impl InputController {
         Self {
             keyboard,
             view_id: String::new(),
-            normal_mode: ModeActions::setup(Mode::Normal, &config.normal_mode),
-            insert_mode: ModeActions::setup(Mode::Insert, &config.insert_mode),
-            visual_mode: ModeActions::setup(Mode::Visual, &config.visual_mode),
-            action_mode: ModeActions::setup(Mode::Action, &config.action_mode),
+            normal_mode: ModeCommands::setup(Mode::Normal, &config.normal_mode),
+            insert_mode: ModeCommands::setup(Mode::Insert, &config.insert_mode),
+            visual_mode: ModeCommands::setup(Mode::Visual, &config.visual_mode),
+            action_mode: ModeCommands::setup(Mode::Action, &config.action_mode),
             mode: Mode::Normal,
             front_event_writer: client_to_client_writer,
         }
@@ -112,14 +101,14 @@ impl InputController {
 
             if let Some(key) = key_res {
                 let mut action = match self.mode {
-                    Mode::Normal => self.normal_mode.get_action_from_keystroke(key),
-                    Mode::Insert => self.insert_mode.get_action_from_keystroke(key),
-                    Mode::Visual => self.visual_mode.get_action_from_keystroke(key),
-                    Mode::Action => self.action_mode.get_action_from_keystroke(key),
+                    Mode::Normal => self.normal_mode.get_command_from_keystroke(key),
+                    Mode::Insert => self.insert_mode.get_command_from_keystroke(key),
+                    Mode::Visual => self.visual_mode.get_command_from_keystroke(key),
+                    Mode::Action => self.action_mode.get_command_from_keystroke(key),
                 };
 
                 if action.is_none() && self.mode == Mode::Insert {
-                    action = Some(Action::InsertKeyStroke(key));
+                    action = Some(Command::InsertKeyStroke(key));
                 } else if action.is_none() {
                     continue;
                 }
@@ -158,26 +147,4 @@ impl InputController {
 
         Ok(())
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::Config;
-
-    #[test]
-    fn test_config_deserialization() {
-        let config: Config = toml::from_str(
-            r#"
-            [visual_mode]
-            move_down  = "<key_up>"
-         "#,
-        )
-        .unwrap();
-
-        assert_eq!(
-            String::from("<key_up>"),
-            config.visual_mode[&String::from("move_down")]
-        );
-    }
-
 }

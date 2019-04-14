@@ -17,7 +17,6 @@ extern crate failure;
 #[macro_use]
 extern crate lazy_static;
 extern crate termion;
-extern crate toml;
 #[cfg(feature = "tracing")]
 extern crate xi_trace;
 
@@ -30,9 +29,8 @@ mod logging;
 mod trace;
 
 use std::cell::RefCell;
-use std::fs::File;
-use std::io::prelude::*;
 use std::io::stdin;
+use std::path::PathBuf;
 use std::process::exit;
 use std::rc::Rc;
 use std::thread;
@@ -40,8 +38,9 @@ use std::thread;
 use event_controller::style::TermionStyles;
 use event_controller::window::TermionLayout;
 use event_controller::{EventController, Styles};
+use input_controller::config;
 use input_controller::keyboard::TermionKeyboard;
-use input_controller::{Config, InputController};
+use input_controller::InputController;
 
 use failure::Error;
 use xi_rpc::{Peer, RpcLoop};
@@ -54,7 +53,7 @@ fn setup_logger() {
     logging::setup(&logging_path).expect("failed to set the logger")
 }
 
-fn setup_config(core: &dyn Peer) -> Result<Config, Error> {
+fn setup_config(core: &dyn Peer) -> Result<PathBuf, Error> {
     let config_dir = dirs::config_dir().ok_or_else(|| format_err!("config dir not found"))?;
 
     let mut xi_config_dir = config_dir.clone();
@@ -67,12 +66,7 @@ fn setup_config(core: &dyn Peer) -> Result<Config, Error> {
     let mut vixi_config_dir = config_dir.clone();
     vixi_config_dir.push("vixi");
 
-    let mut keyboard_config_file = File::open(vixi_config_dir.join("keyboard.toml"))?;
-    let mut keyboard_config_contents = String::new();
-    keyboard_config_file.read_to_string(&mut keyboard_config_contents)?;
-    let config: Config = toml::from_str(&keyboard_config_contents)?;
-
-    Ok(config)
+    Ok(vixi_config_dir.to_path_buf())
 }
 
 fn main() {
@@ -92,7 +86,7 @@ fn main() {
     let mut front_event_loop = RpcLoop::new(client_to_core_writer);
 
     let raw_peer = front_event_loop.get_raw_peer();
-    let config = match setup_config(&raw_peer) {
+    let config_dir = match setup_config(&raw_peer) {
         Ok(config) => config,
         Err(err) => {
             println!("failed to load the configuration: {}", err);
@@ -112,10 +106,22 @@ fn main() {
             .unwrap();
     });
 
+    let keyboard_config = match config::Config::from_config_dir(&config_dir) {
+        Ok(config) => config,
+        Err(err) => {
+            println!(
+                "failed to parse the keyboard config in {}: {}",
+                config_dir.to_str().unwrap(),
+                err
+            );
+            exit(1);
+        }
+    };
+
     let mut input_controller = InputController::new(
         Box::new(TermionKeyboard::from_reader(stdin())),
         client_to_client_writer,
-        &config,
+        &keyboard_config,
     );
 
     if let Err(err) = input_controller.open_file(&raw_peer, file_path) {
