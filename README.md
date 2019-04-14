@@ -16,6 +16,23 @@ Vim used by 80% of users.
 
 ## How to use it
 
+### Configuration
+
+All the keybinding presented below can be overriden via the `keyboard.toml`
+configuration file. You can find an [example of keyboard.toml config](./resources/keyboard.toml)
+which will overrid all the default values with the exact same values.
+
+Those configuration files should live inside a `vixi` folder placed into the
+OS specific config directory.
+
+
+|  **OS** |     **Vixi configuration folder**     |
+|:-------:|:-------------------------------------:|
+|  Linux  |        /home/alice/.config/vixi       |
+| Windows |      C:\Users\Alice\AppData\vixi      |
+|  MacOS  | /Users/Alice/Library/Preferences/vixi |
+
+
 ### Modes
 
 Vixi is behavior is splitted in "modes" (like Vim). Thoses are:
