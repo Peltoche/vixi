@@ -55,12 +55,12 @@ pub enum Command {
 
 impl Command {
     pub fn execute(
-        &self,
+        self,
         view_id: &str,
         core: &dyn Peer,
         front_event_writer: &mut ClientToClientWriter,
     ) -> Response {
-        match *self {
+        match self {
             Command::WriteToFile => rpc::write_to_file(view_id, front_event_writer),
             Command::Quite => rpc::quite(view_id, core),
 

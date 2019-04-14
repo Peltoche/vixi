@@ -27,6 +27,9 @@
 " |   imap  |     Insert     |
 
 
+" Leader key definition
+set leader <Space>
+
 " List of key available the Normal and Visual mode
 map <Esc> :switch_to_normal_mode
 map <Up> :move_up
@@ -35,6 +38,8 @@ map <Left> :move_left
 map <Right> :move_right
 map <PageUp> :page_up
 map <PageDown> :page_down
+map <Leader>q :quit
+map <Leader>w :write_to_file
 
 " Normal mode
 nmap h :move_left

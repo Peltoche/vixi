@@ -23,8 +23,8 @@ impl ModeCommands {
         Self(commands)
     }
 
-    pub fn get_action_from_keystroke(&self, keystroke: &KeyStroke) -> Option<Command> {
-        self.0.get(keystroke).map(|x| *x)
+    pub fn get_command_from_keystroke(&self, keystroke: KeyStroke) -> Option<Command> {
+        self.0.get(&keystroke).cloned()
     }
 }
 

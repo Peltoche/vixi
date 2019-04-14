@@ -9,6 +9,7 @@ use super::keyboard::KeyStroke;
 
 #[derive(Debug, Default)]
 pub struct Config {
+    pub leader: Option<KeyStroke>,
     pub normal_mode: HashMap<KeyStroke, Command>,
     pub insert_mode: HashMap<KeyStroke, Command>,
     pub visual_mode: HashMap<KeyStroke, Command>,
@@ -23,6 +24,48 @@ impl Config {
 
         Self::from_str(&raw_contents)
     }
+
+    fn parse_map(&mut self, line: &str) {
+        let elements: Vec<&str> = line.split(' ').collect();
+
+        if elements.len() < 3 {
+            return;
+        }
+
+        let key = match KeyStroke::from_description(elements[1]) {
+            Some(key) => key,
+            None => return,
+        };
+
+        let command = match Command::from_description(elements[2]) {
+            Some(cmd) => cmd,
+            None => return,
+        };
+
+        match elements[0] {
+            "imap" => self.insert_mode.insert(key, command),
+            "nmap" => self.normal_mode.insert(key, command),
+            "vmap" => self.visual_mode.insert(key, command),
+            "map" => {
+                self.normal_mode.insert(key, command);
+                self.visual_mode.insert(key, command)
+            }
+            _ => return,
+        };
+    }
+
+    fn parse_set(&mut self, line: &str) {
+        let elements: Vec<&str> = line.split(' ').collect();
+
+        if elements.len() != 3 {
+            return;
+        }
+
+        match elements[1] {
+            "leader" => self.leader = KeyStroke::from_description(elements[2]),
+            _ => return,
+        }
+    }
 }
 
 impl FromStr for Config {
@@ -32,32 +75,11 @@ impl FromStr for Config {
         let mut config = Self::default();
 
         for line in raw.lines() {
-            let elements: Vec<&str> = line.split(' ').collect();
-
-            if elements.len() < 3 {
-                continue;
+            match line.splitn(1, ' ').nth(0).unwrap_or_default() {
+                "map" | "nmap" | "vmap" | "imap" => config.parse_map(line),
+                "set" => config.parse_set(line),
+                _ => (),
             }
-
-            let key = match KeyStroke::from_description(elements[1]) {
-                Some(key) => key,
-                None => continue,
-            };
-
-            let command = match Command::from_description(elements[2]) {
-                Some(cmd) => cmd,
-                None => continue,
-            };
-
-            match elements[0] {
-                "imap" => config.insert_mode.insert(key, command),
-                "nmap" => config.normal_mode.insert(key, command),
-                "vmap" => config.visual_mode.insert(key, command),
-                "map" => {
-                    config.normal_mode.insert(key, command);
-                    config.visual_mode.insert(key, command)
-                }
-                _ => continue,
-            };
         }
 
         Ok(config)
