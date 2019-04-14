@@ -169,7 +169,6 @@ mod tests {
         let config: Config = toml::from_str(
             r#"
             [visual_mode]
-            [visual_mode.actions]
             move_down  = "<key_up>"
          "#,
         )
@@ -177,7 +176,7 @@ mod tests {
 
         assert_eq!(
             String::from("<key_up>"),
-            config.visual_mode.actions[&String::from("move_down")]
+            config.visual_mode[&String::from("move_down")]
         );
     }
 
