@@ -54,22 +54,22 @@ fn setup_logger() {
 }
 
 fn setup_config(core: &dyn Peer) -> Result<Config, Error> {
-    let mut xi_config_dir =
-        dirs::config_dir().ok_or_else(|| format_err!("config dir not found"))?;
+    let config_dir = dirs::config_dir().ok_or_else(|| format_err!("config dir not found"))?;
+
+    let mut xi_config_dir = config_dir.clone();
     xi_config_dir.push("xi");
-
-    let mut vixi_config_file = xi_config_dir.clone();
-    vixi_config_file.push("vixi.toml");
-
-    let mut file = File::open(&vixi_config_file)?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    let config: Config = toml::from_str(&contents)?;
-
     core.send_rpc_notification(
         "client_started",
         &json!({ "config_dir": xi_config_dir.to_str().unwrap(), }),
     );
+
+    let mut vixi_config_dir = config_dir.clone();
+    vixi_config_dir.push("vixi");
+
+    let mut keyboard_config_file = File::open(vixi_config_dir.join("keyboard.toml"))?;
+    let mut keyboard_config_contents = String::new();
+    keyboard_config_file.read_to_string(&mut keyboard_config_contents)?;
+    let config: Config = toml::from_str(&keyboard_config_contents)?;
 
     Ok(config)
 }
