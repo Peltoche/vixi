@@ -43,7 +43,7 @@ pub enum Action {
 
     Paste,
 
-    InsertLineBellow,
+    InsertLineBelow,
     InsertLineAbove,
 
     DeleteBackward,
@@ -88,7 +88,7 @@ impl Action {
             Action::Paste => rpc::paste(view_id, core),
 
             Action::InsertKeyStroke(k) => rpc::insert_keystroke(view_id, k, core),
-            Action::InsertLineBellow => rpc::insert_line_bellow(view_id, core),
+            Action::InsertLineBelow => rpc::insert_line_below(view_id, core),
             Action::InsertLineAbove => rpc::insert_line_above(view_id, core),
 
             Action::DeleteBackward => rpc::delete_backward(view_id, core),
@@ -99,7 +99,7 @@ impl Action {
     pub fn from_description(desc: &str) -> Option<Action> {
         match desc {
             "write_to_file" => Some(Action::WriteToFile),
-            "quite" => Some(Action::Quite),
+            "quit" => Some(Action::Quite),
 
             "switch_to_insert_mode" => Some(Action::SwitchToInsertMode),
             "switch_to_visual_mode" => Some(Action::SwitchToVisualMode),
@@ -124,7 +124,7 @@ impl Action {
 
             "paste" => Some(Action::Paste),
 
-            "insert_line_bellow" => Some(Action::InsertLineBellow),
+            "insert_line_below" => Some(Action::InsertLineBelow),
             "insert_line_above" => Some(Action::InsertLineAbove),
 
             "delete_backward" => Some(Action::DeleteBackward),

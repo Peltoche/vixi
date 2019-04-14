@@ -48,11 +48,6 @@ pub mod defaults {
         pub static ref DEFAULT_NORMAL_MODE_ACTIONS: HashMap<KeyStroke, Action> = {
             let mut actions = HashMap::with_capacity(12);
 
-            actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
-            actions.insert(KeyStroke::Char('y'), Action::YankSelection);
-            actions.insert(KeyStroke::Char('d'), Action::DeleteSelection);
-            actions.insert(KeyStroke::Char('p'), Action::DeleteSelectionAndPaste);
-
             // The classic arrow keys.
             actions.insert(KeyStroke::KeyUp, Action::MoveUpAndSelect);
             actions.insert(KeyStroke::KeyDown, Action::MoveDownAndSelect);
@@ -64,6 +59,12 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('j'), Action::MoveDownAndSelect);
             actions.insert(KeyStroke::Char('h'), Action::MoveLeftAndSelect);
             actions.insert(KeyStroke::Char('l'), Action::MoveRightAndSelect);
+
+            actions.insert(KeyStroke::Char('i'), Action::SwitchToInsertMode);
+            actions.insert(KeyStroke::Char('v'), Action::SwitchToVisualMode);
+
+            actions.insert(KeyStroke::Char('o'), Action::InsertLineBelow);
+            actions.insert(KeyStroke::Char('O'), Action::InsertLineAbove);
 
             actions
         };

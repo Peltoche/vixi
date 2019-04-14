@@ -205,7 +205,7 @@ pub fn paste(view_id: &str, core: &dyn Peer) -> Response {
     Response::Continue
 }
 
-pub fn insert_line_bellow(view_id: &str, core: &dyn Peer) -> Response {
+pub fn insert_line_below(view_id: &str, core: &dyn Peer) -> Response {
     move_down(view_id, core);
     insert_newline(view_id, core);
     move_up(view_id, core);

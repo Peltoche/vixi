@@ -1,5 +1,4 @@
 [normal_mode]
-exit = "q"
 switch_to_insert_mode = "i"
 switch_to_visual_mode = "v"
 switch_to_action_mode = "<space>"
@@ -58,3 +57,7 @@ page_down = "<page_down>"
 
 delete_forward = "<del>"
 delete_backward = "<backspace>"
+
+[action_mode]
+quit = "q"
+write_to_file = "w"
