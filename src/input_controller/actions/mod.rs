@@ -55,12 +55,12 @@ pub enum Action {
 
 impl Action {
     pub fn execute(
-        &self,
+        self,
         view_id: &str,
         core: &dyn Peer,
         front_event_writer: &mut ClientToClientWriter,
     ) -> Response {
-        match *self {
+        match self {
             Action::WriteToFile => rpc::write_to_file(view_id, front_event_writer),
             Action::Quite => rpc::quite(view_id, core),
 
