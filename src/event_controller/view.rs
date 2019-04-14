@@ -247,6 +247,14 @@ impl View {
             }
         }
 
+        // If the buffer to draw do not fill the screen, iter on the remaining
+        // lines of the screen and clear it.
+        if buffer_len < window_size.height {
+            for screen_line in buffer_len..window_size.height {
+                self.window.move_cursor_and_clear_line(screen_line as u32);
+            }
+        }
+
         self.window.move_cursor(self.cursor.y, self.cursor.x);
         self.window.refresh();
     }
