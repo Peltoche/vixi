@@ -62,6 +62,7 @@ pub struct View {
     screen_start: u32,
     styles: Rc<RefCell<Box<dyn Styles>>>,
     width_line_section: u32,
+    file_path: Option<String>,
 }
 
 impl View {
@@ -81,6 +82,7 @@ impl View {
             buffer: Buffer::default(),
             screen_start: 0,
             width_line_section: 0,
+            file_path: None,
         };
 
         ctx.get_peer().send_rpc_notification(
@@ -105,6 +107,22 @@ impl View {
         );
 
         view
+    }
+
+    pub fn set_file_path(&mut self, path: &str) {
+        self.file_path = Some(path.to_owned());
+    }
+
+    pub fn write_to_file(&mut self, ctx: &RpcCtx) {
+        if let Some(ref file_path) = self.file_path {
+            ctx.get_peer().send_rpc_notification(
+                "save",
+                &json!({
+                    "view_id": self.id,
+                    "file_path": file_path,
+                }),
+            );
+        }
     }
 
     pub fn move_cursor(&mut self, _ctx: &RpcCtx, line: u32, col: u32) {

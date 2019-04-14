@@ -31,7 +31,7 @@ pub fn quite(view_id: &str, core: &dyn Peer) -> Response {
 }
 
 pub fn write_to_file(view_id: &str, core: &mut ClientToClientWriter) -> Response {
-    core.send_rpc_notification("save-view", &json!({ "view_id": view_id, }));
+    core.send_rpc_notification("write_to_file", &json!({ "view_id": view_id }));
 
     Response::SwitchToNormalMode
 }

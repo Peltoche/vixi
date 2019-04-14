@@ -87,7 +87,9 @@ impl xi_rpc::Handler for EventController {
             "scroll_to" => self.handle_cursor_move(&ctx, &rpc.params),
             "update" => self.handle_content_update(&ctx, &rpc.params),
             "theme_changed" => debug!("{}", &rpc.method),
-            _ => debug!("unhandled notif {} -> {}", &rpc.method, &rpc.params),
+            "set_path_for_view" => self.set_path_for_view(&ctx, &rpc.params),
+            "write_to_file" => self.write_to_file(&ctx, &rpc.params),
+            _ => warn!("unhandled notif \"{}\" -> {}", &rpc.method, &rpc.params),
         };
     }
 
@@ -108,6 +110,36 @@ impl EventController {
             status_bar,
             current_view: String::new(),
         }
+    }
+
+    fn set_path_for_view(&mut self, ctx: &RpcCtx, body: &Value) {
+        #[derive(Deserialize, Debug)]
+        struct Event {
+            view_id: String,
+            path: String,
+        }
+
+        let event: Event = serde_json::from_value(body.clone()).unwrap();
+
+        self.create_view_if_required(ctx, &event.view_id);
+        self.views
+            .get_mut(&event.view_id)
+            .unwrap()
+            .set_file_path(&event.path);
+    }
+
+    fn write_to_file(&mut self, ctx: &RpcCtx, body: &Value) {
+        #[derive(Deserialize, Debug)]
+        struct Event {
+            view_id: String,
+        }
+
+        let event: Event = serde_json::from_value(body.clone()).unwrap();
+
+        self.views
+            .get_mut(&event.view_id)
+            .unwrap()
+            .write_to_file(ctx);
     }
 
     fn handle_new_status_item(&mut self, body: &Value) {

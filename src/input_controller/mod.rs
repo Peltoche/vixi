@@ -85,6 +85,14 @@ impl InputController {
 
         self.view_id = view_id.as_str().unwrap().to_string();
 
+        self.front_event_writer.send_rpc_notification(
+            "set_path_for_view",
+            &json!({
+                "view_id": self.view_id,
+                "path": file_path,
+            }),
+        );
+
         core.send_rpc_notification("set_theme", &json!({"theme_name": "Solarized (light)" }));
         self.front_event_writer.send_rpc_notification(
             "add_status_item",

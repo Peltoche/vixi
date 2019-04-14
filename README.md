@@ -26,7 +26,7 @@ This frontend is under heavy development. A lot of stuff can break and change.
     - [x] Insert line above (`O`)
     - [x] Handle an action with
   - Action Mode (triggered with `<space>` in normal mode)
-    - [ ] Write into a file (`w`) (WIP)
+    - [x] Write into a file (`w`)
     - [x] Quite (`q`)
     - [ ] Find
 - Status Bar
