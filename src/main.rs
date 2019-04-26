@@ -64,13 +64,17 @@ fn setup_config(core: &dyn Peer) -> Result<Config, Error> {
         &json!({ "config_dir": xi_config_dir.to_str().unwrap(), }),
     );
 
-    let mut vixi_config_dir = config_dir.clone();
-    vixi_config_dir.push("vixi");
+    let vixi_config_dir = config_dir.join("vixi");
+    let vixi_keyboard_config_file = vixi_config_dir.join("keyboard.toml");
 
-    let mut keyboard_config_file = File::open(vixi_config_dir.join("keyboard.toml"))?;
-    let mut keyboard_config_contents = String::new();
-    keyboard_config_file.read_to_string(&mut keyboard_config_contents)?;
-    let config: Config = toml::from_str(&keyboard_config_contents)?;
+    let config = if vixi_keyboard_config_file.is_file() {
+        let mut keyboard_config_file = File::open(vixi_keyboard_config_file)?;
+        let mut keyboard_config_contents = String::new();
+        keyboard_config_file.read_to_string(&mut keyboard_config_contents)?;
+        toml::from_str(&keyboard_config_contents)?
+    } else {
+        Config::default()
+    };
 
     Ok(config)
 }

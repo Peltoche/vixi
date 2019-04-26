@@ -49,17 +49,19 @@ pub mod defaults {
             let mut actions = HashMap::with_capacity(12);
 
             // The classic arrow keys.
-            actions.insert(KeyStroke::KeyUp, Action::MoveUpAndSelect);
-            actions.insert(KeyStroke::KeyDown, Action::MoveDownAndSelect);
-            actions.insert(KeyStroke::KeyLeft, Action::MoveLeftAndSelect);
-            actions.insert(KeyStroke::KeyRight, Action::MoveRightAndSelect);
+            actions.insert(KeyStroke::KeyUp, Action::MoveUp);
+            actions.insert(KeyStroke::KeyDown, Action::MoveDown);
+            actions.insert(KeyStroke::KeyLeft, Action::MoveLeft);
+            actions.insert(KeyStroke::KeyRight, Action::MoveRight);
 
             // The "vim like" keys.
-            actions.insert(KeyStroke::Char('k'), Action::MoveUpAndSelect);
-            actions.insert(KeyStroke::Char('j'), Action::MoveDownAndSelect);
-            actions.insert(KeyStroke::Char('h'), Action::MoveLeftAndSelect);
-            actions.insert(KeyStroke::Char('l'), Action::MoveRightAndSelect);
+            actions.insert(KeyStroke::Char('k'), Action::MoveUp);
+            actions.insert(KeyStroke::Char('j'), Action::MoveDown);
+            actions.insert(KeyStroke::Char('h'), Action::MoveLeft);
+            actions.insert(KeyStroke::Char('l'), Action::MoveRight);
 
+            actions.insert(KeyStroke::Char('p'), Action::Paste);
+            actions.insert(KeyStroke::Char('q'), Action::Quite);
             actions.insert(KeyStroke::Char('i'), Action::SwitchToInsertMode);
             actions.insert(KeyStroke::Char('v'), Action::SwitchToVisualMode);
 
