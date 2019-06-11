@@ -68,6 +68,9 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('o'), Action::InsertLineBelow);
             actions.insert(KeyStroke::Char('O'), Action::InsertLineAbove);
 
+            actions.insert(KeyStroke::Char('w'), Action::MoveWordRight);
+            actions.insert(KeyStroke::Char('W'), Action::MoveWordLeft);
+
             actions
         };
 
@@ -118,6 +121,9 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('j'), Action::MoveDownAndSelect);
             actions.insert(KeyStroke::Char('h'), Action::MoveLeftAndSelect);
             actions.insert(KeyStroke::Char('l'), Action::MoveRightAndSelect);
+
+            actions.insert(KeyStroke::Char('w'), Action::MoveWordRightAndSelect);
+            actions.insert(KeyStroke::Char('W'), Action::MoveWordLeftAndSelect);
 
             actions
     };

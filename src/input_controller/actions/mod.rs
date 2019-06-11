@@ -29,6 +29,10 @@ pub enum Action {
     MoveDown,
     MoveLeft,
     MoveRight,
+
+    MoveWordRight,
+    MoveWordLeft,
+
     PageUp,
     PageDown,
 
@@ -36,6 +40,8 @@ pub enum Action {
     MoveDownAndSelect,
     MoveLeftAndSelect,
     MoveRightAndSelect,
+    MoveWordRightAndSelect,
+    MoveWordLeftAndSelect,
 
     YankSelection,
     DeleteSelection,
@@ -73,6 +79,10 @@ impl Action {
             Action::MoveDown => rpc::move_down(view_id, core),
             Action::MoveLeft => rpc::move_left(view_id, core),
             Action::MoveRight => rpc::move_right(view_id, core),
+
+            Action::MoveWordRight => rpc::move_word_right(view_id, core),
+            Action::MoveWordLeft => rpc::move_word_left(view_id, core),
+
             Action::PageUp => rpc::page_up(view_id, core),
             Action::PageDown => rpc::page_down(view_id, core),
 
@@ -80,6 +90,8 @@ impl Action {
             Action::MoveDownAndSelect => rpc::move_down_and_select(view_id, core),
             Action::MoveLeftAndSelect => rpc::move_left_and_select(view_id, core),
             Action::MoveRightAndSelect => rpc::move_right_and_select(view_id, core),
+            Action::MoveWordRightAndSelect => rpc::move_word_right_and_select(view_id, core),
+            Action::MoveWordLeftAndSelect => rpc::move_word_left_and_select(view_id, core),
 
             Action::YankSelection => rpc::yank_selection(view_id, core),
             Action::DeleteSelection => rpc::cute_selection(view_id, core),
