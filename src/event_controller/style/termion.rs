@@ -102,6 +102,27 @@ impl Styles for TermionStyles {
         self.serialize_style_ranges(&mut styles);
 
         let mut res = String::with_capacity(input.len() + STYLE_LEN * styles.len());
+
+        // Find a range of styles so that I can make up for a lack
+        let mut start = None;
+        let mut end = None;
+        for style in styles.clone() {
+            start = if let Some(s) = start.clone() {
+                Some(std::cmp::min(s, style.start))
+            } else {
+                Some(style.start)
+            };
+            end = if let Some(e) = end.clone() {
+                Some(std::cmp::max(e, style.end))
+            } else {
+                Some(style.end)
+            };
+        }
+
+        res.push_str(unsafe {
+            input.get_unchecked(0 as usize..start.unwrap_or(input.len() as u32) as usize)
+        });
+
         for style in styles {
             res.push_str(&format!(
                 "{}{}{}{}{}",
@@ -111,6 +132,10 @@ impl Styles for TermionStyles {
                 BG_RESET.as_str(),
                 FG_RESET.as_str(),
             ));
+        }
+
+        if end != None {
+            res.push_str(unsafe { input.get_unchecked(end.unwrap_or(0) as usize..input.len()) });
         }
 
         res
