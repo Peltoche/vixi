@@ -8,6 +8,7 @@ use crate::event_controller::window::{Layout, Window, WindowPosition, WindowSize
 use termion::clear;
 use termion::color::DetectColors;
 use termion::raw::IntoRawMode;
+use termion::screen::AlternateScreen;
 
 const STATUS_HEIGHT: u32 = 1;
 
@@ -19,7 +20,7 @@ pub struct TermionLayout {
 
 impl TermionLayout {
     pub fn new() -> Self {
-        let mut stdout = stdout().into_raw_mode().unwrap();
+        let mut stdout = AlternateScreen::from(stdout().into_raw_mode().unwrap());
         debug!("{} colors available", stdout.available_colors().unwrap());
 
         write!(stdout, "{}", clear::All).unwrap();
