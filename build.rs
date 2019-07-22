@@ -14,7 +14,7 @@ fn main() {
         Some((true, _)) => {}
         // rustc version too small or can't figure it out
         _ => {
-            writeln!(&mut io::stderr(), "'lsd' requires rustc >= 1.31.0").unwrap();
+            writeln!(&mut io::stderr(), "'vixi' requires rustc >= 1.31.0").unwrap();
             exit(1);
         }
     }
@@ -27,8 +27,8 @@ fn main() {
     fs::create_dir_all(&outdir).unwrap();
 
     let mut app = build();
-    app.gen_completions("lsd", Shell::Bash, &outdir);
-    app.gen_completions("lsd", Shell::Fish, &outdir);
-    app.gen_completions("lsd", Shell::Zsh, &outdir);
-    app.gen_completions("lsd", Shell::PowerShell, &outdir);
+    app.gen_completions("vixi", Shell::Bash, &outdir);
+    app.gen_completions("vixi", Shell::Fish, &outdir);
+    app.gen_completions("vixi", Shell::Zsh, &outdir);
+    app.gen_completions("vixi", Shell::PowerShell, &outdir);
 }
