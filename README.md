@@ -61,7 +61,7 @@ and switch into the other modes.
 | \<Space> |            Switch to Action Mode            |
 |     o    | Insert line below and switch to Insert Mode |
 |     O    | Insert line above and switch to Insert Mode |
-|     p    |      Past the previously cuted content      |
+|     p    |       Paste the previously cut content      |
 
 
 #### Insert mode
