@@ -7,6 +7,7 @@ use xi_rpc::Peer;
 pub fn insert_keystroke(view_id: &str, key: KeyStroke, core: &dyn Peer) -> Response {
     let output = match key {
         KeyStroke::Char(c) => c.to_string(),
+        KeyStroke::KeySpace => ' '.to_string(),
         _ => String::from("<?>"),
     };
 
