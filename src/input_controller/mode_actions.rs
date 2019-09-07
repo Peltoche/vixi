@@ -72,6 +72,9 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('w'), Action::MoveWordRight);
             actions.insert(KeyStroke::Char('W'), Action::MoveWordLeft);
 
+            actions.insert(KeyStroke::Char('x'), Action::DeleteForward);
+            actions.insert(KeyStroke::Char('X'), Action::DeleteBackward);
+
             actions
         };
 
