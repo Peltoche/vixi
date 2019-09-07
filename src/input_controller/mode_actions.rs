@@ -64,6 +64,7 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('q'), Action::Quite);
             actions.insert(KeyStroke::Char('i'), Action::SwitchToInsertMode);
             actions.insert(KeyStroke::Char('v'), Action::SwitchToVisualMode);
+            actions.insert(KeyStroke::KeySpace, Action::SwitchToActionMode);
 
             actions.insert(KeyStroke::Char('o'), Action::InsertLineBelow);
             actions.insert(KeyStroke::Char('O'), Action::InsertLineAbove);
