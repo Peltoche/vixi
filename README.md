@@ -54,6 +54,8 @@ and switch into the other modes.
 |:--------:|:-------------------------------------------:|
 |   ←↑→↓   |               Move the cursor               |
 |   hjkl   |               Move the cursor               |
+|     w    |       Move the cursor to the next word      |
+|     W    |     Move the cursor to the previous word    |
 |  \<PgUp> |        Move the cursor one page above       |
 |  \<PgDn> |        Move the cursor one page below       |
 |     v    |            Switch to Visual Mode            |
@@ -62,6 +64,7 @@ and switch into the other modes.
 |     o    | Insert line below and switch to Insert Mode |
 |     O    | Insert line above and switch to Insert Mode |
 |     p    |       Paste the previously cut content      |
+|     q    |                    Quit                     |
 
 
 #### Insert mode
@@ -86,6 +89,8 @@ The Visual mode is used to select some text and manipulate it.
 |:--------:|:---------------------------------------------------:|
 |   ←↑→↓   |                   Move the cursor                   |
 |   hjkl   |                   Move the cursor                   |
+|     w    |           Move the cursor to the next word          |
+|     W    |         Move the cursor to the previous word        |
 |  \<Esc>  |                Switch to Normal Mode                |
 | \<Space> |                Switch to Action Mode                |
 |     y    |                  Yank the selection                 |
