@@ -64,6 +64,8 @@ and switch into the other modes.
 |     o    | Insert line below and switch to Insert Mode |
 |     O    | Insert line above and switch to Insert Mode |
 |     p    |       Paste the previously cut content      |
+|     x    |             Delete text forward             |
+|     X    |            Delete text backwards            |
 |     q    |                    Quit                     |
 
 
