@@ -128,6 +128,8 @@ pub mod defaults {
 
             actions.insert(KeyStroke::Char('w'), Action::MoveWordRightAndSelect);
             actions.insert(KeyStroke::Char('W'), Action::MoveWordLeftAndSelect);
+            actions.insert(KeyStroke::Char('x'), Action::DeleteSelection);
+            actions.insert(KeyStroke::Char('X'), Action::DeleteSelection);
 
             actions
     };
