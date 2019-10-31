@@ -24,7 +24,7 @@ pub fn insert_keystroke(view_id: &str, key: KeyStroke, core: &dyn Peer) -> Respo
     Response::Continue
 }
 
-pub fn quite(view_id: &str, core: &dyn Peer) -> Response {
+pub fn quit(view_id: &str, core: &dyn Peer) -> Response {
     core.send_rpc_notification("close_view", &json!({ "view_id": view_id }));
     core.send_rpc_notification("exit", &json!({}));
 
@@ -88,6 +88,38 @@ pub fn page_down(view_id: &str, core: &dyn Peer) -> Response {
     core.send_rpc_notification(
         "edit",
         &json!({ "method": "scroll_page_down", "view_id": view_id}),
+    );
+    Response::Continue
+}
+
+pub fn move_to_left_end_of_line(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "move_to_left_end_of_line", "view_id": view_id }),
+    );
+    Response::Continue
+}
+
+pub fn move_to_right_end_of_line(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "move_to_right_end_of_line", "view_id": view_id }),
+    );
+    Response::Continue
+}
+
+pub fn move_to_left_end_of_line_and_select(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "move_to_left_end_of_line_and_modify_selection", "view_id": view_id }),
+    );
+    Response::Continue
+}
+
+pub fn move_to_right_end_of_line_and_select(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification(
+        "edit",
+        &json!({ "method": "move_to_right_end_of_line_and_modify_selection", "view_id": view_id }),
     );
     Response::Continue
 }
@@ -182,7 +214,7 @@ pub fn yank_selection(view_id: &str, core: &dyn Peer) -> Response {
     Response::SwitchToNormalMode
 }
 
-pub fn cute_selection(view_id: &str, core: &dyn Peer) -> Response {
+pub fn cut_selection(view_id: &str, core: &dyn Peer) -> Response {
     let cut_res = core.send_rpc_request("edit", &json!({ "method": "cut", "view_id": view_id}));
     if cut_res.is_err() {
         error!("failed to cut the selection: {:?}", cut_res);
@@ -200,7 +232,7 @@ pub fn cute_selection(view_id: &str, core: &dyn Peer) -> Response {
     Response::SwitchToNormalMode
 }
 
-pub fn cute_selection_and_paste(view_id: &str, core: &dyn Peer) -> Response {
+pub fn cut_selection_and_paste(view_id: &str, core: &dyn Peer) -> Response {
     let cut_res = core.send_rpc_request("edit", &json!({ "method": "cut", "view_id": view_id}));
     if cut_res.is_err() {
         error!("failed to cut the selection: {:?}", cut_res);
