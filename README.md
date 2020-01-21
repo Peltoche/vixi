@@ -87,7 +87,7 @@ The Insert mode is used to insert some content.
 
 The Visual mode is used to select some text and manipulate it.
 
-|  **Key** |                     **Description**                   |
+|  **Key** |                    **Description**                    |
 |:--------:|:-----------------------------------------------------:|
 |   ←↑→↓   |                    Move the cursor                    |
 |   hjkl   |                    Move the cursor                    |
