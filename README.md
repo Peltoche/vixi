@@ -87,19 +87,19 @@ The Insert mode is used to insert some content.
 
 The Visual mode is used to select some text and manipulate it.
 
-|  **Key** |                   **Description**                   |
-|:--------:|:---------------------------------------------------:|
-|   ←↑→↓   |                   Move the cursor                   |
-|   hjkl   |                   Move the cursor                   |
-|     w    |           Move the cursor to the next word          |
-|     W    |         Move the cursor to the previous word        |
-|  \<Esc>  |                Switch to Normal Mode                |
-| \<Space> |                Switch to Action Mode                |
-|     y    |                  Yank the selection                 |
-|     d    |                 Delete the selection                |
-|     p    | Delete the selection and past the previous deletion |
-|     x    |                  Delete selection                   |
-|     X    |                  Delete selection                   |
+|  **Key** |                     **Description**                   |
+|:--------:|:-----------------------------------------------------:|
+|   ←↑→↓   |                    Move the cursor                    |
+|   hjkl   |                    Move the cursor                    |
+|     w    |            Move the cursor to the next word           |
+|     W    |          Move the cursor to the previous word         |
+|  \<Esc>  |                 Switch to Normal Mode                 |
+| \<Space> |                 Switch to Action Mode                 |
+|     y    |                   Yank the selection                  |
+|     d    |                  Delete the selection                 |
+|     p    |  Delete the selection and paste the previous deletion |
+|     x    |                    Delete selection                   |
+|     X    |                    Delete selection                   |
 
 
 #### Action mode
