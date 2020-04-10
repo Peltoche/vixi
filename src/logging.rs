@@ -1,6 +1,7 @@
-use std::fs;
-use std::io;
 use std::path::Path;
+use std::{env, fmt, fs, io, panic, thread};
+
+use backtrace::Backtrace;
 
 pub fn setup(logging_path: &Path) -> Result<(), fern::InitError> {
     let level_filter = match std::env::var("XI_LOG") {
@@ -33,7 +34,58 @@ pub fn setup(logging_path: &Path) -> Result<(), fern::InitError> {
     info!("Logging with fern is set up to level {}", level_filter);
     info!("Writing logs to: {}", logging_path.display());
 
+    setup_panic_handler();
+
     Ok(())
+}
+
+struct Shim(Backtrace);
+
+impl fmt::Debug for Shim {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        if env::var("RUST_BACKTRACE").is_ok() {
+            write!(fmt, "\n{:?}", self.0)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+fn setup_panic_handler() {
+    panic::set_hook(Box::new(|info| {
+        let backtrace = Backtrace::new();
+
+        let thread = thread::current();
+        let thread = thread.name().unwrap_or("unnamed");
+
+        let msg = match info.payload().downcast_ref::<&'static str>() {
+            Some(s) => *s,
+            None => match info.payload().downcast_ref::<String>() {
+                Some(s) => &**s,
+                None => "Box<Any>",
+            },
+        };
+
+        match info.location() {
+            Some(location) => {
+                error!(
+                    target: "panic", "thread '{}' panicked at '{}': {}:{}{:?}",
+                    thread,
+                    msg,
+                    location.file(),
+                    location.line(),
+                    Shim(backtrace)
+                );
+            }
+            None => error!(
+                target: "panic",
+                "thread '{}' panicked at '{}'{:?}",
+                thread,
+                msg,
+                Shim(backtrace)
+            ),
+        }
+    }));
 }
 
 /// This function tries to create the parent directories for a file
