@@ -110,6 +110,7 @@ pub mod defaults {
             let mut actions = HashMap::with_capacity(1);
 
             actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
+            actions.insert(KeyStroke::Char('q'), Action::SwitchToNormalMode);
             actions.insert(KeyStroke::Char('y'), Action::YankSelection);
             actions.insert(KeyStroke::Char('d'), Action::DeleteSelection);
             actions.insert(KeyStroke::Char('p'), Action::DeleteSelectionAndPaste);

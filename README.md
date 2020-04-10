@@ -94,6 +94,7 @@ The Visual mode is used to select some text and manipulate it.
 |     w    |           Move the cursor to the next word          |
 |     W    |         Move the cursor to the previous word        |
 |  \<Esc>  |                Switch to Normal Mode                |
+|     q    |                Switch to Normal Mode                |
 | \<Space> |                Switch to Action Mode                |
 |     y    |                  Yank the selection                 |
 |     d    |                 Delete the selection                |
