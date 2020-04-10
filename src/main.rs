@@ -21,6 +21,9 @@ extern crate toml;
 #[cfg(feature = "tracing")]
 extern crate xi_trace;
 
+#[cfg(feature = "with-backtrace")]
+extern crate backtrace;
+
 mod cli;
 mod core;
 mod event_controller;
@@ -44,6 +47,7 @@ use input_controller::keyboard::TermionKeyboard;
 use input_controller::{Config, InputController};
 
 use failure::Error;
+
 use xi_rpc::{Peer, RpcLoop};
 
 fn setup_logger() {

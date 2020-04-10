@@ -67,6 +67,8 @@ and switch into the other modes.
 |     x    |             Delete text forward             |
 |     X    |            Delete text backwards            |
 |     q    |                    Quit                     |
+|     >    |                   Indent                    |
+|     <    |                  Outdent                    |
 
 
 #### Insert mode
@@ -94,12 +96,11 @@ The Visual mode is used to select some text and manipulate it.
 |     w    |           Move the cursor to the next word          |
 |     W    |         Move the cursor to the previous word        |
 |  \<Esc>  |                Switch to Normal Mode                |
+|     q    |                Switch to Normal Mode                |
 | \<Space> |                Switch to Action Mode                |
 |     y    |                  Yank the selection                 |
 |     d    |                 Delete the selection                |
 |     p    | Delete the selection and past the previous deletion |
-|     x    |                  Delete selection                   |
-|     X    |                  Delete selection                   |
 
 
 #### Action mode
