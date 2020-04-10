@@ -55,6 +55,9 @@ pub enum Action {
     DeleteBackward,
     DeleteForward,
 
+    Indent,
+    Outdent,
+
     // Custom for the insert mode. Not configurable
     InsertKeyStroke(KeyStroke),
 }
@@ -105,6 +108,9 @@ impl Action {
 
             Action::DeleteBackward => rpc::delete_backward(view_id, core),
             Action::DeleteForward => rpc::delete_forward(view_id, core),
+
+            Action::Indent => rpc::indent(view_id, core),
+            Action::Outdent => rpc::outdent(view_id, core),
         }
     }
 
@@ -141,6 +147,9 @@ impl Action {
 
             "delete_backward" => Some(Action::DeleteBackward),
             "delete_forward" => Some(Action::DeleteForward),
+
+            "indent" => Some(Action::Indent),
+            "outdent" => Some(Action::Outdent),
 
             _ => None,
         }

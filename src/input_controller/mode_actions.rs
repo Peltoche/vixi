@@ -75,6 +75,9 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('x'), Action::DeleteForward);
             actions.insert(KeyStroke::Char('X'), Action::DeleteBackward);
 
+            actions.insert(KeyStroke::Char('>'), Action::Indent);
+            actions.insert(KeyStroke::Char('<'), Action::Outdent);
+
             actions
         };
 

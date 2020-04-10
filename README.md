@@ -67,6 +67,8 @@ and switch into the other modes.
 |     x    |             Delete text forward             |
 |     X    |            Delete text backwards            |
 |     q    |                    Quit                     |
+|     >    |                   Indent                    |
+|     <    |                  Outdent                    |
 
 
 #### Insert mode
