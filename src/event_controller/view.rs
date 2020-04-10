@@ -32,6 +32,7 @@ pub struct Line {
     pub ln: Option<usize>,
     /// Indicate if the line needs to be rendered during the next redraw.
     pub is_dirty: bool,
+    pub is_valid: bool,
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -173,6 +174,7 @@ impl View {
                             raw: old_buffer.raw.clone(),
                             ln: operation.ln.map(|ln| ln + i),
                             is_dirty,
+                            is_valid: true,
                         });
                         new_idx += 1;
                     }
@@ -180,18 +182,28 @@ impl View {
                     old_idx += operation.n;
                 }
                 "skip" => old_idx += operation.n,
-                "invalidate" => new_buffer.nb_invalid_lines += operation.n,
+                "invalidate" => {
+                    for _ in 0..operation.n {
+                        new_buffer.lines.push(Line {
+                            raw: String::from(""),
+                            ln: None,
+                            is_dirty: true,
+                            is_valid: false,
+                        });
+                    }
+                }
                 "ins" => {
                     for line in operation.lines.unwrap() {
                         new_buffer.lines.push(Line {
                             raw: styles.apply_to(line.styles, &line.text),
                             ln: line.ln,
                             is_dirty: true,
+                            is_valid: true,
                         });
                         new_idx += 1;
                     }
                 }
-                _ => warn!("unhandled update: {:?}", operation),
+                _ => error!("unhandled update: {:?}", operation),
             }
         }
 

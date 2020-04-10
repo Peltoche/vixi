@@ -101,19 +101,24 @@ impl Styles for TermionStyles {
 
         self.serialize_style_ranges(&mut styles);
 
-        let mut res = String::with_capacity(input.len() + STYLE_LEN * styles.len());
-        for style in styles {
-            res.push_str(&format!(
-                "{}{}{}{}{}",
-                style.style.background.unwrap_or_else(|| String::from("")),
-                style.style.foreground.unwrap_or_else(|| String::from("")),
-                unsafe { input.get_unchecked(style.start as usize..style.end as usize) },
-                BG_RESET.as_str(),
-                FG_RESET.as_str(),
-            ));
+        if styles.is_empty() {
+            let mut res = String::with_capacity(input.len());
+            res.push_str(input);
+            res
+        } else {
+            let mut res = String::with_capacity(input.len() + STYLE_LEN * styles.len());
+            for style in styles {
+                res.push_str(&format!(
+                    "{}{}{}{}{}",
+                    style.style.background.unwrap_or_else(|| String::from("")),
+                    style.style.foreground.unwrap_or_else(|| String::from("")),
+                    unsafe { input.get_unchecked(style.start as usize..style.end as usize) },
+                    BG_RESET.as_str(),
+                    FG_RESET.as_str(),
+                ));
+            }
+            res
         }
-
-        res
     }
 }
 
