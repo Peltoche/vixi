@@ -98,8 +98,6 @@ The Visual mode is used to select some text and manipulate it.
 |     y    |                  Yank the selection                 |
 |     d    |                 Delete the selection                |
 |     p    | Delete the selection and past the previous deletion |
-|     x    |                  Delete selection                   |
-|     X    |                  Delete selection                   |
 
 
 #### Action mode
