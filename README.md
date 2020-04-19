@@ -10,7 +10,7 @@ This frontend is under heavy development. A lot of stuff can break and change.
 ## The "Vim like" approach
 
 The idea behind Vixi is to use the powerful keybinding of Vim without keeping
-all the complexities and inconsistencies. In orther words, keeping the 20% of
+all the complexities and inconsistencies. In other words, keeping the 20% of
 Vim used by 80% of users.
 
 
