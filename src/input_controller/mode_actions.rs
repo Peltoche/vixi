@@ -77,6 +77,9 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('x'), Action::DeleteForward);
             actions.insert(KeyStroke::Char('X'), Action::DeleteBackward);
 
+            actions.insert(KeyStroke::Char('>'), Action::Indent);
+            actions.insert(KeyStroke::Char('<'), Action::Outdent);
+
             actions
         };
 
@@ -115,6 +118,7 @@ pub mod defaults {
             let mut actions = HashMap::with_capacity(1);
 
             actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
+            actions.insert(KeyStroke::Char('q'), Action::SwitchToNormalMode);
             actions.insert(KeyStroke::Char('y'), Action::YankSelection);
             actions.insert(KeyStroke::Char('d'), Action::DeleteSelection);
             actions.insert(KeyStroke::Char('p'), Action::DeleteSelectionAndPaste);
@@ -138,8 +142,6 @@ pub mod defaults {
 
             actions.insert(KeyStroke::Char('w'), Action::MoveWordRightAndSelect);
             actions.insert(KeyStroke::Char('W'), Action::MoveWordLeftAndSelect);
-            actions.insert(KeyStroke::Char('x'), Action::DeleteSelection);
-            actions.insert(KeyStroke::Char('X'), Action::DeleteSelection);
 
             actions
         };

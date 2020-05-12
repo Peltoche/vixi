@@ -284,3 +284,13 @@ pub fn insert_line_above(view_id: &str, core: &dyn Peer) -> Response {
 
     Response::SwitchToInsertMode
 }
+
+pub fn indent(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification("edit", &json!({ "method": "indent", "view_id": view_id}));
+    Response::Continue
+}
+
+pub fn outdent(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification("edit", &json!({ "method": "outdent", "view_id": view_id}));
+    Response::Continue
+}

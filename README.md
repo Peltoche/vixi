@@ -10,7 +10,7 @@ This frontend is under heavy development. A lot of stuff can break and change.
 ## The "Vim like" approach
 
 The idea behind Vixi is to use the powerful keybinding of Vim without keeping
-all the complexities and inconsistencies. In orther words, keeping the 20% of
+all the complexities and inconsistencies. In other words, keeping the 20% of
 Vim used by 80% of users.
 
 
@@ -69,6 +69,8 @@ and switch into the other modes.
 |     x    |             Delete text forward             |
 |     X    |            Delete text backwards            |
 |     q    |                    Quit                     |
+|     >    |                   Indent                    |
+|     <    |                  Outdent                    |
 
 
 #### Insert mode
@@ -100,12 +102,11 @@ The Visual mode is used to select some text and manipulate it.
 | \<Home>  |         Move the cursor to beginning of line        |
 |  \<End>  |         Move the cursor to the end of the line      |
 |  \<Esc>  |                Switch to Normal Mode                |
+|     q    |                Switch to Normal Mode                |
 | \<Space> |                Switch to Action Mode                |
 |     y    |                  Yank the selection                 |
 |     d    |                 Delete the selection                |
 |     p    | Delete the selection and past the previous deletion |
-|     x    |                  Delete selection                   |
-|     X    |                  Delete selection                   |
 
 
 #### Action mode

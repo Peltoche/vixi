@@ -74,6 +74,7 @@ impl xi_rpc::Handler for EventController {
     type Request = RpcCall;
 
     fn handle_notification(&mut self, ctx: &RpcCtx, rpc: Self::Notification) {
+        debug!("handle notification: {}", rpc.method.as_str());
         match rpc.method.as_str() {
             "add_status_item" => self.handle_new_status_item(&rpc.params),
             "update_status_item" => self.update_status_item(&rpc.params),
