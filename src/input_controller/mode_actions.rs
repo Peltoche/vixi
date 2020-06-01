@@ -82,11 +82,13 @@ pub mod defaults {
         };
 
         pub static ref DEFAULT_ACTION_MODE_ACTIONS: HashMap<KeyStroke, Action> = {
-            let mut actions = HashMap::with_capacity(3);
+            let mut actions = HashMap::with_capacity(5);
 
             actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
             actions.insert(KeyStroke::Char('q'), Action::Quite);
             actions.insert(KeyStroke::Char('w'), Action::WriteToFile);
+            actions.insert(KeyStroke::Char('u'), Action::Undo),
+            actions.insert(KeyStroke::Char('r'), Action::Redo),
 
             actions
     };

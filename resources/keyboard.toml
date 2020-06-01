@@ -61,3 +61,5 @@ delete_backward = "<backspace>"
 [action_mode]
 quit = "q"
 write_to_file = "w"
+undo = "u"
+redo = "r"

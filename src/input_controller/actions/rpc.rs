@@ -262,3 +262,13 @@ pub fn outdent(view_id: &str, core: &dyn Peer) -> Response {
     core.send_rpc_notification("edit", &json!({ "method": "outdent", "view_id": view_id}));
     Response::Continue
 }
+
+pub fn undo(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification("edit", &json!({"method": "undo", "view_id": view_id}));
+    Response::Continue
+}
+
+pub fn redo(view_id: &str, core: &dyn Peer) -> Response {
+    core.send_rpc_notification("edit", &json!({"method": "redo", "view_id": view_id}));
+    Response::Continue
+}

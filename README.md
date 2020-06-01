@@ -111,4 +111,6 @@ The Action mode is used to make some generic action like saving or exiting.
 |:-------:|:-------------------:|
 |    q    |         Quit        |
 |    w    | Write into the file |
+|    u    | Undo the last change|
+|    r    | Redo the last change|
 

@@ -58,6 +58,9 @@ pub enum Action {
     Indent,
     Outdent,
 
+    Undo,
+    Redo,
+
     // Custom for the insert mode. Not configurable
     InsertKeyStroke(KeyStroke),
 }
@@ -111,6 +114,9 @@ impl Action {
 
             Action::Indent => rpc::indent(view_id, core),
             Action::Outdent => rpc::outdent(view_id, core),
+
+            Action::Undo => rpc::undo(view_id, core),
+            Action::Redo => rpc::redo(view_id, core),
         }
     }
 
@@ -150,6 +156,9 @@ impl Action {
 
             "indent" => Some(Action::Indent),
             "outdent" => Some(Action::Outdent),
+
+            "undo" => Some(Action::Undo),
+            "redo" => Some(Action::Redo),
 
             _ => None,
         }
