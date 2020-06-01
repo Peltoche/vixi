@@ -179,5 +179,4 @@ mod tests {
             config.visual_mode[&String::from("move_down")]
         );
     }
-
 }
