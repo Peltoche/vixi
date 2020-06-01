@@ -16,7 +16,7 @@ Vim used by 80% of users.
 
 ## Configuration
 
-All the keybinding presented below can be overriden via the `keyboard.toml`
+All the keybindings presented below can be overriden via the `keyboard.toml`
 configuration file. You can find an [example of keyboard.toml config](./resources/keyboard.toml)
 which will override all the default values with the exact same values.
 
@@ -67,7 +67,7 @@ and switch into the other modes.
 |     O    | Insert line above and switch to Insert Mode |
 |     p    |       Paste the previously cut content      |
 |     x    |             Delete text forward             |
-|     X    |            Delete text backwards            |
+|     X    |             Delete text backward            |
 |     q    |                    Quit                     |
 |     >    |                   Indent                    |
 |     <    |                  Outdent                    |
@@ -84,7 +84,7 @@ The Insert mode is used to insert some content.
 |    \<PgDn>   | Move the cursor one page below         |
 |    \<Home>   | Move the cursor to beginning of line   |
 |    \<End>    | Move the cursor to the end of the line |
-|    \<Esc>    |    Switch to the normal mode           |
+|    \<Esc>    |      Switch to normal mode             |
 | \<Backspace> |   Remove a character backward          |
 |    \<Del>    |   Remove a character forward           |
 
@@ -106,7 +106,7 @@ The Visual mode is used to select some text and manipulate it.
 | \<Space> |                Switch to Action Mode                |
 |     y    |                  Yank the selection                 |
 |     d    |                 Delete the selection                |
-|     p    | Delete the selection and past the previous deletion |
+|     p    | Delete the selection and paste the previous deletion|
 
 
 #### Action mode
