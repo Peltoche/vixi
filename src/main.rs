@@ -53,7 +53,7 @@ use xi_rpc::{Peer, RpcLoop};
 fn setup_logger() {
     let logging_path = dirs::home_dir()
         .expect("failed to retrieve the home dir")
-        .join(".local/share/vixy/vixi.log");
+        .join(".local/share/vixi/vixi.log");
 
     logging::setup(&logging_path).expect("failed to set the logger")
 }
