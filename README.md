@@ -6,6 +6,13 @@ A "Vim like" frontend for [xi-editor](https://github.com/xi-editor/xi-editor).
 
 This frontend is under heavy development. A lot of stuff can break and change.
 
+## Installation
+Make sure you have `rustc` version > 1.40 and cargo installed.
+```
+git clone https://github.com/Peltoche/vixi.git && cd vixi
+cargo install --path .
+```
+
 
 ## The "Vim like" approach
 
