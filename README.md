@@ -4,7 +4,8 @@ A "Vim like" frontend for [xi-editor](https://github.com/xi-editor/xi-editor).
 
 ## Warning
 
-This frontend is under heavy development. A lot of stuff can break and change.
+This toy project is not more maintained was under heavy development at the time so a lot of stuff
+can be broken and will not be fixed.
 
 ## Installation
 Make sure you have `rustc` version > 1.40 and cargo installed.
