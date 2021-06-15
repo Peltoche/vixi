@@ -4,7 +4,7 @@ A "Vim like" frontend for [xi-editor](https://github.com/xi-editor/xi-editor).
 
 ## Warning
 
-This toy project is not more maintained was under heavy development at the time so a lot of stuff
+This toy project is not more maintained. It was under heavy development at the time so a lot of stuff
 can be broken and will not be fixed.
 
 ## Installation
