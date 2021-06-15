@@ -34,7 +34,6 @@ OS specific config directory.
 |  **OS** |     **Vixi configuration folder**     |
 |:-------:|:-------------------------------------:|
 |  Linux  |        /home/alice/.config/vixi       |
-| Windows |      C:\Users\Alice\AppData\vixi      |
 |  MacOS  | /Users/Alice/Library/Preferences/vixi |
 
 
