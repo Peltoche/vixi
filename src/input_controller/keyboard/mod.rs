@@ -21,6 +21,8 @@ pub enum KeyStroke {
     KeyBackSpace,
     KeyDelete,
     KeySpace,
+    KeyHome,
+    KeyEnd,
 }
 
 impl KeyStroke {
@@ -37,6 +39,8 @@ impl KeyStroke {
             "<key_right>" => Some(KeyStroke::KeyRight),
             "<page_up>" => Some(KeyStroke::KeyPreviousPage),
             "<page_down>" => Some(KeyStroke::KeyNextPage),
+            "<home>" => Some(KeyStroke::KeyHome),
+            "<end>" => Some(KeyStroke::KeyEnd),
             "<backspace>" => Some(KeyStroke::KeyBackSpace),
             "<del>" => Some(KeyStroke::KeyDelete),
             "<space>" => Some(KeyStroke::KeySpace),

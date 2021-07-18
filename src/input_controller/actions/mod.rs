@@ -18,7 +18,7 @@ pub enum Response {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     WriteToFile,
-    Quite,
+    Quit,
 
     SwitchToInsertMode,
     SwitchToVisualMode,
@@ -29,9 +29,12 @@ pub enum Action {
     MoveDown,
     MoveLeft,
     MoveRight,
-
     MoveWordRight,
     MoveWordLeft,
+    MoveToLeftEndOfLine,
+    MoveToRightEndOfLine,
+    MoveToLeftEndOfLineAndSelect,
+    MoveToRightEndOfLineAndSelect,
 
     PageUp,
     PageDown,
@@ -71,7 +74,7 @@ impl Action {
     ) -> Response {
         match self {
             Action::WriteToFile => rpc::write_to_file(view_id, front_event_writer),
-            Action::Quite => rpc::quite(view_id, core),
+            Action::Quit => rpc::quit(view_id, core),
 
             Action::SwitchToInsertMode => Response::SwitchToInsertMode,
             Action::SwitchToVisualMode => Response::SwitchToVisualMode,
@@ -88,6 +91,11 @@ impl Action {
 
             Action::PageUp => rpc::page_up(view_id, core),
             Action::PageDown => rpc::page_down(view_id, core),
+            Action::MoveToLeftEndOfLine => rpc::move_to_left_end_of_line(view_id, core),
+            Action::MoveToRightEndOfLine => rpc::move_to_right_end_of_line(view_id, core),
+            Action::MoveToLeftEndOfLineAndSelect => rpc::move_to_left_end_of_line_and_select(view_id, core),
+            Action::MoveToRightEndOfLineAndSelect => rpc::move_to_right_end_of_line_and_select(view_id, core),
+
 
             Action::MoveUpAndSelect => rpc::move_up_and_select(view_id, core),
             Action::MoveDownAndSelect => rpc::move_down_and_select(view_id, core),
@@ -97,8 +105,8 @@ impl Action {
             Action::MoveWordLeftAndSelect => rpc::move_word_left_and_select(view_id, core),
 
             Action::YankSelection => rpc::yank_selection(view_id, core),
-            Action::DeleteSelection => rpc::cute_selection(view_id, core),
-            Action::DeleteSelectionAndPaste => rpc::cute_selection_and_paste(view_id, core),
+            Action::DeleteSelection => rpc::cut_selection(view_id, core),
+            Action::DeleteSelectionAndPaste => rpc::cut_selection_and_paste(view_id, core),
 
             Action::Paste => rpc::paste(view_id, core),
 
@@ -117,7 +125,7 @@ impl Action {
     pub fn from_description(desc: &str) -> Option<Action> {
         match desc {
             "write_to_file" => Some(Action::WriteToFile),
-            "quit" => Some(Action::Quite),
+            "quit" => Some(Action::Quit),
 
             "switch_to_insert_mode" => Some(Action::SwitchToInsertMode),
             "switch_to_visual_mode" => Some(Action::SwitchToVisualMode),
@@ -131,6 +139,8 @@ impl Action {
             "page_up" => Some(Action::PageUp),
             "page_down" => Some(Action::PageDown),
 
+            "move_to_left_end_of_line" => Some(Action::MoveToLeftEndOfLine),
+            "move_to_right_end_of_line" => Some(Action::MoveToRightEndOfLine),
             "move_up_and_select" => Some(Action::MoveUpAndSelect),
             "move_down_and_select" => Some(Action::MoveDownAndSelect),
             "move_left_and_select" => Some(Action::MoveLeftAndSelect),
@@ -138,7 +148,7 @@ impl Action {
 
             "yank_selection" => Some(Action::YankSelection),
             "delete_selection" => Some(Action::DeleteSelection),
-            "delete_selection_and_past" => Some(Action::DeleteSelectionAndPaste),
+            "delete_selection_and_paste" => Some(Action::DeleteSelectionAndPaste),
 
             "paste" => Some(Action::Paste),
 

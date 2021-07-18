@@ -65,6 +65,8 @@ and switch into the other modes.
 |     W    |     Move the cursor to the previous word    |
 |  \<PgUp> |        Move the cursor one page above       |
 |  \<PgDn> |        Move the cursor one page below       |
+|  \<Home> |      Move the cursor to beginning of line   |
+|  \<End>  |     Move the cursor to the end of the line  |
 |     v    |            Switch to Visual Mode            |
 |     i    |            Switch to Insert Mode            |
 | \<Space> |            Switch to Action Mode            |
@@ -82,14 +84,16 @@ and switch into the other modes.
 
 The Insert mode is used to insert some content.
 
-|    **Key**   |         **Description**        |
-|:------------:|:------------------------------:|
-|     ←↑→↓     |         Move the cursor        |
-|    \<PgUp>   | Move the cursor one page above |
-|    \<PgDn>   | Move the cursor one page below |
-|    \<Esc>    |    Switch to the normal mode   |
-| \<Backspace> |   Remove a character backward  |
-|    \<Del>    |   Remove a character forward   |
+|    **Key**   |         **Description**                |
+|:------------:|:--------------------------------------:|
+|     ←↑→↓     |         Move the cursor                |
+|    \<PgUp>   | Move the cursor one page above         |
+|    \<PgDn>   | Move the cursor one page below         |
+|    \<Home>   | Move the cursor to beginning of line   |
+|    \<End>    | Move the cursor to the end of the line |
+|    \<Esc>    |    Switch to the normal mode           |
+| \<Backspace> |   Remove a character backward          |
+|    \<Del>    |   Remove a character forward           |
 
 
 #### Visual mode
@@ -102,6 +106,8 @@ The Visual mode is used to select some text and manipulate it.
 |   hjkl   |                   Move the cursor                   |
 |     w    |           Move the cursor to the next word          |
 |     W    |         Move the cursor to the previous word        |
+| \<Home>  |         Move the cursor to beginning of line        |
+|  \<End>  |         Move the cursor to the end of the line      |
 |  \<Esc>  |                Switch to Normal Mode                |
 |     q    |                Switch to Normal Mode                |
 | \<Space> |                Switch to Action Mode                |

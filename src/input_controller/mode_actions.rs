@@ -46,13 +46,15 @@ pub mod defaults {
 
     lazy_static! {
         pub static ref DEFAULT_NORMAL_MODE_ACTIONS: HashMap<KeyStroke, Action> = {
-            let mut actions = HashMap::with_capacity(12);
+            let mut actions = HashMap::with_capacity(21);
 
             // The classic arrow keys.
             actions.insert(KeyStroke::KeyUp, Action::MoveUp);
             actions.insert(KeyStroke::KeyDown, Action::MoveDown);
             actions.insert(KeyStroke::KeyLeft, Action::MoveLeft);
             actions.insert(KeyStroke::KeyRight, Action::MoveRight);
+            actions.insert(KeyStroke::KeyHome, Action::MoveToLeftEndOfLine);
+            actions.insert(KeyStroke::KeyEnd, Action::MoveToRightEndOfLine);
 
             // The "vim like" keys.
             actions.insert(KeyStroke::Char('k'), Action::MoveUp);
@@ -61,7 +63,7 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('l'), Action::MoveRight);
 
             actions.insert(KeyStroke::Char('p'), Action::Paste);
-            actions.insert(KeyStroke::Char('q'), Action::Quite);
+            actions.insert(KeyStroke::Char('q'), Action::Quit);
             actions.insert(KeyStroke::Char('i'), Action::SwitchToInsertMode);
             actions.insert(KeyStroke::Char('v'), Action::SwitchToVisualMode);
             actions.insert(KeyStroke::KeySpace, Action::SwitchToActionMode);
@@ -85,11 +87,11 @@ pub mod defaults {
             let mut actions = HashMap::with_capacity(3);
 
             actions.insert(KeyStroke::KeyEscape, Action::SwitchToNormalMode);
-            actions.insert(KeyStroke::Char('q'), Action::Quite);
+            actions.insert(KeyStroke::Char('q'), Action::Quit);
             actions.insert(KeyStroke::Char('w'), Action::WriteToFile);
 
             actions
-    };
+        };
 
         pub static ref DEFAULT_INSERT_MODE_ACTIONS: HashMap<KeyStroke, Action> = {
             let mut actions = HashMap::with_capacity(12);
@@ -103,11 +105,14 @@ pub mod defaults {
             actions.insert(KeyStroke::KeyDown, Action::MoveDown);
             actions.insert(KeyStroke::KeyLeft, Action::MoveLeft);
             actions.insert(KeyStroke::KeyRight, Action::MoveRight);
+
             actions.insert(KeyStroke::KeyPreviousPage, Action::PageUp);
             actions.insert(KeyStroke::KeyNextPage, Action::PageDown);
+            actions.insert(KeyStroke::KeyHome, Action::MoveToLeftEndOfLine);
+            actions.insert(KeyStroke::KeyEnd, Action::MoveToRightEndOfLine);
 
             actions
-    };
+        };
 
         pub static ref DEFAULT_VISUAL_MODE_ACTIONS: HashMap<KeyStroke, Action> = {
             let mut actions = HashMap::with_capacity(1);
@@ -124,6 +129,11 @@ pub mod defaults {
             actions.insert(KeyStroke::KeyLeft, Action::MoveLeftAndSelect);
             actions.insert(KeyStroke::KeyRight, Action::MoveRightAndSelect);
 
+            actions.insert(KeyStroke::KeyPreviousPage, Action::PageUp);
+            actions.insert(KeyStroke::KeyNextPage, Action::PageDown);
+            actions.insert(KeyStroke::KeyHome, Action::MoveToLeftEndOfLineAndSelect);
+            actions.insert(KeyStroke::KeyEnd, Action::MoveToRightEndOfLineAndSelect);
+
             // The "vim like" keys.
             actions.insert(KeyStroke::Char('k'), Action::MoveUpAndSelect);
             actions.insert(KeyStroke::Char('j'), Action::MoveDownAndSelect);
@@ -134,6 +144,6 @@ pub mod defaults {
             actions.insert(KeyStroke::Char('W'), Action::MoveWordLeftAndSelect);
 
             actions
-    };
+        };
     }
 }
